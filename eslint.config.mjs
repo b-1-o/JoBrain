@@ -39,7 +39,7 @@ const eslintConfig = [
       "node_modules/**",
       "dist/**",
       "coverage/**",
-      "prisma/migrations/**",
+      "prisma/**",
     ],
   },
 ];
