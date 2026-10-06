@@ -19,6 +19,26 @@ export async function POST(request: NextRequest) {
     request.cookies.get("jobrain_workspace")?.value,
   );
 
+  const existing = await prisma.application.count({
+    where: { userId: user.id },
+  });
+
+  if (existing > 0) {
+    const applications = await prisma.application.findMany({
+      where: { userId: user.id },
+      orderBy: { updatedAt: "desc" },
+    });
+    const response = NextResponse.json({ applications, reused: true });
+    response.cookies.set("jobrain_workspace", user.id, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+    return response;
+  }
+
   const created = [];
 
   for (const [company, role, status, source] of demo) {
