@@ -25,10 +25,10 @@ Search roles across multiple feeds at once:
 
 | Source | Integration | Coverage |
 | --- | --- | --- |
-| Remote OK | Public JSON feed | Remote-first |
-| Remotive | Public jobs API | Remote jobs |
-| Arbeitnow | Free Job Board API | Multi-source European listings |
-| HeadHunter | Official API | HH vacancies |
+| Adzuna US | REST API | United States jobs |
+| Jobicy | Public REST API | US-focused remote jobs |
+| Remote OK | Public JSON feed | Worldwide remote jobs |
+| Remotive | Public jobs API | Worldwide remote jobs |
 
 The server normalizes provider-specific responses into one Job model, filters the data, removes duplicate results, and returns a single feed to the client.
 
@@ -97,10 +97,10 @@ Browser
 GET /api/jobs
    ↓
 Promise.allSettled()
+   ├── Adzuna US
+   ├── Jobicy
    ├── Remote OK
-   ├── Remotive
-   ├── Arbeitnow
-   └── HeadHunter
+   └── Remotive
    ↓
 normalize → filter → deduplicate → sort
    ↓
@@ -186,20 +186,20 @@ npm run build
 | --- | --- | --- |
 | DATABASE_URL | Yes | PostgreSQL connection |
 | DIRECT_URL | Recommended | Direct PostgreSQL connection for Prisma migrations |
-| JOBRAIN_USER_AGENT | Recommended | Descriptive User-Agent for the HH API |
-| ADZUNA_APP_ID | No | Reserved for a future adapter |
-| ADZUNA_APP_KEY | No | Reserved for a future adapter |
+| JOBRAIN_USER_AGENT | No | Legacy User-Agent setting kept for compatibility |
+| ADZUNA_APP_ID | Recommended | Adzuna US API application ID |
+| ADZUNA_APP_KEY | Recommended | Adzuna US API application key |
 | NEXT_PUBLIC_APP_URL | No | Public deployment URL |
 
 ## Provider notes
 
-Remote OK documents a public JSON feed and asks applications displaying its jobs to credit the source and link back to the original listing.
+Adzuna provides a REST API for job advertisement listings and supports country-specific search; JoBrain uses its US endpoint for American listings.
 
-Remotive provides a public remote-jobs API for sharing listings with attribution. Its public feed is delayed compared with its private paid API.
+Jobicy provides a public remote-jobs REST API with a US geo filter and structured job data.
 
-Arbeitnow provides a free Job Search API without an API key.
+Remote OK exposes a free public JSON feed of remote jobs and asks aggregators to credit the source and link to the original listing.
 
-HeadHunter documents an official JSON API and requires a descriptive User-Agent header.
+Remotive provides a public remote-jobs API for sharing listings with attribution and requires links back to the original Remotive listing.
 
 JoBrain keeps these integrations isolated in src/lib/jobs.ts so provider changes do not leak into the UI or database layer.
 
