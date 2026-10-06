@@ -55,7 +55,7 @@
     "next": "^16.3.8",
     "next-auth": "5.0.0-beta.32",
     "next-themes": "^0.4.3",
-    "nodemailer": "^6.9.16",
+    "nodemailer": "^8.0.11",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-hook-form": "^7.53.2",
@@ -71,7 +71,7 @@
     "@tailwindcss/postcss": "^4.3.3",
     "@tanstack/react-query-devtools": "^5.59.20",
     "@types/node": "^20.17.6",
-    "@types/nodemailer": "^6.4.16",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@typescript-eslint/eslint-plugin": "^8.14.0",
@@ -102,5 +102,13 @@
     "*.{json,md,css}": [
       "prettier --write"
     ]
+  },
+  "allowScripts": {
+    "@prisma/client@5.22.0": true,
+    "prisma@5.22.0": true,
+    "@prisma/engines@5.22.0": true,
+    "esbuild@0.28.2": true,
+    "esbuild@0.21.5": true,
+    "unrs-resolver@1.12.2": true
   }
 }
