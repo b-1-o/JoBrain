@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { searchJobs, type JobSource } from "@/lib/jobs";
 
 export const dynamic = "force-dynamic";
