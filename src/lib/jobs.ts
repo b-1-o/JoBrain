@@ -52,24 +52,62 @@ function jobIsRemote(
   );
 }
 
+function normalizeText(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[-_/]+/g, " ")
+    .replace(/[^a-z0-9+#. ]/g, " ")
+    .replace(/\\s+/g, " ")
+    .trim();
+}
+
+function queryTokens(query: string) {
+  return normalizeText(query)
+    .split(" ")
+    .filter((token) => token.length >= 2);
+}
+
+function tokenMatches(token: string, haystack: string) {
+  const aliases: Record<string, string[]> = {
+    frontend: ["frontend", "front end", "front-end", "ui developer", "web developer"],
+    backend: ["backend", "back end", "back-end", "server developer"],
+    developer: ["developer", "engineer", "programmer"],
+    engineer: ["engineer", "developer"],
+    javascript: ["javascript", "js", "typescript", "ts"],
+    typescript: ["typescript", "ts"],
+    react: ["react", "react.js", "reactjs"],
+    nextjs: ["next.js", "nextjs", "next"],
+    "next.js": ["next.js", "nextjs", "next"],
+    ui: ["ui", "user interface"],
+    ux: ["ux", "user experience"],
+  };
+
+  return (aliases[token] ?? [token]).some((alias) =>
+    haystack.includes(normalizeText(alias)),
+  );
+}
+
 function matches(job: Job, params: JobSearchParams) {
-  const haystack = (
+  const haystack = normalizeText(
     job.title +
-    " " +
-    job.company +
-    " " +
-    job.location +
-    " " +
-    job.description +
-    " " +
-    job.tags.join(" ")
-  ).toLowerCase();
+      " " +
+      job.company +
+      " " +
+      job.location +
+      " " +
+      job.description +
+      " " +
+      job.tags.join(" "),
+  );
 
-  const query = params.query.trim().toLowerCase();
-  const location = params.location.trim().toLowerCase();
+  const query = queryTokens(params.query);
+  const location = normalizeText(params.location);
 
-  if (query && !haystack.includes(query)) return false;
-  if (location && !job.location.toLowerCase().includes(location)) return false;
+  if (query.length && !query.some((token) => tokenMatches(token, haystack))) {
+    return false;
+  }
+
+  if (location && !normalizeText(job.location).includes(location)) return false;
   if (params.remoteOnly && !job.remote) return false;
 
   return true;
@@ -93,7 +131,13 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 async function remoteOk(): Promise<Job[]> {
-  const data = await fetchJson<unknown[]>("https://remoteok.com/api");
+  const data = await fetchJson<unknown[]>("https://remoteok.com/api", {
+    headers: {
+      "User-Agent":
+        process.env.JOBRAIN_USER_AGENT ??
+        "JoBrain/1.0 (https://github.com/b-1-o/JoBrain)",
+    },
+  });
 
   return data
     .filter(
@@ -126,7 +170,8 @@ async function remoteOk(): Promise<Job[]> {
 async function remotive(query: string): Promise<Job[]> {
   const url = new URL("https://remotive.com/api/remote-jobs");
 
-  if (query) url.searchParams.set("search", query);
+  const search = queryTokens(query)[0];
+  if (search) url.searchParams.set("search", search);
   url.searchParams.set("limit", "50");
 
   const data = await fetchJson<{
@@ -159,6 +204,8 @@ async function jobicy(): Promise<Job[]> {
   const url = new URL("https://jobicy.com/api/v2/remote-jobs");
   url.searchParams.set("count", "100");
   url.searchParams.set("geo", "usa");
+  const search = queryTokens(query)[0];
+  if (search) url.searchParams.set("tag", search);
 
   const data = await fetchJson<{
     jobs?: Array<Record<string, unknown>>;
