@@ -43,7 +43,7 @@ type App = {
 
 type Job = {
   id: string;
-  source: "remoteok" | "remotive" | "arbeitnow" | "hh";
+  source: "remoteok" | "remotive" | "jobicy" | "adzuna";
   title: string;
   company: string;
   location: string;
@@ -73,8 +73,8 @@ const stages: Array<{ key: Status; label: string; tone: string }> = [
 const sourceLabel: Record<string, string> = {
   remoteok: "Remote OK",
   remotive: "Remotive",
-  arbeitnow: "Arbeitnow",
-  hh: "HeadHunter",
+  jobicy: "Jobicy",
+  adzuna: "Adzuna US",
   REMOTEOK: "Remote OK",
   REMOTIVE: "Remotive",
   COMPANY_SITE: "Company",
@@ -133,7 +133,7 @@ export default function Home() {
   const [jobQuery, setJobQuery] = useState("frontend developer");
   const [location, setLocation] = useState("");
   const [source, setSource] = useState("all");
-  const [remoteOnly, setRemoteOnly] = useState(true);
+  const [remoteOnly, setRemoteOnly] = useState(false);
   const [loadingJobs, setLoadingJobs] = useState(false);
   const [lastFetched, setLastFetched] = useState<string | null>(null);
   const [sourceState, setSourceState] = useState<Record<string, "ok" | "error">>({});
@@ -229,7 +229,7 @@ export default function Home() {
         : job.source === "remotive"
           ? "REMOTIVE"
           : job.source === "hh"
-            ? "HH"
+            ? "OTHER"
             : "OTHER";
 
     const response = await fetch("/api/applications", {
@@ -511,7 +511,7 @@ export default function Home() {
                   <Globe2 size={17} className="text-zinc-600" />
                 </div>
                 <div className="grid gap-2">
-                  {["remoteok", "remotive", "arbeitnow", "hh"].map((name) => (
+                  {["remoteok", "remotive", "jobicy", "adzuna"].map((name) => (
                     <div key={name} className="source-row">
                       <div className="flex items-center gap-3">
                         <span className={"size-2 rounded-full " + (sourceState[name] === "error" ? "bg-rose-400" : sourceState[name] === "ok" ? "bg-emerald-400" : "bg-zinc-700")} />
@@ -549,8 +549,8 @@ export default function Home() {
                     <option value="all">All sources</option>
                     <option value="remoteok">Remote OK</option>
                     <option value="remotive">Remotive</option>
-                    <option value="arbeitnow">Arbeitnow</option>
-                    <option value="hh">HeadHunter</option>
+                    <option value="jobicy">Jobicy</option>
+                    <option value="adzuna">Adzuna US</option>
                   </select>
                 </label>
                 <button className={"button-secondary justify-center " + (remoteOnly ? "border-violet-400/30 bg-violet-400/[0.07] text-violet-200" : "")} onClick={() => setRemoteOnly((value) => !value)}>
