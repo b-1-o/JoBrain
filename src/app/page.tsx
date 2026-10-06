@@ -144,17 +144,6 @@ export default function Home() {
   const [manualLoading, setManualLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
-  const loadApplications = useCallback(async () => {
-    try {
-      const response = await fetch("/api/applications", { cache: "no-store" });
-      if (!response.ok) throw new Error("applications");
-      const data = await response.json();
-      setApps(data.applications ?? []);
-    } catch {
-      setError("Could not load the application workspace.");
-    }
-  }, []);
-
   const searchJobs = useCallback(
     async () => {
       abortRef.current?.abort();
@@ -191,10 +180,6 @@ export default function Home() {
     },
     [jobQuery, location, remoteOnly, source],
   );
-
-  useEffect(() => {
-    void loadApplications();
-  }, [loadApplications]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void searchJobs(), 450);
@@ -340,7 +325,12 @@ export default function Home() {
     try {
       const response = await fetch("/api/demo", { method: "POST" });
       if (!response.ok) throw new Error("demo");
-      await loadApplications();
+      const applicationsResponse = await fetch("/api/applications", {
+        cache: "no-store",
+      });
+      if (!applicationsResponse.ok) throw new Error("applications");
+      const applicationsData = await applicationsResponse.json();
+      setApps(applicationsData.applications ?? []);
       setTab("overview");
     } catch {
       setError("Could not load demo data. Check your database connection.");
