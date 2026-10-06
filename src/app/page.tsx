@@ -79,7 +79,17 @@ const sourceLabel: Record<string, string> = {
   COMPANY_SITE: "Company",
   LINKEDIN: "LinkedIn",
   OTHER: "Other",
-};
+}; 
+
+const navItems: Array<{
+  key: "overview" | "search" | "pipeline";
+  label: string;
+  icon: LucideIcon;
+}> = [
+  { key: "overview", label: "Overview", icon: LayoutDashboard },
+  { key: "search", label: "Live search", icon: Search },
+  { key: "pipeline", label: "Pipeline", icon: Layers3 },
+];
 
 function relativeTime(value: string) {
   const diff = Math.max(0, Date.now() - new Date(value).getTime());
@@ -346,18 +356,14 @@ export default function Home() {
         </section>
 
         <div className="mb-6 flex flex-wrap items-center gap-2">
-          {[
-            ["overview", "Overview", LayoutDashboard],
-            ["search", "Live search", Search],
-            ["pipeline", "Pipeline", Layers3],
-          ].map(([key, label, Icon]) => (
+          {navItems.map((item) => (
             <button
-              key={String(key)}
-              className={"nav-pill " + (tab === key ? "nav-pill-active" : "")}
-              onClick={() => setTab(key as typeof tab)}
+              key={item.key}
+              className={"nav-pill " + (tab === item.key ? "nav-pill-active" : "")}
+              onClick={() => setTab(item.key)}
             >
-              <Icon size={15} />
-              {String(label)}
+              <item.icon size={15} />
+              {item.label}
             </button>
           ))}
         </div>
