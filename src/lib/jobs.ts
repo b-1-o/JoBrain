@@ -240,7 +240,10 @@ export async function searchJobs(params: JobSearchParams) {
   const sources: Record<string, "ok" | "error"> = {};
 
   settled.forEach((result, index) => {
-    const source = selected[index].source;
+    const task = selected[index];
+    if (!task) return;
+
+    const source = task.source;
 
     if (result.status === "fulfilled") {
       sources[source] = "ok";
