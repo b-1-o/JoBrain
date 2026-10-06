@@ -228,9 +228,7 @@ export default function Home() {
         ? "REMOTEOK"
         : job.source === "remotive"
           ? "REMOTIVE"
-          : job.source === "hh"
-            ? "OTHER"
-            : "OTHER";
+          : "OTHER";
 
     const response = await fetch("/api/applications", {
       method: "POST",
