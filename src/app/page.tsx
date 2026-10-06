@@ -135,7 +135,6 @@ export default function Home() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [jobQuery, setJobQuery] = useState("frontend");
   const [location, setLocation] = useState("");
-  const [source, setSource] = useState("all");
   const [platform, setPlatform] = useState("all");
   const [experience, setExperience] = useState("all");
   const [remoteOnly, setRemoteOnly] = useState(false);
