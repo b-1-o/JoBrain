@@ -18,6 +18,7 @@ import {
   Sparkles,
   Target,
   TrendingDown,
+  Trash2,
   Zap,
   type LucideIcon,
 } from "lucide-react";
@@ -138,6 +139,9 @@ export default function Home() {
   const [sourceState, setSourceState] = useState<Record<string, "ok" | "error">>({});
   const [error, setError] = useState("");
   const [demoLoading, setDemoLoading] = useState(false);
+  const [manualCompany, setManualCompany] = useState("");
+  const [manualRole, setManualRole] = useState("");
+  const [manualLoading, setManualLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   const loadApplications = useCallback(async () => {
@@ -287,6 +291,47 @@ export default function Home() {
             : item,
         ),
       );
+    }
+  }
+
+  async function createManualApplication() {
+    if (!manualCompany.trim() || !manualRole.trim()) return;
+
+    setManualLoading(true);
+
+    try {
+      const response = await fetch("/api/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company: manualCompany.trim(),
+          role: manualRole.trim(),
+          source: "OTHER",
+          status: "FOUND",
+        }),
+      });
+
+      if (!response.ok) throw new Error("manual");
+      const data = await response.json();
+      setApps((current) => [data.application, ...current]);
+      setManualCompany("");
+      setManualRole("");
+    } catch {
+      setError("Could not add the application.");
+    } finally {
+      setManualLoading(false);
+    }
+  }
+
+  async function deleteApplication(id: string) {
+    const response = await fetch("/api/applications?id=" + encodeURIComponent(id), {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      setApps((current) => current.filter((item) => item.id !== id));
+    } else {
+      setError("Could not remove the application.");
     }
   }
 
@@ -577,6 +622,35 @@ export default function Home() {
               <button className="button-secondary" onClick={() => setTab("search")}><Search size={15} />Find roles</button>
             </div>
 
+            <div className="glass-card mb-3 p-4">
+              <div className="mb-3">
+                <div className="text-sm font-semibold">Quick add</div>
+                <div className="mt-1 text-xs text-zinc-500">Track an application from any other source without opening Live search.</div>
+              </div>
+              <div className="grid gap-2 md:grid-cols-[1fr_1.2fr_auto]">
+                <input
+                  className="quick-input"
+                  value={manualCompany}
+                  onChange={(event) => setManualCompany(event.target.value)}
+                  placeholder="Company"
+                />
+                <input
+                  className="quick-input"
+                  value={manualRole}
+                  onChange={(event) => setManualRole(event.target.value)}
+                  placeholder="Role"
+                />
+                <button
+                  className="button-primary justify-center"
+                  onClick={() => void createManualApplication()}
+                  disabled={manualLoading || !manualCompany.trim() || !manualRole.trim()}
+                >
+                  {manualLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                  Add
+                </button>
+              </div>
+            </div>
+
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
               {stages.map((stage) => {
                 const items = apps.filter((app) => app.status === stage.key);
@@ -588,8 +662,15 @@ export default function Home() {
                     </div>
                     <div className="space-y-2">
                       {items.map((app) => (
-                        <div key={app.id} className="pipeline-card">
-                          <div className="text-xs font-medium leading-5">{app.role}</div>
+                        <div key={app.id} className="pipeline-card relative">
+                          <button
+                            className="delete-button"
+                            onClick={() => void deleteApplication(app.id)}
+                            aria-label={"Delete " + app.company + " application"}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                          <div className="pr-7 text-xs font-medium leading-5">{app.role}</div>
                           <div className="mt-1 truncate text-[11px] text-zinc-500">{app.company}</div>
                           <div className="mt-4 text-[10px] uppercase tracking-[0.12em] text-zinc-600">{app.source}</div>
                           <select className="status-select" value={app.status} onChange={(event) => void updateStatus(app.id, event.target.value as Status)}>
