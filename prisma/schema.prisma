@@ -6,7 +6,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  // directUrl = env("DIRECT_URL")
+  directUrl = env("DIRECT_URL")
   // Enable DIRECT_URL when using Neon PgBouncer / connection pooling.
   // Migrations and introspection require a direct (non-pooled) connection.
   // Set DIRECT_URL to the non-pooled connection string from Neon console.
