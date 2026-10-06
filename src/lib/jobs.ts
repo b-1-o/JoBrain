@@ -1,4 +1,4 @@
-export type JobSource = "remoteok" | "remotive" | "arbeitnow" | "hh";
+export type JobSource = "remoteok" | "remotive" | "jobicy" | "adzuna";
 
 export type Job = {
   id: string;
@@ -40,6 +40,16 @@ function safeDate(input: unknown) {
   return Number.isNaN(date.getTime())
     ? new Date().toISOString()
     : date.toISOString();
+}
+
+function jobIsRemote(
+  title: string,
+  location: string,
+  description: string,
+) {
+  return /\bremote\b|work from home|anywhere|worldwide|distributed/i.test(
+    title + " " + location + " " + description,
+  );
 }
 
 function matches(job: Job, params: JobSearchParams) {
@@ -123,91 +133,122 @@ async function remotive(query: string): Promise<Job[]> {
     jobs?: Array<Record<string, unknown>>;
   }>(url.toString());
 
-  return (data.jobs ?? []).map((item) => ({
-    id: "remotive:" + String(item.id ?? item.url),
-    source: "remotive" as const,
-    title: String(item.title ?? "Untitled role"),
-    company: String(item.company_name ?? "Unknown company"),
-    location: String(item.candidate_required_location ?? "Remote"),
-    remote: true,
-    url: String(item.url ?? "https://remotive.com/"),
-    description: stripHtml(String(item.description ?? item.job_type ?? "")),
-    tags: Array.isArray(item.tags) ? item.tags.map(String).slice(0, 8) : [],
-    salary: item.salary ? String(item.salary) : undefined,
-    postedAt: safeDate(item.publication_date),
-  }));
-}
-
-async function arbeitnow(): Promise<Job[]> {
-  const data = await fetchJson<{
-    data?: Array<Record<string, unknown>>;
-  }>("https://www.arbeitnow.com/api/job-board-api");
-
-  return (data.data ?? []).map((item) => ({
-    id: "arbeitnow:" + String(item.slug ?? item.url),
-    source: "arbeitnow" as const,
-    title: String(item.title ?? "Untitled role"),
-    company: String(item.company_name ?? "Unknown company"),
-    location: String(item.location ?? "Remote"),
-    remote: Boolean(item.remote),
-    url: String(item.url ?? "https://www.arbeitnow.com/"),
-    description: stripHtml(String(item.description ?? "")),
-    tags: Array.isArray(item.tags) ? item.tags.map(String).slice(0, 8) : [],
-    postedAt: safeDate(
-      typeof item.created_at === "number"
-        ? Number(item.created_at) * 1000
-        : item.created_at,
-    ),
-  }));
-}
-
-async function headHunter(query: string): Promise<Job[]> {
-  const url = new URL("https://api.hh.ru/vacancies");
-
-  if (query) url.searchParams.set("text", query);
-  url.searchParams.set("per_page", "50");
-  url.searchParams.set("page", "0");
-
-  const data = await fetchJson<{
-    items?: Array<Record<string, unknown>>;
-  }>(url.toString(), {
-    headers: {
-      "User-Agent":
-        process.env.JOBRAIN_USER_AGENT ??
-        "JoBrain/1.0 (https://github.com/b-1-o/JoBrain)",
-    },
-  });
-
-  return (data.items ?? []).map((item) => {
-    const salary = item.salary as Record<string, unknown> | null;
-
-    const salaryText =
-      salary && (salary.from || salary.to)
-        ? (salary.currency ? String(salary.currency) + " " : "") +
-          (salary.from ? String(salary.from) : "") +
-          (salary.from && salary.to ? "–" : "") +
-          (salary.to ? String(salary.to) : "")
-        : undefined;
+  return (data.jobs ?? []).map((item) => {
+    const location = String(item.candidate_required_location ?? "Remote");
+    const description = stripHtml(
+      String(item.description ?? item.job_type ?? ""),
+    );
 
     return {
-      id: "hh:" + String(item.id),
-      source: "hh" as const,
-      title: String(item.name ?? "Untitled role"),
+      id: "remotive:" + String(item.id ?? item.url),
+      source: "remotive" as const,
+      title: String(item.title ?? "Untitled role"),
+      company: String(item.company_name ?? "Unknown company"),
+      location,
+      remote: true,
+      url: String(item.url ?? "https://remotive.com/"),
+      description,
+      tags: Array.isArray(item.tags) ? item.tags.map(String).slice(0, 8) : [],
+      salary: item.salary ? String(item.salary) : undefined,
+      postedAt: safeDate(item.publication_date),
+    };
+  });
+}
+
+async function jobicy(): Promise<Job[]> {
+  const url = new URL("https://jobicy.com/api/v2/remote-jobs");
+  url.searchParams.set("count", "100");
+  url.searchParams.set("geo", "usa");
+
+  const data = await fetchJson<{
+    jobs?: Array<Record<string, unknown>>;
+  }>(url.toString());
+
+  return (data.jobs ?? []).map((item) => ({
+    id: "jobicy:" + String(item.id ?? item.url),
+    source: "jobicy" as const,
+    title: String(item.jobTitle ?? "Untitled role"),
+    company: String(item.companyName ?? "Unknown company"),
+    location: String(item.jobGeo ?? "USA"),
+    remote: true,
+    url: String(item.url ?? "https://jobicy.com/"),
+    description: stripHtml(
+      String(item.jobDescription ?? item.jobExcerpt ?? ""),
+    ),
+    tags: Array.isArray(item.jobIndustry)
+      ? item.jobIndustry.map(String).slice(0, 8)
+      : [],
+    salary:
+      item.salaryMin || item.salaryMax
+        ? (item.salaryCurrency ? String(item.salaryCurrency) + " " : "") +
+          (item.salaryMin ? String(item.salaryMin) : "") +
+          (item.salaryMin && item.salaryMax ? "–" : "") +
+          (item.salaryMax ? String(item.salaryMax) : "")
+        : undefined,
+    postedAt: safeDate(item.pubDate),
+  }));
+}
+
+async function adzuna(query: string): Promise<Job[]> {
+  const appId = process.env.ADZUNA_APP_ID;
+  const appKey = process.env.ADZUNA_APP_KEY;
+
+  if (!appId || !appKey) {
+    throw new Error("Adzuna credentials are not configured");
+  }
+
+  const url = new URL(
+    "https://api.adzuna.com/v1/api/jobs/us/search/1",
+  );
+  url.searchParams.set("app_id", appId);
+  url.searchParams.set("app_key", appKey);
+  url.searchParams.set("results_per_page", "50");
+  url.searchParams.set("content-type", "application/json");
+  url.searchParams.set("sort_by", "date");
+
+  if (query) url.searchParams.set("what", query);
+
+  const data = await fetchJson<{
+    results?: Array<Record<string, unknown>>;
+  }>(url.toString());
+
+  return (data.results ?? []).map((item) => {
+    const location =
+      String(
+        (item.location as Record<string, unknown> | undefined)?.display_name ??
+          "United States",
+      ) || "United States";
+
+    const description = stripHtml(String(item.description ?? ""));
+    const title = String(item.title ?? "Untitled role");
+
+    return {
+      id: "adzuna:" + String(item.id ?? item.redirect_url),
+      source: "adzuna" as const,
+      title,
       company: String(
-        (item.employer as Record<string, unknown> | undefined)?.name ??
+        (item.company as Record<string, unknown> | undefined)?.display_name ??
           "Unknown company",
       ),
-      location: String(
-        (item.area as Record<string, unknown> | undefined)?.name ?? "Unknown",
-      ),
-      remote: String(item.schedule ?? "").toLowerCase().includes("удал"),
-      url: String(item.alternate_url ?? item.url ?? "https://hh.ru/"),
-      description: stripHtml(
-        String(item.snippet ? JSON.stringify(item.snippet) : ""),
-      ),
-      tags: [],
-      salary: salaryText,
-      postedAt: safeDate(item.published_at),
+      location,
+      remote: jobIsRemote(title, location, description),
+      url: String(item.redirect_url ?? "https://www.adzuna.com/"),
+      description,
+      tags: item.category
+        ? [
+            String(
+              (item.category as Record<string, unknown>).label ?? item.category,
+            ),
+          ]
+        : [],
+      salary:
+        item.salary_min || item.salary_max
+          ? (item.salary_currency ? String(item.salary_currency) + " " : "$") +
+            (item.salary_min ? String(item.salary_min) : "") +
+            (item.salary_min && item.salary_max ? "–" : "") +
+            (item.salary_max ? String(item.salary_max) : "")
+          : undefined,
+      postedAt: safeDate(item.created),
     };
   });
 }
@@ -226,8 +267,8 @@ export async function searchJobs(params: JobSearchParams) {
   }> = [
     { source: "remoteok", run: remoteOk },
     { source: "remotive", run: () => remotive(normalized.query) },
-    { source: "arbeitnow", run: arbeitnow },
-    { source: "hh", run: () => headHunter(normalized.query) },
+    { source: "jobicy", run: jobicy },
+    { source: "adzuna", run: () => adzuna(normalized.query) },
   ];
 
   const selected =
