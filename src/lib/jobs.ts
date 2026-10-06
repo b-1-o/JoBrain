@@ -57,7 +57,7 @@ function normalizeText(value: string) {
     .toLowerCase()
     .replace(/[-_/]+/g, " ")
     .replace(/[^a-z0-9+#. ]/g, " ")
-    .replace(/\\s+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -103,8 +103,17 @@ function matches(job: Job, params: JobSearchParams) {
   const query = queryTokens(params.query);
   const location = normalizeText(params.location);
 
-  if (query.length && !query.some((token) => tokenMatches(token, haystack))) {
-    return false;
+  if (
+    query.length &&
+    !query.every((token) => tokenMatches(token, haystack))
+  ) {
+    const titleAndTags = normalizeText(
+      job.title + " " + job.tags.join(" "),
+    );
+
+    if (!query.some((token) => tokenMatches(token, titleAndTags))) {
+      return false;
+    }
   }
 
   if (location && !normalizeText(job.location).includes(location)) return false;
@@ -200,13 +209,10 @@ async function remotive(query: string): Promise<Job[]> {
   });
 }
 
-async function jobicy(): Promise<Job[]> {
+async function jobicy(_query: string): Promise<Job[]> {
   const url = new URL("https://jobicy.com/api/v2/remote-jobs");
   url.searchParams.set("count", "100");
   url.searchParams.set("geo", "usa");
-  const search = queryTokens(query)[0];
-  if (search) url.searchParams.set("tag", search);
-
   const data = await fetchJson<{
     jobs?: Array<Record<string, unknown>>;
   }>(url.toString());
@@ -314,7 +320,7 @@ export async function searchJobs(params: JobSearchParams) {
   }> = [
     { source: "remoteok", run: remoteOk },
     { source: "remotive", run: () => remotive(normalized.query) },
-    { source: "jobicy", run: jobicy },
+    { source: "jobicy", run: () => jobicy(normalized.query) },
     { source: "adzuna", run: () => adzuna(normalized.query) },
   ];
 
