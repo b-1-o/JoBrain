@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const sourceParam = params.get("source") ?? "all";
-  const allowed = ["all", "remoteok", "remotive", "arbeitnow", "hh"];
+  const allowed = ["all", "remoteok", "remotive", "jobicy", "adzuna"];
 
   if (!allowed.includes(sourceParam)) {
     return NextResponse.json({ error: "Invalid source" }, { status: 400 });
