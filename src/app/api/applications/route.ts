@@ -81,11 +81,18 @@ export async function POST(request: NextRequest) {
       request.cookies.get("jobrain_workspace")?.value,
     );
 
-    const data = sanitize(body);
     const application = await prisma.application.create({
       data: {
         userId: user.id,
-        ...data,
+        company: body.company,
+        role: body.role,
+        url: body.url,
+        source: body.source,
+        status: body.status,
+        salaryMin: body.salaryMin,
+        salaryMax: body.salaryMax,
+        currency: body.currency,
+        notes: body.notes,
         appliedAt: body.appliedAt ? new Date(body.appliedAt) : undefined,
         nextActionAt: body.nextActionAt ? new Date(body.nextActionAt) : undefined,
       },
@@ -106,23 +113,26 @@ export async function PATCH(request: NextRequest) {
       request.cookies.get("jobrain_workspace")?.value,
     );
 
-    const { id, ...raw } = body;
-    const data = Object.fromEntries(
-      Object.entries(raw)
-        .filter(([, value]) => value !== undefined)
-        .map(([key, value]) => [
-          key,
-          key === "appliedAt" || key === "nextActionAt"
-            ? value
-              ? new Date(value as string)
-              : null
-            : value,
-        ]),
-    );
-
+    const { id } = body;
     const result = await prisma.application.updateMany({
       where: { id, userId: user.id },
-      data,
+      data: {
+        ...(body.company !== undefined ? { company: body.company } : {}),
+        ...(body.role !== undefined ? { role: body.role } : {}),
+        ...(body.url !== undefined ? { url: body.url } : {}),
+        ...(body.source !== undefined ? { source: body.source } : {}),
+        ...(body.status !== undefined ? { status: body.status } : {}),
+        ...(body.salaryMin !== undefined ? { salaryMin: body.salaryMin } : {}),
+        ...(body.salaryMax !== undefined ? { salaryMax: body.salaryMax } : {}),
+        ...(body.currency !== undefined ? { currency: body.currency } : {}),
+        ...(body.notes !== undefined ? { notes: body.notes } : {}),
+        ...(body.appliedAt !== undefined
+          ? { appliedAt: body.appliedAt ? new Date(body.appliedAt) : null }
+          : {}),
+        ...(body.nextActionAt !== undefined
+          ? { nextActionAt: body.nextActionAt ? new Date(body.nextActionAt) : null }
+          : {}),
+      },
     });
 
     const response = NextResponse.json({ updated: result.count === 1 });
