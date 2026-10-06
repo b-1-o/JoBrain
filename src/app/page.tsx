@@ -130,7 +130,7 @@ export default function Home() {
   const [tab, setTab] = useState<"overview" | "search" | "pipeline">("overview");
   const [apps, setApps] = useState<App[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [jobQuery, setJobQuery] = useState("frontend developer");
+  const [jobQuery, setJobQuery] = useState("frontend");
   const [location, setLocation] = useState("");
   const [source, setSource] = useState("all");
   const [remoteOnly, setRemoteOnly] = useState(false);
