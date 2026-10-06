@@ -81,8 +81,8 @@ describe("searchJobs", () => {
     });
 
     expect(result.jobs).toHaveLength(2);
-    expect(result.jobs[0].company).toBe("Alpha");
-    expect(result.jobs[1].company).toBe("Beta");
+    expect(result.jobs[0]?.company).toBe("Alpha");
+    expect(result.jobs[1]?.company).toBe("Beta");
     expect(result.sources.remoteok).toBe("ok");
     expect(result.sources.remotive).toBe("ok");
     expect(result.sources.arbeitnow).toBe("ok");
