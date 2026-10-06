@@ -294,3 +294,40 @@ button:disabled { cursor: not-allowed; opacity: .65; }
   color: rgb(113 113 122);
   font-size: .6rem;
 }
+
+.quick-input {
+  min-width: 0;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  outline: 0;
+  background: rgba(255,255,255,.035);
+  padding: .72rem .8rem;
+  color: rgb(228 228 231);
+  font-size: .75rem;
+}
+
+.quick-input:focus {
+  border-color: rgba(167,139,250,.35);
+  box-shadow: 0 0 0 3px rgba(124,58,237,.08);
+}
+
+.delete-button {
+  position: absolute;
+  top: .65rem;
+  right: .65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 8px;
+  background: transparent;
+  color: rgb(82 82 91);
+}
+
+.delete-button:hover {
+  border-color: rgba(244,63,94,.22);
+  background: rgba(244,63,94,.08);
+  color: rgb(253 164 175);
+}
