@@ -25,12 +25,13 @@ Search roles across multiple feeds at once:
 
 | Source | Integration | Coverage |
 | --- | --- | --- |
+| Google Jobs via SerpApi | Google Jobs aggregation | LinkedIn, Indeed, Glassdoor, ZipRecruiter, Dice, company sites and other boards |
 | Adzuna US | REST API | United States jobs |
 | Jobicy | Public REST API | US-focused remote jobs |
 | Remote OK | Public JSON feed | Worldwide remote jobs |
 | Remotive | Public jobs API | Worldwide remote jobs |
 
-The server normalizes provider-specific responses into one Job model, filters the data, removes duplicate results, and returns a single feed to the client.
+The server normalizes provider-specific responses into one Job model, identifies the originating platform when Google Jobs exposes it, classifies experience level, filters the data, removes duplicate results, and returns a single feed to the client.
 
 A failed provider does not break the entire search. Each source reports its own connection state.
 
@@ -97,6 +98,12 @@ Browser
 GET /api/jobs
    ↓
 Promise.allSettled()
+   ├── Google Jobs / SerpApi
+   │   ├── LinkedIn
+   │   ├── Indeed
+   │   ├── Glassdoor
+   │   ├── ZipRecruiter
+   │   └── other job boards
    ├── Adzuna US
    ├── Jobicy
    ├── Remote OK
@@ -115,6 +122,8 @@ The Prisma schema separates:
 - Application
 - SavedSearch
 - Auth.js Account / Session
+
+The search UI includes platform filtering and experience-level filtering for Internship / Entry, Junior, Mid, Senior, and Lead / Staff roles.
 
 The current UI uses a lightweight browser workspace identity so the project can run without OAuth credentials. Each browser gets its own workspace cookie. Auth.js can be connected later without redesigning the application model.
 
@@ -189,9 +198,12 @@ npm run build
 | JOBRAIN_USER_AGENT | No | Legacy User-Agent setting kept for compatibility |
 | ADZUNA_APP_ID | Recommended | Adzuna US API application ID |
 | ADZUNA_APP_KEY | Recommended | Adzuna US API application key |
+| SERPAPI_API_KEY | Recommended | Google Jobs aggregation API key |
 | NEXT_PUBLIC_APP_URL | No | Public deployment URL |
 
 ## Provider notes
+
+SerpApi provides a Google Jobs API that returns structured job results and pagination; its results expose the platform a listing came from and can include direct apply links for providers such as LinkedIn and Indeed.
 
 Adzuna provides a REST API for job advertisement listings and supports country-specific search; JoBrain uses its US endpoint for American listings.
 
