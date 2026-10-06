@@ -1,15 +1,57 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { searchJobs, type JobSource } from "@/lib/jobs";
+import { searchJobs, type ExperienceLevel, type JobPlatform, type JobSource } from "@/lib/jobs";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const sourceParam = params.get("source") ?? "all";
-  const allowed = ["all", "remoteok", "remotive", "jobicy", "adzuna"];
+  const platformParam = params.get("platform") ?? "all";
+  const experienceParam = params.get("experience") ?? "all";
 
-  if (!allowed.includes(sourceParam)) {
+  const allowedSources = [
+    "all",
+    "remoteok",
+    "remotive",
+    "jobicy",
+    "adzuna",
+    "googlejobs",
+  ];
+
+  const allowedPlatforms = [
+    "all",
+    "linkedin",
+    "indeed",
+    "glassdoor",
+    "ziprecruiter",
+    "dice",
+    "company",
+    "remoteok",
+    "remotive",
+    "jobicy",
+    "adzuna",
+    "other",
+  ];
+
+  const allowedExperience = [
+    "all",
+    "intern",
+    "junior",
+    "mid",
+    "senior",
+    "lead",
+  ];
+
+  if (!allowedSources.includes(sourceParam)) {
     return NextResponse.json({ error: "Invalid source" }, { status: 400 });
+  }
+
+  if (!allowedPlatforms.includes(platformParam)) {
+    return NextResponse.json({ error: "Invalid platform" }, { status: 400 });
+  }
+
+  if (!allowedExperience.includes(experienceParam)) {
+    return NextResponse.json({ error: "Invalid experience level" }, { status: 400 });
   }
 
   try {
@@ -17,8 +59,10 @@ export async function GET(request: NextRequest) {
       query: params.get("query") ?? "",
       location: params.get("location") ?? "",
       source: sourceParam as JobSource | "all",
-      remoteOnly: params.get("remote") !== "false",
-      limit: Number(params.get("limit") ?? 72),
+      platform: platformParam as JobPlatform | "all",
+      experience: experienceParam as ExperienceLevel,
+      remoteOnly: params.get("remote") === "true",
+      limit: Number(params.get("limit") ?? 120),
     });
 
     return NextResponse.json(result, {
