@@ -52,13 +52,6 @@ function setWorkspaceCookie(response: NextResponse, userId: string) {
     maxAge: 60 * 60 * 24 * 365,
   });
 }
-
-function sanitize(data: z.infer<typeof createSchema>) {
-  return Object.fromEntries(
-    Object.entries(data).filter(([, value]) => value !== undefined),
-  );
-}
-
 export async function GET(request: NextRequest) {
   const { user } = await getWorkspaceUser(
     request.cookies.get("jobrain_workspace")?.value,
