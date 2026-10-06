@@ -43,7 +43,9 @@ type App = {
 
 type Job = {
   id: string;
-  source: "remoteok" | "remotive" | "jobicy" | "adzuna";
+  source: "remoteok" | "remotive" | "jobicy" | "adzuna" | "googlejobs";
+  platform: string;
+  level: "intern" | "junior" | "mid" | "senior" | "lead" | null;
   title: string;
   company: string;
   location: string;
@@ -75,6 +77,7 @@ const sourceLabel: Record<string, string> = {
   remotive: "Remotive",
   jobicy: "Jobicy",
   adzuna: "Adzuna US",
+  googlejobs: "Google Jobs",
   REMOTEOK: "Remote OK",
   REMOTIVE: "Remotive",
   COMPANY_SITE: "Company",
@@ -133,6 +136,8 @@ export default function Home() {
   const [jobQuery, setJobQuery] = useState("frontend");
   const [location, setLocation] = useState("");
   const [source, setSource] = useState("all");
+  const [platform, setPlatform] = useState("all");
+  const [experience, setExperience] = useState("all");
   const [remoteOnly, setRemoteOnly] = useState(false);
   const [loadingJobs, setLoadingJobs] = useState(false);
   const [lastFetched, setLastFetched] = useState<string | null>(null);
@@ -156,9 +161,11 @@ export default function Home() {
         const params = new URLSearchParams({
           query: jobQuery,
           location,
-          source,
+          source: "all",
+          platform,
+          experience,
           remote: String(remoteOnly),
-          limit: "72",
+          limit: "120",
         });
 
         const response = await fetch("/api/jobs?" + params.toString(), {
@@ -178,13 +185,13 @@ export default function Home() {
         if (!controller.signal.aborted) setLoadingJobs(false);
       }
     },
-    [jobQuery, location, remoteOnly, source],
+    [jobQuery, location, platform, experience, remoteOnly],
   );
 
   useEffect(() => {
     const timer = window.setTimeout(() => void searchJobs(), 450);
     return () => window.clearTimeout(timer);
-  }, [jobQuery, location, source, remoteOnly, searchJobs]);
+  }, [jobQuery, location, platform, experience, remoteOnly, searchJobs]);
 
   const stats = useMemo(() => {
     const applied = apps.filter((item) => item.status !== "FOUND").length;
@@ -224,11 +231,15 @@ export default function Home() {
 
   async function addApplication(job: Job) {
     const sourceValue =
-      job.source === "remoteok"
-        ? "REMOTEOK"
-        : job.source === "remotive"
-          ? "REMOTIVE"
-          : "OTHER";
+      job.platform === "linkedin"
+        ? "LINKEDIN"
+        : job.platform === "indeed"
+          ? "INDEED"
+          : job.platform === "remotive"
+            ? "REMOTIVE"
+            : job.platform === "remoteok"
+              ? "REMOTEOK"
+              : "OTHER";
 
     const response = await fetch("/api/applications", {
       method: "POST",
@@ -532,7 +543,7 @@ export default function Home() {
         {tab === "search" ? (
           <section>
             <div className="glass-card p-4 sm:p-5">
-              <div className="grid gap-3 lg:grid-cols-[1.25fr_.8fr_.55fr_auto]">
+              <div className="grid gap-3 lg:grid-cols-[1.15fr_.8fr_.65fr_.65fr_auto]">
                 <label className="field-wrap">
                   <Search size={16} />
                   <input value={jobQuery} onChange={(event) => setJobQuery(event.target.value)} placeholder="frontend developer" />
@@ -543,12 +554,29 @@ export default function Home() {
                 </label>
                 <label className="field-wrap">
                   <Filter size={16} />
-                  <select value={source} onChange={(event) => setSource(event.target.value)}>
-                    <option value="all">All sources</option>
+                  <select value={platform} onChange={(event) => setPlatform(event.target.value)}>
+                    <option value="all">All platforms</option>
+                    <option value="linkedin">LinkedIn</option>
+                    <option value="indeed">Indeed</option>
+                    <option value="glassdoor">Glassdoor</option>
+                    <option value="ziprecruiter">ZipRecruiter</option>
+                    <option value="dice">Dice</option>
+                    <option value="company">Company sites</option>
                     <option value="remoteok">Remote OK</option>
                     <option value="remotive">Remotive</option>
                     <option value="jobicy">Jobicy</option>
                     <option value="adzuna">Adzuna US</option>
+                  </select>
+                </label>
+                <label className="field-wrap">
+                  <Gauge size={16} />
+                  <select value={experience} onChange={(event) => setExperience(event.target.value)}>
+                    <option value="all">Any level</option>
+                    <option value="intern">Intern / Entry</option>
+                    <option value="junior">Junior</option>
+                    <option value="mid">Mid-level</option>
+                    <option value="senior">Senior</option>
+                    <option value="lead">Lead / Staff</option>
                   </select>
                 </label>
                 <button className={"button-secondary justify-center " + (remoteOnly ? "border-violet-400/30 bg-violet-400/[0.07] text-violet-200" : "")} onClick={() => setRemoteOnly((value) => !value)}>
@@ -567,7 +595,34 @@ export default function Home() {
                   <div className="mb-5 flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="mb-2 flex flex-wrap gap-2">
-                        <span className="source-chip">{sourceLabel[job.source]}</span>
+                        <span className="source-chip">
+                          {job.platform === "linkedin"
+                            ? "LinkedIn"
+                            : job.platform === "indeed"
+                              ? "Indeed"
+                              : job.platform === "glassdoor"
+                                ? "Glassdoor"
+                                : job.platform === "ziprecruiter"
+                                  ? "ZipRecruiter"
+                                  : job.platform === "dice"
+                                    ? "Dice"
+                                    : job.platform === "company"
+                                      ? "Company"
+                                      : sourceLabel[job.platform] ?? sourceLabel[job.source]}
+                        </span>
+                        {job.level ? (
+                          <span className="source-chip source-chip-level">
+                            {job.level === "intern"
+                              ? "Intern / Entry"
+                              : job.level === "junior"
+                                ? "Junior"
+                                : job.level === "mid"
+                                  ? "Mid"
+                                  : job.level === "senior"
+                                    ? "Senior"
+                                    : "Lead / Staff"}
+                          </span>
+                        ) : null}
                         {job.remote ? <span className="source-chip source-chip-accent">Remote</span> : null}
                       </div>
                       <h3 className="line-clamp-2 text-base font-semibold leading-6">{job.title}</h3>
