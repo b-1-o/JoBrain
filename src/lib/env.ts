@@ -9,8 +9,8 @@ import { z } from "zod";
 export const env = createEnv({
   server: {
     DATABASE_URL: z.string().url(),
-    // Optional direct (non-pooled) URL for Neon migrations / introspection
-    DIRECT_URL: z.string().url().optional(),
+    // Direct (non-pooled) URL required for Neon migrations / introspection
+    DIRECT_URL: z.string().url(),
 
     NEXTAUTH_SECRET: z.string().min(32),
     NEXTAUTH_URL: z.string().url(),
