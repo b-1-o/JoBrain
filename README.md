@@ -1,250 +1,61 @@
 # JoBrain
 
-> A personal job-search command center for finding roles, tracking applications, and understanding the funnel instead of losing it in a spreadsheet.
+> A modern job-search command center for discovering roles, tracking applications, and visualizing the hiring pipeline.
 
-**Repository:** https://github.com/b-1-o/JoBrain
+[Live Demo](https://jobrain-b1o.vercel.app/) · [GitHub](https://github.com/b-1-o/JoBrain)
 
-## Why JoBrain?
+## What it does
 
-Applying for jobs creates a messy workflow: search the same role across different sites, copy links into a spreadsheet, forget where an application came from, miss follow-ups, and only realize later that the funnel is leaking.
+JoBrain brings job discovery and application tracking into one focused workspace.
 
-JoBrain turns that workflow into one workspace:
-
-- **Realtime multi-source job search** with debounced search.
-- **Application tracking** from first discovery through offer or rejection.
-- **Visual funnel analytics** for active applications, interviews, offers, and drop-off.
-- **One-click tracking** from a live job result into the pipeline.
-- **Personal browser workspace isolation** using an HTTP-only cookie.
-- **Source adapters** so new job boards can be added without rewriting the UI.
-
-## Product
-
-### Live Search
-
-Search roles across multiple feeds at once:
-
-| Source | Integration | Coverage |
-| --- | --- | --- |
-| Google Jobs via SerpApi | Google Jobs aggregation | LinkedIn, Indeed, Glassdoor, ZipRecruiter, Dice, company sites and other boards |
-| Adzuna US | REST API | United States jobs |
-| Jobicy | Public REST API | US-focused remote jobs |
-| Remote OK | Public JSON feed | Worldwide remote jobs |
-| Remotive | Public jobs API | Worldwide remote jobs |
-
-The server normalizes provider-specific responses into one Job model, identifies the originating platform when Google Jobs exposes it, classifies experience level, filters the data, removes duplicate results, and returns a single feed to the client.
-
-A failed provider does not break the entire search. Each source reports its own connection state.
-
-### Application Funnel
-
-Tracked roles move through:
-
-~~~text
-FOUND → APPLIED → SCREENING → TECH → OFFER
-                         ↘ REJECTED
-~~~
-
-This makes the important question visible: **where are applications actually getting stuck?**
-
-### Dashboard
-
-The overview combines:
-
-- tracked applications;
-- active pipeline;
-- interview-stage count;
-- offer count and offer rate;
-- rejection rate;
-- stage-by-stage funnel visualization;
-- source health;
-- recent application activity;
-- a compact funnel insight.
+- **Multi-source job search** across Google Jobs, LinkedIn, Indeed, Glassdoor, ZipRecruiter, Dice, Adzuna, Jobicy, Remote OK, and Remotive
+- **Smart filtering** by location, remote status, platform, and experience level
+- **Application pipeline** from discovery to interview, offer, or rejection
+- **Visual analytics** to see application progress and funnel performance
+- **One-click tracking** to move interesting roles into the pipeline
 
 ## Tech Stack
 
-- Next.js 16 App Router
+- Next.js 16
 - React 19
 - TypeScript
 - Tailwind CSS 4
-- Prisma 5
+- Prisma
 - PostgreSQL / Neon
 - Zod
-- Lucide React
 - Vitest
+- Vercel
 
-## Architecture
+## Highlights
 
-~~~text
-src/
-├── app/
-│   ├── api/
-│   │   ├── applications/route.ts
-│   │   ├── demo/route.ts
-│   │   └── jobs/route.ts
-│   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx
-└── lib/
-    ├── current-user.ts
-    ├── jobs.ts
-    └── prisma.ts
-~~~
+JoBrain is designed as a production-style SaaS experience rather than a basic job board clone. It combines live data aggregation, normalized job results, filtering, application state management, and a polished responsive interface in one product.
 
-### Search flow
+## Project
 
-~~~text
-Browser
-   ↓
-GET /api/jobs
-   ↓
-Promise.allSettled()
-   ├── Google Jobs / SerpApi
-   │   ├── LinkedIn
-   │   ├── Indeed
-   │   ├── Glassdoor
-   │   ├── ZipRecruiter
-   │   └── other job boards
-   ├── Adzuna US
-   ├── Jobicy
-   ├── Remote OK
-   └── Remotive
-   ↓
-normalize → filter → deduplicate → sort
-   ↓
-UI
-~~~
+**JoBrain — Job Search Command Center**
 
-### Data model
+Built to demonstrate:
 
-The Prisma schema separates:
+**Frontend Engineering · TypeScript · API Integration · Data Modeling · Product UI/UX · Responsive Design**
 
-- User
-- Application
-- SavedSearch
-- Auth.js Account / Session
+## Run locally
 
-The search UI includes platform filtering and experience-level filtering for Internship / Entry, Junior, Mid, Senior, and Lead / Staff roles.
-
-The current UI uses a lightweight browser workspace identity so the project can run without OAuth credentials. Each browser gets its own workspace cookie. Auth.js can be connected later without redesigning the application model.
-
-## Getting Started
-
-### 1. Install
-
-Requirements:
-
-- Node.js 20+
-- PostgreSQL / Neon
-- npm
-
-~~~bash
+```bash
 npm install
-~~~
-
-### 2. Configure environment
-
-~~~bash
 cp .env.example .env.local
-~~~
-
-At minimum:
-
-~~~env
-DATABASE_URL="postgresql://..."
-DIRECT_URL="postgresql://..."
-~~~
-
-For Neon, use the non-pooled connection string for DIRECT_URL when migrations need a direct database connection.
-
-### 3. Prepare Prisma
-
-~~~bash
 npm run db:generate
-npm run db:migrate:deploy
-~~~
-
-For local schema development:
-
-~~~bash
-npm run db:migrate
-~~~
-
-### 4. Start JoBrain
-
-~~~bash
 npm run dev
-~~~
+```
 
-Open http://localhost:3000.
+Open `http://localhost:3000`.
 
-The dashboard starts empty. Use **Load demo** to populate a realistic application funnel, or start tracking roles from Live search.
+## Status
 
-## Quality Commands
+Actively developed and deployed on Vercel.
 
-~~~bash
-npm run typecheck
-npm run lint
-npm run format:check
-npm test
-npm run build
-~~~
+## Author
 
-## Environment Variables
+**Erik Ghabuzyan**  
+Frontend Developer · UI Engineer
 
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| DATABASE_URL | Yes | PostgreSQL connection |
-| DIRECT_URL | Recommended | Direct PostgreSQL connection for Prisma migrations |
-| JOBRAIN_USER_AGENT | No | Legacy User-Agent setting kept for compatibility |
-| ADZUNA_APP_ID | Recommended | Adzuna US API application ID |
-| ADZUNA_APP_KEY | Recommended | Adzuna US API application key |
-| SERPAPI_API_KEY | Recommended | Google Jobs aggregation API key |
-| NEXT_PUBLIC_APP_URL | No | Public deployment URL |
-
-## Provider notes
-
-SerpApi provides a Google Jobs API that returns structured job results and pagination; its results expose the platform a listing came from and can include direct apply links for providers such as LinkedIn and Indeed.
-
-Adzuna provides a REST API for job advertisement listings and supports country-specific search; JoBrain uses its US endpoint for American listings.
-
-Jobicy provides a public remote-jobs REST API with a US geo filter and structured job data.
-
-Remote OK exposes a free public JSON feed of remote jobs and asks aggregators to credit the source and link to the original listing.
-
-Remotive provides a public remote-jobs API for sharing listings with attribution and requires links back to the original Remotive listing.
-
-JoBrain keeps these integrations isolated in src/lib/jobs.ts so provider changes do not leak into the UI or database layer.
-
-## Design Direction
-
-JoBrain deliberately avoids the look of a generic admin template:
-
-- near-black canvas;
-- translucent glass panels;
-- subtle violet and blue signal colors;
-- dense information hierarchy;
-- restrained motion;
-- responsive layouts;
-- information shown before decoration.
-
-The goal is a personal command center, not another spreadsheet.
-
-## Current Scope
-
-The project focuses on the highest-value loop:
-
-**discover → track → move → analyze**
-
-Natural next extensions are:
-
-- authenticated accounts;
-- UI for persistent saved searches;
-- scheduled alerts;
-- richer provider adapters;
-- resume-to-job matching;
-- follow-up reminders;
-- historical time-series analytics.
-
-## License
-
-Private project by default. Add a license before accepting external contributions.
+[GitHub](https://github.com/b-1-o) · [LinkedIn](https://www.linkedin.com/in/b1o)
