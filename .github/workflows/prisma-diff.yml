@@ -1,0 +1,31 @@
+name: Prisma migration diff
+
+on:
+  push:
+    branches: ["ai/followup-hardening"]
+
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Generate migration diff
+        run: |
+          mkdir -p migration-diff
+          npx prisma migrate diff \
+            --from-migrations prisma/migrations \
+            --to-schema-datamodel prisma/schema.prisma \
+            --script > migration-diff/migration.sql
+      - name: Upload migration diff
+        uses: actions/upload-artifact@v4
+        with:
+          name: prisma-migration-diff
+          path: migration-diff/migration.sql
