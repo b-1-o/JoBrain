@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
+import { captureError } from "@/lib/telemetry";
 import { enforceRateLimit, sameOrigin } from "@/lib/api-security";
 import { getWorkspaceUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
@@ -76,7 +77,8 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({ status }, { status: 201 });
     setWorkspaceCookie(response, user.id);
     return response;
-  } catch {
+  } catch (error) {
+    captureError(error, { route: "/api/statuses", method: "POST" });
     return NextResponse.json({ error: "Invalid status payload" }, { status: 400 });
   }
 }
