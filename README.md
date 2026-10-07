@@ -2,7 +2,7 @@
 
 > A modern job-search command center for discovering roles, tracking applications, and visualizing the hiring pipeline.
 
-[Live Demo](https://jobrain-b1o.vercel.app/) · [GitHub](https://github.com/b-1-o/JoBrain)
+[Live Demo](https://jobrain.vercel.app/) · [GitHub](https://github.com/b-1-o/JoBrain)
 
 ## What it does
 
