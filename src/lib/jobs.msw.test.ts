@@ -13,7 +13,7 @@ describe("searchJobs with MSW", () => {
     process.env.ADZUNA_APP_KEY = "test";
 
     const result = await searchJobs({
-      query: "frontend",
+      query: "",
       location: "",
       source: "all",
       platform: "all",
