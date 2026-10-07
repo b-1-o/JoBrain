@@ -400,7 +400,7 @@ export default function Home() {
 
       <header className="jb-topbar">
         <div className="jb-topbar-inner">
-          <button type="button" className="jb-brand" onClick={() => setTab("overview")} aria-label="JoBrain home">
+          <button type="button" className="jb-brand" onClick={() => changeTab("overview")} aria-label="JoBrain home">
             <span className="jb-brand-mark">JB</span>
             <span className="jb-brand-word">JOBRAIN</span>
             <span className="jb-brand-index">/ 01</span>
@@ -412,7 +412,7 @@ export default function Home() {
                 key={item.key}
                 type="button"
                 className={"jb-nav-item " + (tab === item.key ? "is-active" : "")}
-                onClick={() => setTab(item.key)}
+                onClick={() => changeTab(item.key)}
               >
                 <span>{item.label}</span>
               </button>
@@ -457,7 +457,7 @@ export default function Home() {
                     Explore live roles
                     <span>↗</span>
                   </button>
-                  <button type="button" className="jb-button jb-button-ghost" onClick={() => setTab("pipeline")}>
+                  <button type="button" className="jb-button jb-button-ghost" onClick={() => changeTab("pipeline")}>
                     Open pipeline
                   </button>
                   <button type="button" className="jb-icon-button" onClick={() => void searchJobs()} aria-label="Refresh live jobs">
@@ -581,7 +581,7 @@ export default function Home() {
                     <strong>No tracked roles yet.</strong>
                     <p>Load demo data or open Live Search to start building the funnel.</p>
                   </div>
-                  <button type="button" className="jb-text-link" onClick={() => setTab("search")}>Find roles ↗</button>
+                  <button type="button" className="jb-text-link" onClick={() => changeTab("search")}>Find roles ↗</button>
                 </div>
               ) : (
                 <div className="jb-recent-list">
