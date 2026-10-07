@@ -34,6 +34,8 @@ jobs:
           cache: npm
       - name: Install
         run: npm ci
+      - name: Create shadow database
+        run: PGPASSWORD=postgres psql -h localhost -U postgres -d jobrain -c "CREATE DATABASE jobrain_shadow;"
       - name: Generate migration diff
         run: |
           mkdir -p migration-diff
