@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { captureError } from "@/lib/telemetry";
-import { captureError } from "@/lib/telemetry";
 import { enforceRateLimit, sameOrigin } from "@/lib/api-security";
 import { getWorkspaceUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
