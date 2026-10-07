@@ -133,7 +133,11 @@ function platformName(platform: string) {
 
 export default function Home() {
   const [tab, setTab] = useState<"overview" | "search" | "pipeline">("overview");
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    if (typeof window === "undefined") return "dark";
+    const stored = window.localStorage.getItem("jobrain-theme");
+    return stored === "light" || stored === "dark" ? stored : "dark";
+  });
   const [apps, setApps] = useState<App[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [jobQuery, setJobQuery] = useState("frontend");
@@ -145,16 +149,10 @@ export default function Home() {
   const [lastFetched, setLastFetched] = useState<string | null>(null);
   const [sourceState, setSourceState] = useState<Record<string, "ok" | "error">>({});
   const [error, setError] = useState("");
-  const [demoLoading, setDemoLoading] = useState(false);
   const [manualCompany, setManualCompany] = useState("");
   const [manualRole, setManualRole] = useState("");
   const [manualLoading, setManualLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem("jobrain-theme");
-    if (stored === "light" || stored === "dark") setTheme(stored);
-  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -372,24 +370,6 @@ export default function Home() {
     setRemoteOnly(false);
   }
 
-  async function loadDemo() {
-    setDemoLoading(true);
-    try {
-      const response = await fetch("/api/demo", { method: "POST" });
-      if (!response.ok) throw new Error("demo");
-      const applicationsResponse = await fetch("/api/applications", {
-        cache: "no-store",
-      });
-      if (!applicationsResponse.ok) throw new Error("applications");
-      const applicationsData = await applicationsResponse.json();
-      setApps(applicationsData.applications ?? []);
-      changeTab("overview");
-    } catch {
-      setError("Could not load demo data. Check your database connection.");
-    } finally {
-      setDemoLoading(false);
-    }
-  }
 
   return (
     <main className="jb-shell">
