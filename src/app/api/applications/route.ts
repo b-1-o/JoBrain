@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { captureError } from "@/lib/telemetry";
+import { captureError } from "@/lib/telemetry";
 import { enforceRateLimit, sameOrigin } from "@/lib/api-security";
 import { getWorkspaceUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
@@ -203,7 +204,8 @@ export async function PATCH(request: NextRequest) {
     const response = NextResponse.json({ updated: result.count === 1 });
     setWorkspaceCookie(response, user.id);
     return response;
-  } catch {
+  } catch (error) {
+    captureError(error, { route: "/api/applications", method: "PATCH" });
     return NextResponse.json({ error: "Invalid update payload" }, { status: 400 });
   }
 }
