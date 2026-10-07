@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
         "X-Cache": "MISS",
       },
     });
-  } catch {
+  } catch (error) {
     captureError(error, { route: "/api/jobs", method: "GET" });
     return NextResponse.json(
       { error: "Job search failed. Try again in a moment." },
