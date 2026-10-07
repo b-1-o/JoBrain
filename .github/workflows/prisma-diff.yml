@@ -7,6 +7,23 @@ on:
 jobs:
   diff:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: jobrain
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d jobrain"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/jobrain
+      SHADOW_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/jobrain_shadow
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,6 +40,7 @@ jobs:
           npx prisma migrate diff \
             --from-migrations prisma/migrations \
             --to-schema-datamodel prisma/schema.prisma \
+            --shadow-database-url "$SHADOW_DATABASE_URL" \
             --script > migration-diff/migration.sql
       - name: Upload migration diff
         uses: actions/upload-artifact@v4
