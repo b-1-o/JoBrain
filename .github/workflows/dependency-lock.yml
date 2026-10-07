@@ -1,5 +1,8 @@
 name: Dependency lock generation
 
+permissions:
+  contents: write
+
 on:
   push:
     branches: ["ai/followup-hardening"]
@@ -20,6 +23,16 @@ jobs:
         run: |
           npm install @sentry/nextjs@latest --save
           npm install --save-dev msw@latest @playwright/test@latest storybook@latest @storybook/nextjs@latest
+      - name: Commit generated package metadata
+        if: ${{ !contains(github.event.head_commit.message, 'chore: sync production tooling lockfile') }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: sync production tooling lockfile"
+          git push
+
       - name: Upload generated package metadata
         uses: actions/upload-artifact@v4
         with:
