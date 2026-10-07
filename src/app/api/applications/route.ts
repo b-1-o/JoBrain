@@ -128,7 +128,12 @@ export async function POST(request: NextRequest) {
         notes: body.notes,
         contactName: body.contactName,
         contactEmail: body.contactEmail,
-        appliedAt: body.appliedAt ? new Date(body.appliedAt) : undefined,
+        appliedAt:
+          body.appliedAt
+            ? new Date(body.appliedAt)
+            : body.status === "APPLIED"
+              ? new Date()
+              : undefined,
         nextActionAt: body.nextActionAt ? new Date(body.nextActionAt) : undefined,
         lastContactAt: body.lastContactAt ? new Date(body.lastContactAt) : undefined,
         interviewAt: body.interviewAt ? new Date(body.interviewAt) : undefined,
@@ -184,7 +189,9 @@ export async function PATCH(request: NextRequest) {
         ...(body.contactEmail !== undefined ? { contactEmail: body.contactEmail } : {}),
         ...(body.appliedAt !== undefined
           ? { appliedAt: body.appliedAt ? new Date(body.appliedAt) : null }
-          : {}),
+          : body.status === "APPLIED"
+            ? { appliedAt: new Date() }
+            : {}),
         ...(body.nextActionAt !== undefined
           ? { nextActionAt: body.nextActionAt ? new Date(body.nextActionAt) : null }
           : {}),
