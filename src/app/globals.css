@@ -3195,3 +3195,85 @@ body {
     border-radius: 12px;
   }
 }
+
+
+/* Forest background */
+.jb-forest-backdrop {
+  position: fixed;
+  inset: -2%;
+  z-index: -4;
+  pointer-events: none;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: grayscale(1) brightness(1.07) contrast(0.72) blur(1px);
+  opacity: 0.66;
+  transform: scale(1.015);
+}
+
+.jb-forest-backdrop::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    linear-gradient(180deg, rgba(245,247,248,0.20) 0%, rgba(230,235,238,0.07) 28%, rgba(3,5,6,0.28) 100%),
+    radial-gradient(circle at 50% 46%, rgba(250,252,253,0.10), transparent 54%);
+}
+
+.jb-shell::after {
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  pointer-events: none;
+  content: "";
+  background:
+    linear-gradient(180deg, rgba(4,5,6,0.10), rgba(4,5,6,0.42)),
+    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.08), transparent 34%);
+}
+
+.jb-grid {
+  opacity: 0.14;
+}
+
+.jb-atmosphere-glow {
+  opacity: 0.22;
+}
+
+.jb-atmosphere-glow-a {
+  background: rgba(255,255,255,0.065);
+}
+
+.jb-atmosphere-glow-b {
+  background: rgba(228,236,241,0.035);
+}
+
+.jb-topbar {
+  background: rgba(8, 9, 10, 0.52);
+  backdrop-filter: blur(24px) saturate(110%);
+  -webkit-backdrop-filter: blur(24px) saturate(110%);
+}
+
+.jb-panel,
+.jb-recent,
+.jb-quick-add,
+.jb-command,
+.jb-job-row,
+.jb-pipeline-column,
+.jb-pipeline-signal {
+  box-shadow:
+    0 24px 80px rgba(0,0,0,0.20),
+    inset 0 1px rgba(255,255,255,0.055);
+}
+
+@media (max-width: 560px) {
+  .jb-forest-backdrop {
+    background-position: 54% center;
+    opacity: 0.58;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jb-forest-backdrop {
+    transform: none;
+  }
+}
