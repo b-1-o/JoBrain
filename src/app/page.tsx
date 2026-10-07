@@ -124,15 +124,6 @@ function platformName(platform: string) {
   return labels[platform] ?? platform;
 }
 
-function levelName(level: Job["level"]) {
-  if (level === "intern") return "Intern / Entry";
-  if (level === "junior") return "Junior";
-  if (level === "mid") return "Mid";
-  if (level === "senior") return "Senior";
-  if (level === "lead") return "Lead / Staff";
-  return null;
-}
-
 function StatCard({
   label,
   value,
