@@ -13,6 +13,7 @@ JoBrain brings job discovery and application tracking into one focused workspace
 - **Application pipeline** from discovery to interview, offer, or rejection
 - **Visual analytics** to see application progress and funnel performance
 - **One-click tracking** to move interesting roles into the pipeline
+- **Autofill companion extension** for faster, review-first job application form filling
 
 ## Tech Stack
 
@@ -36,7 +37,7 @@ JoBrain is designed as a production-style SaaS experience rather than a basic jo
 
 Built to demonstrate:
 
-**Frontend Engineering · TypeScript · API Integration · Data Modeling · Product UI/UX · Responsive Design**
+**Frontend Engineering · TypeScript · API Integration · Data Modeling · Product UI/UX · Browser Extension Integration · Responsive Design**
 
 ## Run locally
 
@@ -59,3 +60,9 @@ Actively developed and deployed on Vercel.
 Frontend Developer · UI Engineer
 
 [GitHub](https://github.com/b-1-o) · [LinkedIn](https://www.linkedin.com/in/b1o)
+
+## Autofill
+
+JoBrain includes a companion Chrome extension for review-first form autofill on supported job application platforms.
+
+[Autofill GitHub](https://github.com/b-1-o/autofill)
