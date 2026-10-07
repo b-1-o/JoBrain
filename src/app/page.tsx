@@ -648,14 +648,14 @@ export default function Home() {
                 </span>
               </div>
               <div className="mt-3 flex flex-wrap gap-2 px-1">
-                {[
+                {([
                   ["all", "All levels"],
                   ["intern", "Intern / Entry"],
                   ["junior", "Junior"],
                   ["mid", "Mid"],
                   ["senior", "Senior"],
                   ["lead", "Lead / Staff"],
-                ].map(([value, label]) => (
+                ] as Array<[string, string]>).map(([value, label]) => (
                   <button
                     key={value}
                     type="button"
