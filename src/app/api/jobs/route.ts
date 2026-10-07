@@ -64,6 +64,32 @@ export async function GET(request: NextRequest) {
   };
 
   try {
+    if (process.env.JOBRAIN_E2E_MODE === "true") {
+      return NextResponse.json({
+        jobs: [
+          {
+            id: "e2e:frontend-1",
+            source: "googlejobs",
+            platform: "company",
+            level: "junior",
+            title: "Junior Frontend Developer",
+            company: "JoBrain Labs",
+            location: "Remote",
+            remote: true,
+            url: "https://example.com/jobs/frontend",
+            description: "E2E fixture role for deterministic browser tests.",
+            tags: ["React", "TypeScript"],
+            salary: "$90,000–$120,000",
+            postedAt: new Date().toISOString(),
+          },
+        ],
+        sources: { googlejobs: "ok" },
+        fetchedAt: new Date().toISOString(),
+      }, {
+        headers: { "X-Cache": "E2E" },
+      });
+    }
+
     const cached = await getCachedJobs(params);
     if (cached) {
       return NextResponse.json(cached, {
