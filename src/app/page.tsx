@@ -18,7 +18,7 @@ import {
 import PatternWaves from "@components/PatternWaves";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Status = "FOUND" | "APPLIED" | "SCREENING" | "TECH" | "OFFER" | "REJECTED";
 type App = {
