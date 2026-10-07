@@ -17,5 +17,6 @@ export default defineConfig({
       ".next/**",
       ".storybook/**",
     ],
+    setupFiles: ["./src/test/setup.ts"],
   },
 });
