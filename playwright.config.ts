@@ -22,6 +22,7 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       JOBRAIN_E2E_MODE: "true",
+      JOBRAIN_RATE_LIMIT_DISABLED: "true",
       DATABASE_URL:
         process.env.DATABASE_URL ??
         "postgresql://postgres:postgres@127.0.0.1:5432/jobrain",
