@@ -38,3 +38,46 @@ Route handlers should validate input with Zod, preserve workspace scoping, and u
 ## Design
 
 JoBrain follows a restrained graphite/glass visual system. New UI should preserve the existing editorial hierarchy and motion language rather than introducing unrelated visual systems.
+
+
+## Test infrastructure
+
+Run MSW-backed integration tests with:
+
+```bash
+npm test
+```
+
+The Prisma integration test runs automatically when `TEST_DATABASE_URL` is configured. CI provisions PostgreSQL and applies migrations before running the suite.
+
+Run browser E2E locally with:
+
+```bash
+npx playwright install chromium
+npm run e2e
+```
+
+Start Storybook with:
+
+```bash
+npm run storybook
+```
+
+Build Storybook for CI:
+
+```bash
+npm run storybook:build
+```
+
+## Reminder worker
+
+The deployed reminder endpoint is:
+
+`/api/cron/reminders`
+
+GitHub Actions invokes it every 15 minutes with the `x-jobrain-cron-secret` header. Configure repository secrets:
+
+- `JOBRAIN_CRON_URL`
+- `CRON_SECRET`
+
+Use `?dryRun=1` to verify eligibility without sending mail.
