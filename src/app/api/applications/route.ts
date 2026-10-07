@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
+import { enforceRateLimit, sameOrigin } from "@/lib/api-security";
 import { getWorkspaceUser } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 
@@ -25,22 +26,31 @@ const statusEnum = z.enum([
   "REJECTED",
 ]);
 
+const isoDate = z.string().datetime({ offset: true });
+
 const createSchema = z.object({
-  company: z.string().min(1).max(200),
-  role: z.string().min(1).max(200),
+  company: z.string().trim().min(1).max(200),
+  role: z.string().trim().min(1).max(200),
   url: z.string().url().max(2048).optional(),
   source: sourceEnum.optional(),
   status: statusEnum.optional(),
-  salaryMin: z.number().int().positive().optional(),
-  salaryMax: z.number().int().positive().optional(),
-  currency: z.string().length(3).optional(),
+  salaryMin: z.number().int().nonnegative().optional(),
+  salaryMax: z.number().int().nonnegative().optional(),
+  currency: z.string().regex(/^[A-Z]{3}$/).optional(),
   notes: z.string().max(10000).optional(),
-  appliedAt: z.string().datetime().optional(),
-  nextActionAt: z.string().datetime().optional(),
+  contactName: z.string().trim().max(200).optional(),
+  contactEmail: z.string().email().max(320).optional(),
+  appliedAt: isoDate.optional(),
+  nextActionAt: isoDate.optional(),
+  lastContactAt: isoDate.optional(),
 });
 
 const patchSchema = createSchema.partial().extend({
-  id: z.string().min(1),
+  id: z.string().min(1).max(128),
+});
+
+const deleteSchema = z.object({
+  id: z.string().min(1).max(128),
 });
 
 function setWorkspaceCookie(response: NextResponse, userId: string) {
@@ -52,7 +62,17 @@ function setWorkspaceCookie(response: NextResponse, userId: string) {
     maxAge: 60 * 60 * 24 * 365,
   });
 }
+
+function rejectMutation(request: NextRequest) {
+  return sameOrigin(request)
+    ? null
+    : NextResponse.json({ error: "Cross-origin mutation rejected" }, { status: 403 });
+}
+
 export async function GET(request: NextRequest) {
+  const limited = await enforceRateLimit(request, "applications-read", 120, "1 m");
+  if (!limited.allowed && limited.response) return limited.response;
+
   const { user } = await getWorkspaceUser(
     request.cookies.get("jobrain_workspace")?.value,
   );
@@ -68,6 +88,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const forbidden = rejectMutation(request);
+  if (forbidden) return forbidden;
+
+  const limited = await enforceRateLimit(request, "applications-write", 60, "1 m");
+  if (!limited.allowed && limited.response) return limited.response;
+
   try {
     const body = createSchema.parse(await request.json());
     const { user } = await getWorkspaceUser(
@@ -86,8 +112,11 @@ export async function POST(request: NextRequest) {
         salaryMax: body.salaryMax,
         currency: body.currency,
         notes: body.notes,
+        contactName: body.contactName,
+        contactEmail: body.contactEmail,
         appliedAt: body.appliedAt ? new Date(body.appliedAt) : undefined,
         nextActionAt: body.nextActionAt ? new Date(body.nextActionAt) : undefined,
+        lastContactAt: body.lastContactAt ? new Date(body.lastContactAt) : undefined,
       },
     });
 
@@ -100,6 +129,12 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const forbidden = rejectMutation(request);
+  if (forbidden) return forbidden;
+
+  const limited = await enforceRateLimit(request, "applications-write", 60, "1 m");
+  if (!limited.allowed && limited.response) return limited.response;
+
   try {
     const body = patchSchema.parse(await request.json());
     const { user } = await getWorkspaceUser(
@@ -119,11 +154,16 @@ export async function PATCH(request: NextRequest) {
         ...(body.salaryMax !== undefined ? { salaryMax: body.salaryMax } : {}),
         ...(body.currency !== undefined ? { currency: body.currency } : {}),
         ...(body.notes !== undefined ? { notes: body.notes } : {}),
+        ...(body.contactName !== undefined ? { contactName: body.contactName } : {}),
+        ...(body.contactEmail !== undefined ? { contactEmail: body.contactEmail } : {}),
         ...(body.appliedAt !== undefined
           ? { appliedAt: body.appliedAt ? new Date(body.appliedAt) : null }
           : {}),
         ...(body.nextActionAt !== undefined
           ? { nextActionAt: body.nextActionAt ? new Date(body.nextActionAt) : null }
+          : {}),
+        ...(body.lastContactAt !== undefined
+          ? { lastContactAt: body.lastContactAt ? new Date(body.lastContactAt) : null }
           : {}),
       },
     });
@@ -137,9 +177,17 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const id = request.nextUrl.searchParams.get("id");
-  if (!id) {
-    return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  const forbidden = rejectMutation(request);
+  if (forbidden) return forbidden;
+
+  const limited = await enforceRateLimit(request, "applications-write", 60, "1 m");
+  if (!limited.allowed && limited.response) return limited.response;
+
+  const parsed = deleteSchema.safeParse({
+    id: request.nextUrl.searchParams.get("id") ?? "",
+  });
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid application id" }, { status: 400 });
   }
 
   const { user } = await getWorkspaceUser(
@@ -147,7 +195,7 @@ export async function DELETE(request: NextRequest) {
   );
 
   await prisma.application.deleteMany({
-    where: { id, userId: user.id },
+    where: { id: parsed.data.id, userId: user.id },
   });
 
   const response = NextResponse.json({ ok: true });
