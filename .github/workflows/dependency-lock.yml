@@ -4,10 +4,13 @@ permissions:
   contents: write
 
 on:
+  push:
+    branches: ["ai/followup-hardening"]
   workflow_dispatch:
 
 jobs:
   generate:
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore: sync production tooling lockfile') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
