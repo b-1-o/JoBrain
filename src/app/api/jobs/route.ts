@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
+import { captureError } from "@/lib/telemetry";
 import { enforceRateLimit } from "@/lib/api-security";
 import { getCachedJobs, setCachedJobs } from "@/lib/job-cache";
 import { searchJobs, type ExperienceLevel, type JobPlatform, type JobSource } from "@/lib/jobs";
@@ -83,6 +84,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch {
+    captureError(error, { route: "/api/jobs", method: "GET" });
     return NextResponse.json(
       { error: "Job search failed. Try again in a moment." },
       { status: 502 },
