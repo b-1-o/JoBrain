@@ -16,11 +16,20 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import PatternWaves from "@components/PatternWaves";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Status = "FOUND" | "APPLIED" | "SCREENING" | "TECH" | "OFFER" | "REJECTED";
+type StatusDefinition = {
+  id: string;
+  label: string;
+  key: string;
+  category: Status;
+  color: string;
+  isSystem: boolean;
+};
+
 type App = {
   id: string;
   company: string;
@@ -34,6 +43,9 @@ type App = {
   notes: string | null;
   appliedAt: string | null;
   nextActionAt: string | null;
+  interviewAt: string | null;
+  customStatusId: string | null;
+  customStatus: StatusDefinition | null;
   updatedAt: string;
 };
 
@@ -148,6 +160,9 @@ export default function Home() {
   const [manualCompany, setManualCompany] = useState("");
   const [manualRole, setManualRole] = useState("");
   const [manualLoading, setManualLoading] = useState(false);
+  const [newStatusLabel, setNewStatusLabel] = useState("");
+  const [newStatusCategory, setNewStatusCategory] = useState<Status>("FOUND");
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -215,6 +230,18 @@ export default function Home() {
   const lastFetched = jobData?.fetchedAt ?? null;
   const sourceState = jobData?.sources ?? {};
   const displayError = error || (jobsError ? "Live search is temporarily unavailable." : "");
+
+  const { data: statusData } = useQuery<{ statuses: StatusDefinition[] }>({
+    queryKey: ["application-statuses"],
+    queryFn: async () => {
+      const response = await fetch("/api/statuses");
+      if (!response.ok) throw new Error("statuses");
+      return response.json() as Promise<{ statuses: StatusDefinition[] }>;
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  const statusDefinitions = statusData?.statuses ?? [];
 
 
   const stats = useMemo(() => {
@@ -344,6 +371,60 @@ export default function Home() {
     } finally {
       setManualLoading(false);
     }
+  }
+
+  async function updateCustomStatus(id: string, customStatusId: string | null) {
+    const response = await fetch("/api/applications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, customStatusId }),
+    });
+
+    if (response.ok) {
+      const match = statusDefinitions.find((status) => status.id === customStatusId) ?? null;
+      setApps((current) =>
+        current.map((item) => (item.id === id ? { ...item, customStatusId, customStatus: match } : item)),
+      );
+      toast.success(match ? "Custom status applied." : "Custom status cleared.");
+    }
+  }
+
+  async function updateInterviewAt(id: string, value: string) {
+    const interviewAt = value ? new Date(value).toISOString() : null;
+    const response = await fetch("/api/applications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, interviewAt }),
+    });
+
+    if (response.ok) {
+      setApps((current) => current.map((item) => (item.id === id ? { ...item, interviewAt } : item)));
+      toast.success(interviewAt ? "Interview date saved." : "Interview date cleared.");
+    }
+  }
+
+  async function createCustomStatus() {
+    const label = newStatusLabel.trim();
+    if (!label) return;
+
+    const response = await fetch("/api/statuses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        label,
+        category: newStatusCategory,
+        color: "neutral",
+      }),
+    });
+
+    if (!response.ok) {
+      toast.error("Could not create custom status.");
+      return;
+    }
+
+    await queryClient.invalidateQueries({ queryKey: ["application-statuses"] });
+    setNewStatusLabel("");
+    toast.success("Custom status created.");
   }
 
   async function deleteApplication(id: string) {
@@ -791,6 +872,15 @@ export default function Home() {
                   Add role
                 </button>
               </div>
+              <div className="jb-quick-add-fields jb-status-builder">
+                <input value={newStatusLabel} onChange={(event) => setNewStatusLabel(event.target.value)} placeholder="Custom status label" />
+                <select value={newStatusCategory} onChange={(event) => setNewStatusCategory(event.target.value as Status)}>
+                  {stages.map((stage) => <option key={stage.key} value={stage.key}>Maps to {stage.label}</option>)}
+                </select>
+                <button type="button" className="jb-button jb-button-ghost" onClick={() => void createCustomStatus()} disabled={!newStatusLabel.trim()}>
+                  <Plus size={14} /> Create status
+                </button>
+              </div>
             </section>
 
             <div className="jb-pipeline-grid">
@@ -816,10 +906,22 @@ export default function Home() {
                           </div>
                           <h3>{app.role}</h3>
                           <p>{app.company}</p>
-                          <span>{sourceLabel[app.source] ?? app.source}</span>
+                          <span>{app.customStatus?.label ?? (sourceLabel[app.source] ?? app.source)}</span>
                           <select value={app.status} onChange={(event) => void updateStatus(app.id, event.target.value as Status)} aria-label={"Move " + app.company + " application"}>
                             {stages.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}
                           </select>
+                          <select value={app.customStatusId ?? ""} onChange={(event) => void updateCustomStatus(app.id, event.target.value || null)} aria-label={"Custom status for " + app.company + " application"}>
+                            <option value="">Canonical status</option>
+                            {statusDefinitions.filter((definition) => !definition.isSystem).map((definition) => (
+                              <option key={definition.id} value={definition.id}>{definition.label}</option>
+                            ))}
+                          </select>
+                          <input
+                            type="datetime-local"
+                            value={app.interviewAt ? app.interviewAt.slice(0, 16) : ""}
+                            onChange={(event) => void updateInterviewAt(app.id, event.target.value)}
+                            aria-label={"Interview date for " + app.company + " application"}
+                          />
                         </article>
                       ))}
                       {!items.length ? <div className="jb-column-empty">—</div> : null}
