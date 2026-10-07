@@ -611,61 +611,6 @@ export default function Home() {
                 </div>
               </div>
             </section>
-              <div className="glass-card p-5">
-                <div className="mb-5 flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-semibold">Recent applications</div>
-                    <div className="mt-1 text-xs text-zinc-500">Your latest tracked moves.</div>
-                  </div>
-                  <button className="text-xs text-violet-300 hover:text-violet-200" onClick={() => setTab("pipeline")}>Open pipeline →</button>
-                </div>
-                <div className="space-y-2">
-                  {apps.slice(0, 6).map((app) => (
-                    <div key={app.id} className="row-card">
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-medium">{app.role}</div>
-                        <div className="mt-1 flex flex-wrap gap-2 text-xs text-zinc-500">
-                          <span>{app.company}</span><span>·</span><span>{sourceLabel[app.source] ?? app.source}</span>
-                        </div>
-                      </div>
-                      <span className={"status-chip status-" + app.status.toLowerCase()}>{app.status}</span>
-                    </div>
-                  ))}
-                  {!apps.length ? (
-                    <div className="empty-state">
-                      <BriefcaseBusiness size={20} />
-                      <span>No applications yet. Load demo data or track a live role.</span>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="glass-card p-5">
-                <div className="mb-5 flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-semibold">Live source matrix</div>
-                    <div className="mt-1 text-xs text-zinc-500">Coverage during the latest search.</div>
-                  </div>
-                  <Globe2 size={17} className="text-zinc-600" />
-                </div>
-                <div className="grid gap-2">
-                  {["googlejobs", "remoteok", "remotive", "jobicy", "adzuna"].map((name) => (
-                    <div key={name} className="source-row">
-                      <div className="flex items-center gap-3">
-                        <span className={"size-2 rounded-full " + (sourceState[name] === "error" ? "bg-rose-400" : sourceState[name] === "ok" ? "bg-emerald-400" : "bg-zinc-700")} />
-                        <span className="text-sm">{sourceLabel[name]}</span>
-                      </div>
-                      <span className="text-xs text-zinc-600">
-                        {sourceState[name] === "error" ? "unavailable" : sourceState[name] === "ok" ? "connected" : "idle"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-5 border-t border-white/[0.06] pt-4 text-xs text-zinc-600">
-                  {lastFetched ? "Last fetch " + relativeTime(lastFetched) : "Waiting for first fetch"}
-                </div>
-              </div>
-            </section>
           </>
         ) : null}
 
