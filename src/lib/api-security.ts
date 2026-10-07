@@ -1,6 +1,6 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import type { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 let redis: Redis | null | undefined;
 const limiters = new Map<string, Ratelimit>();
@@ -84,14 +84,6 @@ export function sameOrigin(request: NextRequest) {
   } catch {
     return false;
   }
-}
-
-export function rejectCrossOrigin(request: NextRequest, response?: NextResponse) {
-  if (sameOrigin(request)) return null;
-
-  return response
-    ? new Response("Cross-origin mutation rejected", { status: 403 })
-    : new Response("Cross-origin mutation rejected", { status: 403 });
 }
 
 export function getRedisClient() {
