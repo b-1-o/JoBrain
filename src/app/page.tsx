@@ -16,6 +16,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import PatternWaves from "@components/PatternWaves";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Status = "FOUND" | "APPLIED" | "SCREENING" | "TECH" | "OFFER" | "REJECTED";
@@ -137,20 +139,15 @@ export default function Home() {
     return stored === "light" || stored === "dark" ? stored : "dark";
   });
   const [apps, setApps] = useState<App[]>([]);
-  const [jobs, setJobs] = useState<Job[]>([]);
   const [jobQuery, setJobQuery] = useState("frontend");
   const [location, setLocation] = useState("");
   const [platform, setPlatform] = useState("all");
   const [experience, setExperience] = useState("all");
   const [remoteOnly, setRemoteOnly] = useState(false);
-  const [loadingJobs, setLoadingJobs] = useState(false);
-  const [lastFetched, setLastFetched] = useState<string | null>(null);
-  const [sourceState, setSourceState] = useState<Record<string, "ok" | "error">>({});
   const [error, setError] = useState("");
   const [manualCompany, setManualCompany] = useState("");
   const [manualRole, setManualRole] = useState("");
   const [manualLoading, setManualLoading] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -180,49 +177,45 @@ export default function Home() {
     [tab],
   );
 
-  const searchJobs = useCallback(
-    async () => {
-      abortRef.current?.abort();
-      const controller = new AbortController();
-      abortRef.current = controller;
-      setLoadingJobs(true);
-      setError("");
-
-      try {
-        const params = new URLSearchParams({
-          query: jobQuery,
-          location,
-          source: "all",
-          platform,
-          experience,
-          remote: String(remoteOnly),
-          limit: "120",
-        });
-
-        const response = await fetch("/api/jobs?" + params.toString(), {
-          cache: "no-store",
-          signal: controller.signal,
-        });
-
-        if (!response.ok) throw new Error("search");
-        const data = (await response.json()) as JobResponse;
-        setJobs(data.jobs);
-        setSourceState(data.sources);
-        setLastFetched(data.fetchedAt);
-      } catch (value) {
-        if (value instanceof DOMException && value.name === "AbortError") return;
-        setError("Live search is temporarily unavailable.");
-      } finally {
-        if (!controller.signal.aborted) setLoadingJobs(false);
-      }
-    },
+  const jobSearchKey = useMemo(
+    () => ["jobs", jobQuery, location, platform, experience, remoteOnly] as const,
     [jobQuery, location, platform, experience, remoteOnly],
   );
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => void searchJobs(), 450);
-    return () => window.clearTimeout(timer);
-  }, [jobQuery, location, platform, experience, remoteOnly, searchJobs]);
+  const {
+    data: jobData,
+    isFetching: loadingJobs,
+    error: jobsError,
+    refetch: refetchJobs,
+  } = useQuery<JobResponse>({
+    queryKey: jobSearchKey,
+    queryFn: async ({ signal }) => {
+      const params = new URLSearchParams({
+        query: jobQuery,
+        location,
+        source: "all",
+        platform,
+        experience,
+        remote: String(remoteOnly),
+        limit: "120",
+      });
+
+      const response = await fetch("/api/jobs?" + params.toString(), {
+        cache: "no-store",
+        signal,
+      });
+
+      if (!response.ok) throw new Error("search");
+      return response.json() as Promise<JobResponse>;
+    },
+    enabled: Boolean(jobQuery.trim()),
+  });
+
+  const jobs = jobData?.jobs ?? [];
+  const lastFetched = jobData?.fetchedAt ?? null;
+  const sourceState = jobData?.sources ?? {};
+  const displayError = error || (jobsError ? "Live search is temporarily unavailable." : "");
+
 
   const stats = useMemo(() => {
     const applied = apps.filter((item) => item.status !== "FOUND").length;
@@ -287,9 +280,12 @@ export default function Home() {
     if (response.ok) {
       const data = await response.json();
       setApps((current) => [data.application, ...current]);
+      toast.success("Role added to the pipeline.");
       changeTab("pipeline");
     } else {
-      setError("Could not track this role.");
+      const message = "Could not track this role.";
+      setError(message);
+      toast.error(message);
     }
   }
 
@@ -339,10 +335,12 @@ export default function Home() {
       if (!response.ok) throw new Error("manual");
       const data = await response.json();
       setApps((current) => [data.application, ...current]);
+      toast.success("Role added to the pipeline.");
       setManualCompany("");
       setManualRole("");
     } catch {
       setError("Could not add the application.");
+      toast.error("Could not add the application.");
     } finally {
       setManualLoading(false);
     }
@@ -355,8 +353,10 @@ export default function Home() {
 
     if (response.ok) {
       setApps((current) => current.filter((item) => item.id !== id));
+      toast.success("Application removed.");
     } else {
       setError("Could not remove the application.");
+      toast.error("Could not remove the application.");
     }
   }
 
@@ -425,9 +425,9 @@ export default function Home() {
       </header>
 
       <div className="jb-page">
-        {error ? (
+        {displayError ? (
           <div className="jb-alert" role="alert">
-            <span>{error}</span>
+            <span>{displayError}</span>
             <button type="button" onClick={() => setError("")} aria-label="Dismiss">
               ×
             </button>
@@ -458,7 +458,7 @@ export default function Home() {
                   <button type="button" className="jb-button jb-button-ghost" onClick={() => changeTab("pipeline")}>
                     Open pipeline
                   </button>
-                  <button type="button" className="jb-icon-button" onClick={() => void searchJobs()} aria-label="Refresh live jobs">
+                  <button type="button" className="jb-icon-button" onClick={() => void refetchJobs()} aria-label="Refresh live jobs">
                     <RefreshCw size={15} className={loadingJobs ? "jb-spin" : ""} />
                   </button>
                 </div>
