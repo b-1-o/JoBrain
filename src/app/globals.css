@@ -3908,3 +3908,161 @@ body {
     animation: none;
   }
 }
+
+
+/* =========================================================
+   ColorBends canvas + page transition motion
+   ========================================================= */
+
+.jb-color-bends,
+.jb-dot-field {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+}
+
+.jb-color-bends {
+  background: transparent;
+  filter: saturate(108%);
+}
+
+.jb-dot-field {
+  background: transparent !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+  opacity: 0.78;
+}
+
+.jb-view-transition {
+  view-transition-name: jb-page-content;
+  animation: jb-view-enter 520ms cubic-bezier(.22,1,.36,1);
+  transform-origin: 50% 8%;
+}
+
+@keyframes jb-view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(.985);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+::view-transition-old(jb-page-content) {
+  animation: jb-view-old 260ms cubic-bezier(.4,0,1,1) both;
+}
+
+::view-transition-new(jb-page-content) {
+  animation: jb-view-new 520ms cubic-bezier(.22,1,.36,1) both;
+}
+
+@keyframes jb-view-old {
+  from {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(.985);
+    filter: blur(7px);
+  }
+}
+
+@keyframes jb-view-new {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(.975);
+    filter: blur(10px);
+    clip-path: inset(2% 1% 0 round 28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+    clip-path: inset(0 0 0 round 0);
+  }
+}
+
+.jb-nav-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.jb-nav-item::after {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 2px;
+  height: 2px;
+  content: "";
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0;
+  transform: scaleX(.35);
+  transition: opacity 220ms ease, transform 360ms cubic-bezier(.22,1,.36,1);
+}
+
+.jb-nav-item.is-active::after {
+  opacity: .55;
+  transform: scaleX(1);
+}
+
+.jb-button,
+.jb-icon-button,
+.jb-track-button,
+.jb-open-link,
+.jb-job-row,
+.jb-pipeline-item,
+.jb-command-quick button,
+.jb-command-toggle,
+.jb-metrics > div {
+  will-change: transform;
+}
+
+.jb-job-row:hover,
+.jb-pipeline-item:hover {
+  transform: translateY(-4px) scale(1.008);
+}
+
+.jb-job-row:active,
+.jb-pipeline-item:active,
+.jb-button:active,
+.jb-track-button:active {
+  transform: translateY(0) scale(.988);
+}
+
+.jb-shell {
+  animation: jb-shell-in 720ms cubic-bezier(.22,1,.36,1) both;
+}
+
+@keyframes jb-shell-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jb-shell,
+  .jb-view-transition {
+    animation: none;
+  }
+
+  ::view-transition-old(jb-page-content),
+  ::view-transition-new(jb-page-content) {
+    animation: none;
+  }
+
+  .jb-job-row:hover,
+  .jb-pipeline-item:hover {
+    transform: none;
+  }
+}
