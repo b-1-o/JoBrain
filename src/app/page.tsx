@@ -13,7 +13,8 @@ import {
   Trash2,
   type LucideIcon,
 } from "lucide-react";
-import forestBackground from "../Gemini_Generated_Image_4ccdch4ccdch4ccd.jpeg";
+import { ColorBends } from "../components/ColorBends";
+import { DotField } from "../components/DotField";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Status = "FOUND" | "APPLIED" | "SCREENING" | "TECH" | "OFFER" | "REJECTED";
@@ -355,12 +356,28 @@ export default function Home() {
 
   return (
     <main className="jb-shell">
-      <div className="jb-forest-backdrop" style={{ backgroundImage: `url(${forestBackground.src})` }} aria-hidden="true" />
-      <div className="jb-atmosphere" aria-hidden="true">
-        <span className="jb-atmosphere-glow jb-atmosphere-glow-a" />
-        <span className="jb-atmosphere-glow jb-atmosphere-glow-b" />
-      </div>
-      <div className="jb-grid" aria-hidden="true" />
+      <ColorBends
+        color="#ffffff"
+        speed={0.2}
+        frequency={1}
+        noise={0.15}
+        bandWidth={0.14}
+        rotation={90}
+        fadeTop={0.75}
+        iterations={1}
+        intensity={1.3}
+      />
+      <DotField
+        dotRadius={1.5}
+        dotSpacing={14}
+        cursorRadius={500}
+        cursorForce={0.1}
+        bulgeOnly
+        bulgeStrength={67}
+        glowRadius={160}
+        sparkle={false}
+        waveAmplitude={0}
+      />
 
       <header className="jb-topbar">
         <div className="jb-topbar-inner">
