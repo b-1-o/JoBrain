@@ -43,6 +43,8 @@ const createSchema = z.object({
   appliedAt: isoDate.optional(),
   nextActionAt: isoDate.optional(),
   lastContactAt: isoDate.optional(),
+  interviewAt: isoDate.optional(),
+  customStatusId: z.string().min(1).max(128).nullable().optional(),
 });
 
 const patchSchema = createSchema.partial().extend({
@@ -79,6 +81,7 @@ export async function GET(request: NextRequest) {
 
   const applications = await prisma.application.findMany({
     where: { userId: user.id },
+    include: { customStatus: true },
     orderBy: { updatedAt: "desc" },
   });
 
@@ -100,6 +103,16 @@ export async function POST(request: NextRequest) {
       request.cookies.get("jobrain_workspace")?.value,
     );
 
+    if (body.customStatusId) {
+      const definition = await prisma.applicationStatusDefinition.findFirst({
+        where: {
+          id: body.customStatusId,
+          OR: [{ userId: null, isSystem: true }, { userId: user.id }],
+        },
+      });
+      if (!definition) return NextResponse.json({ error: "Invalid custom status" }, { status: 400 });
+    }
+
     const application = await prisma.application.create({
       data: {
         userId: user.id,
@@ -117,6 +130,8 @@ export async function POST(request: NextRequest) {
         appliedAt: body.appliedAt ? new Date(body.appliedAt) : undefined,
         nextActionAt: body.nextActionAt ? new Date(body.nextActionAt) : undefined,
         lastContactAt: body.lastContactAt ? new Date(body.lastContactAt) : undefined,
+        interviewAt: body.interviewAt ? new Date(body.interviewAt) : undefined,
+        customStatusId: body.customStatusId ?? undefined,
       },
     });
 
@@ -142,6 +157,15 @@ export async function PATCH(request: NextRequest) {
     );
 
     const { id } = body;
+    if (body.customStatusId) {
+      const definition = await prisma.applicationStatusDefinition.findFirst({
+        where: {
+          id: body.customStatusId,
+          OR: [{ userId: null, isSystem: true }, { userId: user.id }],
+        },
+      });
+      if (!definition) return NextResponse.json({ error: "Invalid custom status" }, { status: 400 });
+    }
     const result = await prisma.application.updateMany({
       where: { id, userId: user.id },
       data: {
@@ -164,6 +188,12 @@ export async function PATCH(request: NextRequest) {
           : {}),
         ...(body.lastContactAt !== undefined
           ? { lastContactAt: body.lastContactAt ? new Date(body.lastContactAt) : null }
+          : {}),
+        ...(body.interviewAt !== undefined
+          ? { interviewAt: body.interviewAt ? new Date(body.interviewAt) : null }
+          : {}),
+        ...(body.customStatusId !== undefined
+          ? { customStatusId: body.customStatusId }
           : {}),
       },
     });
