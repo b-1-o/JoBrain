@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { runReminderWorker } from "@/lib/reminders";
+import { captureError } from "@/lib/telemetry";
 
 function isAuthorized(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -18,7 +19,8 @@ export async function POST(request: NextRequest) {
         dryRun: request.nextUrl.searchParams.get("dryRun") === "1",
       }),
     );
-  } catch {
+  } catch (error) {
+    captureError(error, { route: "/api/reminders", method: request.method });
     return NextResponse.json({ error: "Reminder worker failed" }, { status: 503 });
   }
 }
