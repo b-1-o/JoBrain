@@ -86,7 +86,7 @@ const navItems: Array<{
   icon: LucideIcon;
 }> = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
-  { key: "search", label: "Live search", icon: Search },
+  { key: "search", label: "Search", icon: Search },
   { key: "pipeline", label: "Pipeline", icon: Layers3 },
 ];
 
@@ -582,27 +582,27 @@ export default function Home() {
               <div>
                 <span className="jb-eyebrow">
                   <span className="jb-eyebrow-line" />
-                  LIVE SEARCH / 02
+                  SEARCH / 02
                 </span>
-                <h1>Search the market.</h1>
-                <p>One query. Multiple sources. No tab hoarding.</p>
+                <h1>Find your next role.</h1>
+                <p>One search across multiple live sources, with the filters and context you need to move quickly.</p>
               </div>
               <div className="jb-search-counter">
                 <strong>{loadingJobs ? "…" : jobs.length}</strong>
-                <span>ROLES MATCHED</span>
+                <span>ROLES FOUND</span>
               </div>
             </div>
 
             <div className="jb-command">
-              <div className="jb-command-top">
+              <div className="jb-command-top" aria-busy={loadingJobs}>
                 <Search size={17} />
                 <input
                   value={jobQuery}
                   onChange={(event) => setJobQuery(event.target.value)}
-                  placeholder="frontend developer"
+                  placeholder="Search jobs, skills, companies…"
                   aria-label="Search jobs"
                 />
-                <span>↵</span>
+                <span className="jb-search-hint">LIVE</span>
               </div>
               <div className="jb-command-filters">
                 <label>
@@ -637,7 +637,7 @@ export default function Home() {
                   </select>
                 </label>
                 <button type="button" className={"jb-command-toggle " + (remoteOnly ? "is-on" : "")} onClick={() => setRemoteOnly((value) => !value)}>
-                  <span>REMOTE ONLY</span>
+                  <span>Remote only</span>
                   <i />
                 </button>
               </div>
@@ -659,8 +659,8 @@ export default function Home() {
             </div>
 
             <div className="jb-results-head">
-              <span>{loadingJobs ? "Fetching live sources…" : "Latest matching roles"}</span>
-              <span>{lastFetched ? "SYNC " + relativeTime(lastFetched).toUpperCase() : "LIVE SEARCH"}</span>
+              <span>{loadingJobs ? "Searching live sources…" : "Latest matching roles"}</span>
+              <span>{lastFetched ? "UPDATED " + relativeTime(lastFetched).toUpperCase() : "LIVE SOURCES"}</span>
             </div>
 
             <div className="jb-job-list">
