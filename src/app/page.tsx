@@ -467,11 +467,11 @@ export default function Home() {
         {tab === "overview" ? (
           <>
             <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-              <div className="stat-card"><StatCard label="Tracked" value={stats.total} hint="total applications" icon={BriefcaseBusiness} />
+              <StatCard label="Tracked" value={stats.total} hint="total applications" icon={BriefcaseBusiness} />
               <StatCard label="Active" value={stats.active} hint="still moving" icon={Activity} />
               <StatCard label="Interviews" value={stats.interviews} hint="screening + technical" icon={Gauge} />
               <StatCard label="Offers" value={stats.offers} hint={stats.offerRate + "% of applied"} icon={CheckCircle2} />
-              <StatCard label="Rejection" value={stats.rejectionRate + "%"} hint="of applied outcomes" icon={TrendingDown} /></div>
+              <StatCard label="Rejection" value={stats.rejectionRate + "%"} hint="of applied outcomes" icon={TrendingDown} />
             </section>
 
             <section className="mt-3 grid gap-3 xl:grid-cols-[1.45fr_.75fr]">
@@ -675,7 +675,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="job-grid mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {jobs.map((job) => (
                 <article key={job.id} className="job-card">
                   <div className="mb-5 flex items-start justify-between gap-3">
@@ -683,18 +683,6 @@ export default function Home() {
                       <div className="mb-2 flex flex-wrap gap-2">
                         <span className="source-chip">
                           {platformName(job.platform)}
-                            ? "LinkedIn"
-                            : job.platform === "indeed"
-                              ? "Indeed"
-                              : job.platform === "glassdoor"
-                                ? "Glassdoor"
-                                : job.platform === "ziprecruiter"
-                                  ? "ZipRecruiter"
-                                  : job.platform === "dice"
-                                    ? "Dice"
-                                    : job.platform === "company"
-                                      ? "Company"
-                                      : sourceLabel[job.platform] ?? sourceLabel[job.source]}
                         </span>
                         {job.level ? (
                           <span className="source-chip source-chip-level">
