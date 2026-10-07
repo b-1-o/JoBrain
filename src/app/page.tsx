@@ -15,8 +15,6 @@ import {
   Sun,
   type LucideIcon,
 } from "lucide-react";
-import { ColorBends } from "@components/ColorBends";
-import { DotField } from "@components/DotField";
 import PatternWaves from "@components/PatternWaves";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -386,29 +384,6 @@ export default function Home() {
         opacity={theme === "dark" ? 0.46 : 0.18}
         className="jb-pattern-waves"
       />
-      <ColorBends
-        color="#ffffff"
-        speed={0.2}
-        frequency={1}
-        noise={0.15}
-        bandWidth={0.14}
-        rotation={90}
-        fadeTop={0.75}
-        iterations={1}
-        intensity={1.3}
-      />
-      <DotField
-        dotRadius={1.5}
-        dotSpacing={14}
-        cursorRadius={500}
-        cursorForce={0.1}
-        bulgeOnly
-        bulgeStrength={67}
-        glowRadius={160}
-        sparkle={false}
-        waveAmplitude={0}
-      />
-
       <header className="jb-topbar">
         <div className="jb-topbar-inner">
           <button type="button" className="jb-brand" onClick={() => changeTab("overview")} aria-label="JoBrain home">
