@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import PatternWaves from "@components/PatternWaves";
+import WorkflowTools from "@/components/WorkflowTools";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -842,6 +843,7 @@ export default function Home() {
                 Find new roles
                 <span>↗</span>
               </button>
+              <WorkflowTools />
             </div>
 
             <div className="jb-pipeline-signal">
