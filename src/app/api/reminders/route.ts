@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
   }
 
   const now = new Date();
-  const dueSoon = new Date(now.getTime() + 15 * 60 * 1000);
   const overdueContact = new Date(now.getTime() - 7 * 86400000);
 
   const applications = await prisma.application.findMany({
@@ -45,14 +44,10 @@ export async function POST(request: NextRequest) {
       OR: [
         {
           nextActionAt: {
-            gte: now,
-            lte: dueSoon,
+            lte: now,
           },
         },
         {
-          nextActionAt: {
-            lt: now,
-          },
           lastContactAt: {
             lt: overdueContact,
           },
@@ -71,8 +66,8 @@ export async function POST(request: NextRequest) {
     if (!app.contactEmail) continue;
 
     const bucket =
-      app.nextActionAt && app.nextActionAt >= now
-        ? "next:" + app.nextActionAt.toISOString().slice(0, 16)
+      app.nextActionAt && app.nextActionAt <= now
+        ? "next:" + app.nextActionAt.toISOString().slice(0, 10)
         : "contact:" + now.toISOString().slice(0, 10);
     const dedupeKey = "jobrain:reminder:" + app.id + ":" + bucket;
 
