@@ -373,15 +373,15 @@ export default function Home() {
     <main className="jb-shell">
       <PatternWaves
         preset="silk"
-        color={theme === "dark" ? "#ffffff" : "#1a2024"}
-        backgroundColor={theme === "dark" ? "#050607" : "#e7eaec"}
+        color={theme === "dark" ? "#ffffff" : "#000000"}
+        backgroundColor={theme === "dark" ? "#050607" : "#dfdfdf"}
         fade="edges"
-        fadeSize={0.58}
         interactive
         cursorSize={50}
         cursorStrength={0.6}
-        shine={0.15}
-        opacity={theme === "dark" ? 1 : 0.22}
+        markSize={theme === "dark" ? 0.95 : 1}
+        shine={theme === "dark" ? 0.15 : 0.75}
+        opacity={1}
         className="jb-pattern-waves"
       />
       <header className="jb-topbar">
