@@ -13,6 +13,7 @@ import {
   Trash2,
   type LucideIcon,
 } from "lucide-react";
+import forestBackground from "../Gemini_Generated_Image_4ccdch4ccdch4ccd.jpeg";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Status = "FOUND" | "APPLIED" | "SCREENING" | "TECH" | "OFFER" | "REJECTED";
@@ -354,6 +355,7 @@ export default function Home() {
 
   return (
     <main className="jb-shell">
+      <div className="jb-forest-backdrop" style={{ backgroundImage: `url(${forestBackground.src})` }} aria-hidden="true" />
       <div className="jb-atmosphere" aria-hidden="true">
         <span className="jb-atmosphere-glow jb-atmosphere-glow-a" />
         <span className="jb-atmosphere-glow jb-atmosphere-glow-b" />
