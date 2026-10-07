@@ -416,6 +416,35 @@ void main() {
 }
 `;
 
+/**
+ * @typedef {Object} PatternWavesProps
+ * @property {'silk'|'ocean'|'pond'|'lines'|'terminal'|'mesh'} [preset]
+ * @property {string} [pattern]
+ * @property {string} [wave]
+ * @property {number} [spacing]
+ * @property {number} [markSize]
+ * @property {number} [depth]
+ * @property {number} [light]
+ * @property {number} [shine]
+ * @property {number} [contrast]
+ * @property {number} [speed]
+ * @property {number} [scale]
+ * @property {number} [direction]
+ * @property {string} [color]
+ * @property {string} [backgroundColor]
+ * @property {number} [opacity]
+ * @property {'none'|'edges'|'center'|'bottom'|'top'} [fade]
+ * @property {number} [fadeSize]
+ * @property {string} [characters]
+ * @property {boolean} [interactive]
+ * @property {number} [cursorSize]
+ * @property {number} [cursorStrength]
+ * @property {boolean} [intro]
+ * @property {boolean} [paused]
+ * @property {string} [className]
+ * @property {Object} [style]
+ */
+/** @param {PatternWavesProps} props */
 const PatternWaves = ({
   preset = 'silk',
   pattern = undefined,
