@@ -72,7 +72,7 @@ describe("/api/applications", () => {
     });
 
     const { sameOrigin } = await import("@/lib/api-security");
-    vi.mocked(sameOrigin).mockReturnValue(false);
+    vi.mocked(sameOrigin).mockReturnValueOnce(false);
 
     const response = await DELETE(request);
     expect(response.status).toBe(403);
