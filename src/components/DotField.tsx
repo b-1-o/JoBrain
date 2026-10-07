@@ -26,7 +26,6 @@ export function DotField({
   waveAmplitude = 0,
 }: DotFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const pointerRef = useRef({ x: -1000, y: -1000 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -57,7 +56,6 @@ export function DotField({
     const move = (event: PointerEvent) => {
       targetX = event.clientX;
       targetY = event.clientY;
-      pointerRef.current = { x: targetX, y: targetY };
     };
 
     const draw = () => {
