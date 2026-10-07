@@ -1,0 +1,29 @@
+name: Dependency lock generation
+
+on:
+  push:
+    branches: ["ai/followup-hardening"]
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install required production and test tooling
+        run: |
+          npm install @sentry/nextjs@latest --save
+          npm install --save-dev msw@latest @playwright/test@latest storybook@latest @storybook/nextjs@latest
+      - name: Upload generated package metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-tooling-package-metadata
+          path: |
+            package.json
+            package-lock.json
