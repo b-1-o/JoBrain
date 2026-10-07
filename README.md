@@ -55,7 +55,7 @@ Actively developed and deployed on Vercel.
 
 ## Author
 
-**Erik Ghabuzyan**  
+**Erik G.**  
 Frontend Developer · UI Engineer
 
 [GitHub](https://github.com/b-1-o) · [LinkedIn](https://www.linkedin.com/in/b1o)
