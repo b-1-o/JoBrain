@@ -22,7 +22,7 @@ vi.mock("@/lib/prisma", () => ({
           company: "Example",
           role: "Frontend Developer",
           contactEmail: "recruiter@example.com",
-          nextActionAt: new Date(Date.now() + 5 * 60 * 1000),
+          nextActionAt: new Date(Date.now() - 5 * 60 * 1000),
           lastContactAt: null,
         },
       ]),
@@ -31,6 +31,7 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 import { POST } from "./route";
+import { runReminderWorker } from "@/lib/reminders";
 
 describe("POST /api/reminders", () => {
   beforeEach(() => {
@@ -51,6 +52,12 @@ describe("POST /api/reminders", () => {
     );
 
     expect(response.status).toBe(401);
+    expect(sendMail).not.toHaveBeenCalled();
+  });
+
+  it("supports dry-run without sending mail", async () => {
+    const result = await runReminderWorker({ dryRun: true });
+    expect(result.sent).toBe(1);
     expect(sendMail).not.toHaveBeenCalled();
   });
 
