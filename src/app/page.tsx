@@ -66,12 +66,12 @@ type JobResponse = {
 };
 
 const stages: Array<{ key: Status; label: string; tone: string }> = [
-  { key: "FOUND", label: "Found", tone: "text-zinc-300" },
-  { key: "APPLIED", label: "Applied", tone: "text-blue-300" },
-  { key: "SCREENING", label: "Screening", tone: "text-violet-300" },
-  { key: "TECH", label: "Technical", tone: "text-amber-300" },
-  { key: "OFFER", label: "Offer", tone: "text-emerald-300" },
-  { key: "REJECTED", label: "Rejected", tone: "text-rose-300" },
+  { key: "FOUND", label: "Found", tone: "jb-stage-found" },
+  { key: "APPLIED", label: "Applied", tone: "jb-stage-applied" },
+  { key: "SCREENING", label: "Screening", tone: "jb-stage-screening" },
+  { key: "TECH", label: "Technical", tone: "jb-stage-tech" },
+  { key: "OFFER", label: "Offer", tone: "jb-stage-offer" },
+  { key: "REJECTED", label: "Rejected", tone: "jb-stage-rejected" },
 ];
 
 const sourceLabel: Record<string, string> = {
@@ -110,6 +110,15 @@ function relativeTime(value: string) {
   return Math.floor(hours / 24) + "d ago";
 }
 
+function levelLabel(level: Job["level"]) {
+  if (level === "intern") return "Intern / Entry";
+  if (level === "junior") return "Junior";
+  if (level === "mid") return "Mid";
+  if (level === "senior") return "Senior";
+  if (level === "lead") return "Lead / Staff";
+  return "Any level";
+}
+
 function platformName(platform: string) {
   const labels: Record<string, string> = {
     linkedin: "LinkedIn",
@@ -126,31 +135,6 @@ function platformName(platform: string) {
   };
 
   return labels[platform] ?? platform;
-}
-
-function StatCard({
-  label,
-  value,
-  hint,
-  icon: Icon,
-}: {
-  label: string;
-  value: string | number;
-  hint: string;
-  icon: LucideIcon;
-}) {
-  return (
-    <div className="glass-card stat-card p-5">
-      <div className="mb-7 flex items-start justify-between">
-        <span className="text-xs font-medium uppercase tracking-[0.16em] text-zinc-500">{label}</span>
-        <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2 text-zinc-400">
-          <Icon size={16} />
-        </div>
-      </div>
-      <div className="text-3xl font-semibold tracking-tight">{value}</div>
-      <div className="mt-2 text-xs text-zinc-500">{hint}</div>
-    </div>
-  );
 }
 
 export default function Home() {
@@ -380,263 +364,264 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden">
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-[-12%] top-[-18%] h-[38rem] w-[38rem] rounded-full bg-violet-600/[0.1] blur-[130px]" />
-        <div className="absolute right-[-15%] top-[20%] h-[32rem] w-[32rem] rounded-full bg-sky-500/[0.08] blur-[140px]" />
+    <main className="jb-shell">
+      <div className="jb-atmosphere" aria-hidden="true">
+        <span className="jb-atmosphere-glow jb-atmosphere-glow-a" />
+        <span className="jb-atmosphere-glow jb-atmosphere-glow-b" />
       </div>
+      <div className="jb-grid" aria-hidden="true" />
 
-      <header className="sticky top-0 z-30 border-b border-white/[0.07] bg-[#060609]/75 backdrop-blur-2xl">
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.055] shadow-lg shadow-violet-950/10">
-              <Target size={18} className="text-violet-300" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold tracking-tight">JoBrain</div>
-              <div className="text-[11px] text-zinc-500">Job search intelligence</div>
-            </div>
-          </div>
-          <div className="live-badge">
-            <span className="live-dot" />
-            Live data
+      <header className="jb-topbar">
+        <div className="jb-topbar-inner">
+          <button type="button" className="jb-brand" onClick={() => setTab("overview")} aria-label="JoBrain home">
+            <span className="jb-brand-mark">JB</span>
+            <span className="jb-brand-word">JOBRAIN</span>
+            <span className="jb-brand-index">/ 01</span>
+          </button>
+
+          <nav className="jb-nav" aria-label="Primary">
+            {navItems.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={"jb-nav-item " + (tab === item.key ? "is-active" : "")}
+                onClick={() => setTab(item.key)}
+              >
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </nav>
+
+          <div className="jb-topbar-status">
+            <span className="jb-status-dot" />
+            <span>{loadingJobs ? "SYNCING" : "LIVE"}</span>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-[1500px] px-4 pb-16 pt-8 sm:px-6">
-        <section className="mb-8">
-          <div className="flex flex-col justify-between gap-7 xl:flex-row xl:items-end">
-            <div className="min-w-0">
-              <p className="page-kicker">
-                <span className="size-1.5 rounded-full bg-violet-300" />
-                Personal command center
-              </p>
-              <h1 className="hero-title mt-5">
-                Find the right roles.
-                <span className="block text-zinc-600">Keep the whole funnel visible.</span>
-              </h1>
-              <p className="hero-copy mt-5">
-                Search fresh roles across the major job ecosystem, narrow the feed by level and platform, then move the strongest opportunities into one pipeline.
-              </p>
-              <div className="hero-meta mt-5">
-                <span className="meta-pill"><Globe2 size={12} />US + Remote</span>
-                <span className="meta-pill"><Filter size={12} />Platform + level filters</span>
-                <span className="meta-pill"><Target size={12} />One-click tracking</span>
-              </div>
-            </div>
-            <div className="flex shrink-0 flex-wrap gap-2">
-              <button className="button-secondary" onClick={() => void searchJobs()}>
-                <RefreshCw size={15} className={loadingJobs ? "animate-spin" : ""} />
-                Refresh
-              </button>
-              <button className="button-primary" onClick={() => void loadDemo()} disabled={demoLoading}>
-                {demoLoading ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
-                {demoLoading ? "Loading..." : "Load demo"}
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <div className="mb-7">
-          <div className="nav-strip">
-            {navItems.map((item) => (
-            <button
-              key={item.key}
-              className={"nav-pill " + (tab === item.key ? "nav-pill-active" : "")}
-              onClick={() => setTab(item.key)}
-            >
-              <item.icon size={15} />
-              {item.label}
-            </button>
-          ))}
-          </div>
-        </div>
-
+      <div className="jb-page">
         {error ? (
-          <div className="mb-6 rounded-2xl border border-rose-400/20 bg-rose-400/[0.06] px-4 py-3 text-sm text-rose-200">
-            {error}
+          <div className="jb-alert" role="alert">
+            <span>{error}</span>
+            <button type="button" onClick={() => setError("")} aria-label="Dismiss">
+              ×
+            </button>
           </div>
         ) : null}
 
         {tab === "overview" ? (
-          <>
-            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-              <StatCard label="Tracked" value={stats.total} hint="total applications" icon={BriefcaseBusiness} />
-              <StatCard label="Active" value={stats.active} hint="still moving" icon={Activity} />
-              <StatCard label="Interviews" value={stats.interviews} hint="screening + technical" icon={Gauge} />
-              <StatCard label="Offers" value={stats.offers} hint={stats.offerRate + "% of applied"} icon={CheckCircle2} />
-              <StatCard label="Rejection" value={stats.rejectionRate + "%"} hint="of applied outcomes" icon={TrendingDown} />
-            </section>
-
-            <section className="mt-3 grid gap-3 xl:grid-cols-[1.45fr_.75fr]">
-              <div className="glass-card overflow-hidden">
-                <div className="border-b border-white/[0.06] px-5 py-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm font-semibold">Application funnel</div>
-                      <div className="mt-1 text-xs text-zinc-500">Where opportunities are moving or leaking.</div>
-                    </div>
-                    <BarChart3 size={18} className="text-zinc-600" />
-                  </div>
+          <section className="jb-overview">
+            <div className="jb-hero">
+              <div className="jb-hero-copy">
+                <div className="jb-eyebrow">
+                  <span className="jb-eyebrow-line" />
+                  JOB SEARCH / 01
                 </div>
-                <div className="space-y-4 p-5">
-                  {funnel.map((item) => {
-                    const width = stats.total ? Math.max((item.count / stats.total) * 100, item.count ? 9 : 0) : 0;
+                <h1>
+                  Find work.
+                  <span>Not another spreadsheet.</span>
+                </h1>
+                <p>
+                  Fresh roles, one application memory, and a funnel you can actually read.
+                  Search the market, track the signal, and move without losing context.
+                </p>
+                <div className="jb-hero-actions">
+                  <button type="button" className="jb-button jb-button-solid" onClick={() => setTab("search")}>
+                    Explore live roles
+                    <span>↗</span>
+                  </button>
+                  <button type="button" className="jb-button jb-button-ghost" onClick={() => setTab("pipeline")}>
+                    Open pipeline
+                  </button>
+                  <button type="button" className="jb-icon-button" onClick={() => void searchJobs()} aria-label="Refresh live jobs">
+                    <RefreshCw size={15} className={loadingJobs ? "jb-spin" : ""} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="jb-signal">
+                <div className="jb-section-meta">
+                  <span>FUNNEL SIGNAL</span>
+                  <span>{stats.total.toString().padStart(2, "0")} TRACKED</span>
+                </div>
+                <div className="jb-signal-rail">
+                  {funnel.map((item, index) => {
+                    const max = Math.max(...funnel.map((entry) => entry.count), 1);
+                    const width = item.count ? Math.max((item.count / max) * 100, 12) : 4;
                     return (
-                      <div key={item.key}>
-                        <div className="mb-2 flex items-center justify-between text-xs">
-                          <span className={item.tone}>{item.label}</span>
-                          <span className="text-zinc-500">{item.count}</span>
+                      <div key={item.key} className="jb-signal-step">
+                        <div className="jb-signal-label">
+                          <span className={item.tone}>{String(index + 1).padStart(2, "0")}</span>
+                          <span>{item.label}</span>
+                          <strong>{item.count}</strong>
                         </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-white/[0.045]">
-                          <div className="funnel-bar" style={{ width: width + "%", opacity: item.opacity }} />
+                        <div className="jb-signal-track">
+                          <span style={{ width: width + "%" }} />
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              </div>
-
-              <div className="glass-card p-5">
-                <div className="mb-8 flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-semibold">System signal</div>
-                    <div className="mt-1 text-xs text-zinc-500">A compact read on the current funnel.</div>
-                  </div>
-                  <Zap size={17} className="text-amber-300" />
+                <div className="jb-signal-foot">
+                  <span>OFFER RATE {stats.offerRate}%</span>
+                  <span>{lastFetched ? "SYNC " + relativeTime(lastFetched).toUpperCase() : "AWAITING SYNC"}</span>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 text-sm leading-6 text-zinc-300">
+              </div>
+            </div>
+
+            <div className="jb-metrics">
+              <div><span>TRACKED</span><strong>{stats.total}</strong><small>Total roles</small></div>
+              <div><span>ACTIVE</span><strong>{stats.active}</strong><small>Still moving</small></div>
+              <div><span>INTERVIEWS</span><strong>{stats.interviews}</strong><small>Screen + technical</small></div>
+              <div><span>OFFERS</span><strong>{stats.offers}</strong><small>{stats.offerRate}% of applied</small></div>
+              <div><span>REJECTED</span><strong>{stats.rejectionRate}%</strong><small>Of applied outcomes</small></div>
+            </div>
+
+            <div className="jb-content-grid">
+              <section className="jb-panel jb-funnel-panel">
+                <div className="jb-panel-head">
+                  <div>
+                    <span className="jb-kicker">APPLICATION FUNNEL</span>
+                    <h2>Keep the whole funnel visible.</h2>
+                  </div>
+                  <span className="jb-panel-index">A / 01</span>
+                </div>
+                <div className="jb-spatial-funnel">
+                  <div className="jb-spatial-line" />
+                  {funnel.map((item, index) => (
+                    <div key={item.key} className={"jb-stage-node " + item.tone}>
+                      <div className="jb-node-top">
+                        <span>0{index + 1}</span>
+                        <span>{item.label}</span>
+                      </div>
+                      <div className="jb-node-dot" />
+                      <strong>{item.count}</strong>
+                    </div>
+                  ))}
+                </div>
+                <div className="jb-panel-caption">
                   {insight}
                 </div>
-                <div className="mt-5 grid grid-cols-2 gap-2">
-                  <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-4">
-                    <div className="text-2xl font-semibold">{stats.applied}</div>
-                    <div className="mt-1 text-xs text-zinc-500">applications</div>
-                  </div>
-                  <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-4">
-                    <div className="text-2xl font-semibold">{stats.interviews}</div>
-                    <div className="mt-1 text-xs text-zinc-500">interview stages</div>
-                  </div>
-                </div>
-              </div>
-            </section>
+              </section>
 
-            <section className="mt-3 grid gap-3 xl:grid-cols-[1fr_.9fr_.78fr]">
-              <div className="glass-card p-5">
-                <div className="mb-5 flex items-start justify-between gap-4">
+              <section className="jb-panel jb-autofill-panel">
+                <div className="jb-panel-head">
                   <div>
-                    <div className="text-sm font-semibold">Recent applications</div>
-                    <div className="mt-1 text-xs text-zinc-500">Your latest tracked moves.</div>
+                    <span className="jb-kicker">COMPANION / 02</span>
+                    <h2>From role to application.</h2>
                   </div>
-                  <button className="text-xs text-violet-300 hover:text-violet-200" onClick={() => setTab("pipeline")}>Open pipeline →</button>
+                  <span className="jb-panel-index">EXT</span>
                 </div>
-                <div className="space-y-2">
-                  {apps.slice(0, 6).map((app) => (
-                    <div key={app.id} className="row-card">
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-medium">{app.role}</div>
-                        <div className="mt-1 flex flex-wrap gap-2 text-xs text-zinc-500">
-                          <span>{app.company}</span><span>·</span><span>{sourceLabel[app.source] ?? app.source}</span>
-                        </div>
-                      </div>
-                      <span className={"status-chip status-" + app.status.toLowerCase()}>{app.status}</span>
-                    </div>
-                  ))}
-                  {!apps.length ? (
-                    <div className="empty-state">
-                      <BriefcaseBusiness size={20} />
-                      <span>No applications yet. Load demo data or track a live role.</span>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="glass-card p-5">
-                <div className="mb-5 flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-semibold">Live source matrix</div>
-                    <div className="mt-1 text-xs text-zinc-500">Coverage during the latest search.</div>
-                  </div>
-                  <Globe2 size={17} className="text-zinc-600" />
-                </div>
-                <div className="grid gap-2">
-                  {["googlejobs", "remoteok", "remotive", "jobicy", "adzuna"].map((name) => (
-                    <div key={name} className="source-row">
-                      <div className="flex items-center gap-3">
-                        <span className={"size-2 rounded-full " + (sourceState[name] === "error" ? "bg-rose-400" : sourceState[name] === "ok" ? "bg-emerald-400" : "bg-zinc-700")} />
-                        <span className="text-sm">{sourceLabel[name]}</span>
-                      </div>
-                      <span className="text-xs text-zinc-600">
-                        {sourceState[name] === "error" ? "unavailable" : sourceState[name] === "ok" ? "connected" : "idle"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-5 border-t border-white/[0.06] pt-4 text-xs text-zinc-600">
-                  {lastFetched ? "Last fetch " + relativeTime(lastFetched) : "Waiting for first fetch"}
-                </div>
-              </div>
-
-              <div className="glass-card p-5">
-                <div className="mb-5 flex items-center justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-semibold">Autofill</div>
-                    <div className="mt-1 text-xs text-zinc-500">Move from job discovery to application faster.</div>
-                  </div>
-                  <div className="rounded-xl border border-violet-300/10 bg-violet-300/[0.06] p-2 text-violet-200">
-                    <Zap size={16} />
+                <div className="jb-autofill-copy">
+                  <p>Autofill is the shortest path from discovery to a reviewed application form.</p>
+                  <div className="jb-meta-row">
+                    <span>MANIFEST V3</span>
+                    <span>REVIEW FIRST</span>
+                    <span>LOCAL PROFILE</span>
                   </div>
                 </div>
-                <p className="text-sm leading-6 text-zinc-300">
-                  Companion Chrome extension for filling supported application forms with one click while keeping profile data in Chrome Sync.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <span className="meta-pill">Manifest V3</span>
-                  <span className="meta-pill">Review first</span>
-                  <span className="meta-pill">Local profile</span>
-                </div>
-                <div className="mt-5 grid gap-2">
-                  <a className="button-primary w-full justify-center" href={AUTOFILL_DOWNLOAD_URL}>
-                    <Zap size={14} />
+                <div className="jb-autofill-actions">
+                  <a className="jb-button jb-button-solid" href={AUTOFILL_DOWNLOAD_URL}>
                     Download extension
+                    <span>↓</span>
                   </a>
-                  <a className="button-secondary w-full justify-center" href={AUTOFILL_GITHUB_URL} target="_blank" rel="noreferrer">
-                    View Autofill project
+                  <a className="jb-button jb-button-ghost" href={AUTOFILL_GITHUB_URL} target="_blank" rel="noreferrer">
+                    View source
                     <ExternalLink size={14} />
                   </a>
                 </div>
-                <div className="mt-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-[11px] leading-5 text-zinc-500">
-                  Chrome Web Store one-click install can be added after the extension is published there. For now, download the ZIP and load it as an unpacked extension in Chrome.
+                <div className="jb-autofill-foot">
+                  Chrome Web Store install becomes a one-click action once the extension is published.
                 </div>
+              </section>
+            </div>
+
+            <section className="jb-recent">
+              <div className="jb-panel-head jb-recent-head">
+                <div>
+                  <span className="jb-kicker">RECENT MOVES / 03</span>
+                  <h2>What is moving right now.</h2>
+                </div>
+                <button type="button" className="jb-text-link" onClick={() => setTab("pipeline")}>
+                  Open pipeline ↗
+                </button>
+              </div>
+
+              {!apps.length ? (
+                <div className="jb-empty-wide">
+                  <span className="jb-empty-number">00</span>
+                  <div>
+                    <strong>No tracked roles yet.</strong>
+                    <p>Load demo data or open Live Search to start building the funnel.</p>
+                  </div>
+                  <button type="button" className="jb-text-link" onClick={() => setTab("search")}>Find roles ↗</button>
+                </div>
+              ) : (
+                <div className="jb-recent-list">
+                  {apps.slice(0, 5).map((app, index) => (
+                    <div key={app.id} className="jb-recent-row">
+                      <span className="jb-row-index">0{index + 1}</span>
+                      <div className="jb-row-main">
+                        <strong>{app.role}</strong>
+                        <span>{app.company} · {sourceLabel[app.source] ?? app.source}</span>
+                      </div>
+                      <span className={"jb-status " + app.status.toLowerCase()}>{app.status}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="jb-system-strip">
+                <span>SOURCES</span>
+                <div className="jb-source-strip">
+                  {["googlejobs", "remoteok", "remotive", "jobicy", "adzuna"].map((name) => (
+                    <span key={name}>
+                      <i className={sourceState[name] === "error" ? "is-error" : sourceState[name] === "ok" ? "is-ok" : ""} />
+                      {sourceLabel[name]}
+                    </span>
+                  ))}
+                </div>
+                <span>{lastFetched ? "LAST SYNC " + relativeTime(lastFetched).toUpperCase() : "AWAITING FIRST SYNC"}</span>
               </div>
             </section>
-          </>
+          </section>
         ) : null}
 
         {tab === "search" ? (
-          <section>
-            <div className="search-panel p-3 sm:p-4">
-              <div className="mb-3 flex items-center justify-between gap-3 px-1">
-                <div>
-                  <div className="section-label">Live search</div>
-                  <div className="section-muted">Search once. Compare the market in one feed.</div>
-                </div>
-                <button className="button-secondary hidden sm:inline-flex" onClick={resetFilters}>
-                  Reset filters
-                </button>
+          <section className="jb-search-page">
+            <div className="jb-search-hero">
+              <div>
+                <span className="jb-eyebrow">
+                  <span className="jb-eyebrow-line" />
+                  LIVE SEARCH / 02
+                </span>
+                <h1>Search the market.</h1>
+                <p>One query. Multiple sources. No tab hoarding.</p>
               </div>
-              <div className="grid gap-2.5 lg:grid-cols-[1.35fr_.8fr_.7fr_.7fr_auto]">
-                <label className="field-wrap search-primary"> 
-                  <Search size={17} />
-                  <input value={jobQuery} onChange={(event) => setJobQuery(event.target.value)} placeholder="frontend developer" />
-                </label>
-                <label className="field-wrap">
-                  <Globe2 size={16} />
+              <div className="jb-search-counter">
+                <strong>{loadingJobs ? "…" : jobs.length}</strong>
+                <span>ROLES MATCHED</span>
+              </div>
+            </div>
+
+            <div className="jb-command">
+              <div className="jb-command-top">
+                <Search size={17} />
+                <input
+                  value={jobQuery}
+                  onChange={(event) => setJobQuery(event.target.value)}
+                  placeholder="frontend developer"
+                  aria-label="Search jobs"
+                />
+                <span>↵</span>
+              </div>
+              <div className="jb-command-filters">
+                <label>
+                  <span>LOCATION</span>
                   <input value={location} onChange={(event) => setLocation(event.target.value)} placeholder="Los Angeles, US" />
                 </label>
-                <label className="field-wrap">
-                  <Filter size={16} />
+                <label>
+                  <span>PLATFORM</span>
                   <select value={platform} onChange={(event) => setPlatform(event.target.value)}>
                     <option value="all">All platforms</option>
                     <option value="linkedin">LinkedIn</option>
@@ -651,8 +636,8 @@ export default function Home() {
                     <option value="adzuna">Adzuna US</option>
                   </select>
                 </label>
-                <label className="field-wrap">
-                  <Gauge size={16} />
+                <label>
+                  <span>LEVEL</span>
                   <select value={experience} onChange={(event) => setExperience(event.target.value)}>
                     <option value="all">Any level</option>
                     <option value="intern">Intern / Entry</option>
@@ -662,113 +647,73 @@ export default function Home() {
                     <option value="lead">Lead / Staff</option>
                   </select>
                 </label>
-                <button className={"button-secondary justify-center " + (remoteOnly ? "border-violet-400/30 bg-violet-400/[0.07] text-violet-200" : "")} onClick={() => setRemoteOnly((value) => !value)}>
-                  <Target size={15} /> Remote
+                <button type="button" className={"jb-command-toggle " + (remoteOnly ? "is-on" : "")} onClick={() => setRemoteOnly((value) => !value)}>
+                  <span>REMOTE ONLY</span>
+                  <i />
                 </button>
               </div>
-              <div className="result-bar mt-3 px-1">
-                <span className="result-count">
-                  {loadingJobs ? "Updating results…" : jobs.length + " roles matched"}
-                </span>
-                <span className="result-status">
-                  <span className={loadingJobs ? "live-dot animate-pulse" : "live-dot"} />
-                  {lastFetched ? "Live source refresh " + relativeTime(lastFetched) : "Searching live sources"}
-                </span>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2 px-1">
+              <div className="jb-command-quick">
                 {([
-                  ["all", "All levels"],
-                  ["intern", "Intern / Entry"],
+                  ["all", "All"],
+                  ["intern", "Intern"],
                   ["junior", "Junior"],
                   ["mid", "Mid"],
                   ["senior", "Senior"],
-                  ["lead", "Lead / Staff"],
+                  ["lead", "Lead"],
                 ] as Array<[string, string]>).map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    className={"filter-chip " + (experience === value ? "filter-chip-active" : "")}
-                    onClick={() => setExperience(value)}
-                  >
+                  <button key={value} type="button" className={experience === value ? "is-active" : ""} onClick={() => setExperience(value)}>
                     {label}
                   </button>
                 ))}
-                <button
-                  type="button"
-                  className={"filter-chip " + (remoteOnly ? "filter-chip-active" : "")}
-                  onClick={() => setRemoteOnly((value) => !value)}
-                >
-                  Remote only
-                </button>
+                <button type="button" className="jb-command-reset" onClick={resetFilters}>Reset</button>
               </div>
             </div>
 
-            <div className="job-grid mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {jobs.map((job) => (
-                <article key={job.id} className="job-card">
-                  <div className="mb-5 flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="mb-2 flex flex-wrap gap-2">
-                        <span className="source-chip">
-                          {platformName(job.platform)}
-                        </span>
-                        {job.level ? (
-                          <span className="source-chip source-chip-level">
-                            {job.level === "intern"
-                              ? "Intern / Entry"
-                              : job.level === "junior"
-                                ? "Junior"
-                                : job.level === "mid"
-                                  ? "Mid"
-                                  : job.level === "senior"
-                                    ? "Senior"
-                                    : "Lead / Staff"}
-                          </span>
-                        ) : null}
-                        {job.remote ? <span className="source-chip source-chip-accent">Remote</span> : null}
-                      </div>
-                      <h3 className="job-card-title line-clamp-2">{job.title}</h3>
-                      <div className="job-company">{job.company}</div>
+            <div className="jb-results-head">
+              <span>{loadingJobs ? "Fetching live sources…" : "Latest matching roles"}</span>
+              <span>{lastFetched ? "SYNC " + relativeTime(lastFetched).toUpperCase() : "LIVE SEARCH"}</span>
+            </div>
+
+            <div className="jb-job-list">
+              {jobs.map((job, index) => (
+                <article key={job.id} className="jb-job-row">
+                  <div className="jb-job-index">{String(index + 1).padStart(2, "0")}</div>
+                  <div className="jb-job-main">
+                    <div className="jb-job-overline">
+                      <span>{platformName(job.platform)}</span>
+                      {job.remote ? <span>REMOTE</span> : null}
+                      {job.level ? <span>{levelLabel(job.level)}</span> : null}
                     </div>
-                    <a className="icon-button" href={job.url} target="_blank" rel="noreferrer" aria-label="Open job">
-                      <ExternalLink size={15} />
+                    <h2>{job.title}</h2>
+                    <div className="jb-job-company">{job.company}</div>
+                    <div className="jb-job-meta">
+                      <span><MapPin size={12} />{job.location || "Remote"}</span>
+                      <span><Clock3 size={12} />{relativeTime(job.postedAt)}</span>
+                      {job.salary ? <span className="jb-job-salary">{job.salary}</span> : null}
+                    </div>
+                    <p>{job.description || "No description returned by source."}</p>
+                    <div className="jb-tags">
+                      {job.tags.slice(0, 4).map((tag) => <span key={tag}>{tag}</span>)}
+                    </div>
+                  </div>
+                  <div className="jb-job-actions">
+                    <a href={job.url} target="_blank" rel="noreferrer" className="jb-open-link">
+                      Open <ExternalLink size={13} />
                     </a>
-                  </div>
-                  <div className="job-meta mb-4 mt-5">
-                    <span className="job-meta-item"><MapPin size={12} />{job.location || "Remote"}</span>
-                    <span>·</span>
-                    <span className="job-meta-item"><Clock3 size={12} />{relativeTime(job.postedAt)}</span>
-                  </div>
-                  {job.salary ? (
-                    <div className="mb-4 text-xs font-semibold text-emerald-300">{job.salary}</div>
-                  ) : null}
-                  <p className="job-description line-clamp-3 min-h-[4.8rem]">
-                    {job.description || "No description returned by source."}
-                  </p>
-                  <div className="mt-4 flex min-h-7 flex-wrap gap-1.5">
-                    {job.tags.slice(0, 3).map((tag) => <span className="tag" key={tag}>{tag}</span>)}
-                  </div>
-                  <div className="job-footer">
-                    <div className="job-source-line">
-                      <span className="job-source-dot" />
-                      <span className="truncate text-[10px] uppercase tracking-[0.12em] text-zinc-600">
-                        {platformName(job.platform)}
-                      </span>
-                    </div>
-                    <button className="button-small" onClick={() => void addApplication(job)}>
-                      <Plus size={14} />Track
+                    <button type="button" className="jb-track-button" onClick={() => void addApplication(job)}>
+                      Track
+                      <Plus size={14} />
                     </button>
                   </div>
                 </article>
               ))}
+
               {!jobs.length && !loadingJobs ? (
-                <div className="empty-state md:col-span-2 xl:col-span-3">
-                  <div className="text-center">
-                    <Search size={22} className="mx-auto mb-3 text-zinc-700" />
-                    <div className="text-sm font-medium text-zinc-400">No roles matched this view.</div>
-                    <div className="mt-1 text-xs text-zinc-600">Try another keyword, broaden the level, or reset the filters.</div>
-                    <button className="button-secondary mt-4" onClick={resetFilters}>Reset filters</button>
-                  </div>
+                <div className="jb-empty-search">
+                  <span>00</span>
+                  <strong>No roles matched this view.</strong>
+                  <p>Broaden the query or reset the filters.</p>
+                  <button type="button" className="jb-button jb-button-ghost" onClick={resetFilters}>Reset filters</button>
                 </div>
               ) : null}
             </div>
@@ -776,74 +721,84 @@ export default function Home() {
         ) : null}
 
         {tab === "pipeline" ? (
-          <section>
-            <div className="mb-4 flex items-center justify-between">
+          <section className="jb-pipeline-page">
+            <div className="jb-pipeline-hero">
               <div>
-                <div className="text-lg font-semibold">Application pipeline</div>
-                <div className="mt-1 text-xs text-zinc-500">Move every role forward or close the loop.</div>
+                <span className="jb-eyebrow">
+                  <span className="jb-eyebrow-line" />
+                  PIPELINE / 03
+                </span>
+                <h1>Your job search, in motion.</h1>
+                <p>Every role has a state. Every active state should have a next action.</p>
               </div>
-              <button className="button-secondary" onClick={() => setTab("search")}><Search size={15} />Find roles</button>
+              <button type="button" className="jb-button jb-button-solid" onClick={() => setTab("search")}>
+                Find new roles
+                <span>↗</span>
+              </button>
             </div>
 
-            <div className="glass-card mb-3 p-4">
-              <div className="mb-3">
-                <div className="text-sm font-semibold">Quick add</div>
-                <div className="mt-1 text-xs text-zinc-500">Track an application from any other source without opening Live search.</div>
+            <div className="jb-pipeline-signal">
+              {funnel.map((item, index) => (
+                <div key={item.key} className={"jb-pipeline-signal-item " + item.tone}>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <strong>{item.count}</strong>
+                  <small>{item.label}</small>
+                </div>
+              ))}
+            </div>
+
+            <section className="jb-quick-add">
+              <div>
+                <span className="jb-kicker">QUICK ADD / 04</span>
+                <h2>Bring in a role from anywhere.</h2>
               </div>
-              <div className="grid gap-2 md:grid-cols-[1fr_1.2fr_auto]">
-                <input
-                  className="quick-input"
-                  value={manualCompany}
-                  onChange={(event) => setManualCompany(event.target.value)}
-                  placeholder="Company"
-                />
-                <input
-                  className="quick-input"
-                  value={manualRole}
-                  onChange={(event) => setManualRole(event.target.value)}
-                  placeholder="Role"
-                />
+              <div className="jb-quick-add-fields">
+                <input value={manualCompany} onChange={(event) => setManualCompany(event.target.value)} placeholder="Company" />
+                <input value={manualRole} onChange={(event) => setManualRole(event.target.value)} placeholder="Role" />
                 <button
-                  className="button-primary justify-center"
+                  type="button"
+                  className="jb-button jb-button-solid"
                   onClick={() => void createManualApplication()}
                   disabled={manualLoading || !manualCompany.trim() || !manualRole.trim()}
                 >
-                  {manualLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-                  Add
+                  {manualLoading ? <Loader2 size={14} className="jb-spin" /> : <Plus size={14} />}
+                  Add role
                 </button>
               </div>
-            </div>
+            </section>
 
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+            <div className="jb-pipeline-grid">
               {stages.map((stage) => {
                 const items = apps.filter((app) => app.status === stage.key);
                 return (
-                  <div key={stage.key} className="pipeline-column">
-                    <div className="mb-3 flex items-center justify-between">
-                      <span className={"text-xs font-semibold uppercase tracking-[0.14em] " + stage.tone}>{stage.label}</span>
-                      <span className="count-badge">{items.length}</span>
+                  <section key={stage.key} className={"jb-pipeline-column " + stage.tone}>
+                    <div className="jb-column-head">
+                      <div>
+                        <span>{stage.label}</span>
+                        <strong>{String(items.length).padStart(2, "0")}</strong>
+                      </div>
+                      <span className="jb-column-line" />
                     </div>
-                    <div className="space-y-2">
-                      {items.map((app) => (
-                        <div key={app.id} className="pipeline-card relative">
-                          <button
-                            className="delete-button"
-                            onClick={() => void deleteApplication(app.id)}
-                            aria-label={"Delete " + app.company + " application"}
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                          <div className="pr-7 text-xs font-medium leading-5">{app.role}</div>
-                          <div className="mt-1 truncate text-[11px] text-zinc-500">{app.company}</div>
-                          <div className="mt-4 text-[10px] uppercase tracking-[0.12em] text-zinc-600">{app.source}</div>
-                          <select className="status-select" value={app.status} onChange={(event) => void updateStatus(app.id, event.target.value as Status)}>
+                    <div className="jb-column-items">
+                      {items.map((app, index) => (
+                        <article key={app.id} className="jb-pipeline-item">
+                          <div className="jb-pipeline-item-top">
+                            <span>0{index + 1}</span>
+                            <button type="button" onClick={() => void deleteApplication(app.id)} aria-label={"Delete " + app.company + " application"}>
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                          <h3>{app.role}</h3>
+                          <p>{app.company}</p>
+                          <span>{sourceLabel[app.source] ?? app.source}</span>
+                          <select value={app.status} onChange={(event) => void updateStatus(app.id, event.target.value as Status)} aria-label={"Move " + app.company + " application"}>
                             {stages.map((option) => <option key={option.key} value={option.key}>{option.label}</option>)}
                           </select>
-                        </div>
+                        </article>
                       ))}
-                      {!items.length ? <div className="empty-column">Empty</div> : null}
+                      {!items.length ? <div className="jb-column-empty">—</div> : null}
                     </div>
-                  </div>
+                  </section>
                 );
               })}
             </div>
