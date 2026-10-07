@@ -2996,3 +2996,202 @@ body {
     grid-column: 2;
   }
 }
+
+
+/* Global glass surface refresh */
+.jb-topbar {
+  background: rgba(5,6,7,.66);
+  border-bottom-color: rgba(255,255,255,.07);
+  backdrop-filter: blur(22px) saturate(120%);
+  -webkit-backdrop-filter: blur(22px) saturate(120%);
+}
+
+.jb-topbar-inner {
+  min-height: 70px;
+}
+
+.jb-nav-item {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: rgba(223,229,232,.48);
+  background: transparent;
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.jb-nav-item:hover {
+  border-color: rgba(255,255,255,.07);
+  background: rgba(255,255,255,.035);
+  color: rgba(242,246,247,.78);
+}
+
+.jb-nav-item.is-active {
+  border-color: rgba(255,255,255,.1);
+  background: rgba(255,255,255,.065);
+  color: #f4f6f7;
+  box-shadow: inset 0 1px rgba(255,255,255,.035), 0 8px 24px rgba(0,0,0,.12);
+}
+
+.jb-topbar-status {
+  padding: 8px 11px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 999px;
+  background: rgba(255,255,255,.025);
+}
+
+.jb-panel,
+.jb-recent,
+.jb-quick-add {
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(255,255,255,.06), transparent 40%),
+    linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.017));
+  box-shadow: 0 20px 65px rgba(0,0,0,.2), inset 0 1px rgba(255,255,255,.035);
+  backdrop-filter: blur(20px) saturate(120%);
+  -webkit-backdrop-filter: blur(20px) saturate(120%);
+}
+
+.jb-panel-head,
+.jb-recent-head {
+  border-bottom-color: rgba(255,255,255,.06);
+}
+
+.jb-metrics {
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 22px;
+  background: rgba(255,255,255,.025);
+  box-shadow: inset 0 1px rgba(255,255,255,.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.jb-metrics > div {
+  border-right-color: rgba(255,255,255,.055);
+}
+
+.jb-button {
+  min-height: 40px;
+  border-radius: 13px;
+  box-shadow: inset 0 1px rgba(255,255,255,.04);
+  transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.jb-button:hover {
+  transform: translateY(-1px);
+}
+
+.jb-button-solid {
+  background: rgba(244,247,248,.93);
+  color: #0a0c0d;
+  box-shadow: 0 10px 30px rgba(0,0,0,.22), inset 0 1px rgba(255,255,255,.5);
+}
+
+.jb-button-solid:hover {
+  background: #fff;
+  box-shadow: 0 14px 35px rgba(0,0,0,.28), inset 0 1px rgba(255,255,255,.7);
+}
+
+.jb-button-ghost {
+  border-color: rgba(255,255,255,.09);
+  border-radius: 13px;
+  background: rgba(255,255,255,.035);
+}
+
+.jb-button-ghost:hover {
+  border-color: rgba(255,255,255,.14);
+  background: rgba(255,255,255,.065);
+}
+
+.jb-icon-button {
+  border-radius: 13px;
+  border-color: rgba(255,255,255,.09);
+  background: rgba(255,255,255,.035);
+}
+
+.jb-recent-row {
+  border-bottom-color: rgba(255,255,255,.055);
+}
+
+.jb-recent-row:hover {
+  padding: 0 13px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.03);
+}
+
+.jb-pipeline-signal {
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 22px;
+  background: rgba(255,255,255,.025);
+  box-shadow: inset 0 1px rgba(255,255,255,.03);
+}
+
+.jb-pipeline-signal-item {
+  border-right-color: rgba(255,255,255,.055);
+}
+
+.jb-pipeline-column {
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,.055);
+  border-radius: 20px;
+  background: rgba(255,255,255,.018);
+}
+
+.jb-column-head {
+  padding: 4px 3px 12px;
+}
+
+.jb-pipeline-item {
+  border-color: rgba(255,255,255,.06);
+  border-radius: 17px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255,255,255,.05), transparent 48%),
+    rgba(255,255,255,.025);
+}
+
+.jb-pipeline-item:hover {
+  border-color: rgba(255,255,255,.12);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255,255,255,.075), transparent 48%),
+    rgba(255,255,255,.045);
+}
+
+.jb-pipeline-item select {
+  border-radius: 9px;
+}
+
+.jb-stage-offer .jb-column-line,
+.jb-stage-rejected .jb-column-line {
+  border-radius: 999px;
+}
+
+@media (max-width: 820px) {
+  .jb-metrics {
+    border-radius: 18px;
+  }
+
+  .jb-pipeline-column {
+    border-radius: 18px;
+  }
+}
+
+@media (max-width: 560px) {
+  .jb-topbar-inner {
+    min-height: 62px;
+  }
+
+  .jb-panel,
+  .jb-recent,
+  .jb-quick-add {
+    border-radius: 20px;
+  }
+
+  .jb-button,
+  .jb-button-ghost,
+  .jb-icon-button {
+    border-radius: 12px;
+  }
+}
