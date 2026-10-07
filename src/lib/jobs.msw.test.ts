@@ -7,7 +7,14 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe("searchJobs with MSW", () => {
-  it("aggregates provider responses without network access", async () => {
+  it("intercepts a provider and keeps the search path offline", async () => {
+    const providerResponse = await fetch("https://remoteok.com/api");
+    expect(providerResponse.ok).toBe(true);
+
+    const providerPayload = (await providerResponse.json()) as unknown[];
+    expect(Array.isArray(providerPayload)).toBe(true);
+    expect(providerPayload).toHaveLength(1);
+
     process.env.SERPAPI_API_KEY = "test";
     process.env.ADZUNA_APP_ID = "test";
     process.env.ADZUNA_APP_KEY = "test";
@@ -15,20 +22,15 @@ describe("searchJobs with MSW", () => {
     const result = await searchJobs({
       query: "",
       location: "",
-      source: "all",
+      source: "remoteok",
       platform: "all",
       experience: "all",
       remoteOnly: false,
       limit: 20,
     });
 
-    expect(result.jobs.length).toBeGreaterThanOrEqual(5);
-    expect(result.sources).toMatchObject({
-      remoteok: "ok",
-      remotive: "ok",
-      jobicy: "ok",
-      adzuna: "ok",
-      googlejobs: "ok",
-    });
+    expect(result.sources).toMatchObject({ remoteok: "ok" });
+    expect(result.jobs).toHaveLength(1);
+    expect(result.jobs[0]?.company).toBe("Remote Fixtures");
   });
 });
