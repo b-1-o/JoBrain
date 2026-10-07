@@ -87,6 +87,10 @@ const sourceLabel: Record<string, string> = {
   OTHER: "Other",
 }; 
 
+const AUTOFILL_GITHUB_URL = "https://github.com/b-1-o/autofill";
+const AUTOFILL_DOWNLOAD_URL =
+  "https://github.com/b-1-o/autofill/archive/refs/heads/main.zip";
+
 const navItems: Array<{
   key: "overview" | "search" | "pipeline";
   label: string;
@@ -518,7 +522,95 @@ export default function Home() {
               </div>
             </section>
 
-            <section className="mt-3 grid gap-3 xl:grid-cols-[1fr_.9fr]">
+            <section className="mt-3 grid gap-3 xl:grid-cols-[1fr_.9fr_.78fr]">
+              <div className="glass-card p-5">
+                <div className="mb-5 flex items-start justify-between gap-4">
+                  <div>
+                    <div className="text-sm font-semibold">Recent applications</div>
+                    <div className="mt-1 text-xs text-zinc-500">Your latest tracked moves.</div>
+                  </div>
+                  <button className="text-xs text-violet-300 hover:text-violet-200" onClick={() => setTab("pipeline")}>Open pipeline →</button>
+                </div>
+                <div className="space-y-2">
+                  {apps.slice(0, 6).map((app) => (
+                    <div key={app.id} className="row-card">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-medium">{app.role}</div>
+                        <div className="mt-1 flex flex-wrap gap-2 text-xs text-zinc-500">
+                          <span>{app.company}</span><span>·</span><span>{sourceLabel[app.source] ?? app.source}</span>
+                        </div>
+                      </div>
+                      <span className={"status-chip status-" + app.status.toLowerCase()}>{app.status}</span>
+                    </div>
+                  ))}
+                  {!apps.length ? (
+                    <div className="empty-state">
+                      <BriefcaseBusiness size={20} />
+                      <span>No applications yet. Load demo data or track a live role.</span>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="glass-card p-5">
+                <div className="mb-5 flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-semibold">Live source matrix</div>
+                    <div className="mt-1 text-xs text-zinc-500">Coverage during the latest search.</div>
+                  </div>
+                  <Globe2 size={17} className="text-zinc-600" />
+                </div>
+                <div className="grid gap-2">
+                  {["googlejobs", "remoteok", "remotive", "jobicy", "adzuna"].map((name) => (
+                    <div key={name} className="source-row">
+                      <div className="flex items-center gap-3">
+                        <span className={"size-2 rounded-full " + (sourceState[name] === "error" ? "bg-rose-400" : sourceState[name] === "ok" ? "bg-emerald-400" : "bg-zinc-700")} />
+                        <span className="text-sm">{sourceLabel[name]}</span>
+                      </div>
+                      <span className="text-xs text-zinc-600">
+                        {sourceState[name] === "error" ? "unavailable" : sourceState[name] === "ok" ? "connected" : "idle"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-5 border-t border-white/[0.06] pt-4 text-xs text-zinc-600">
+                  {lastFetched ? "Last fetch " + relativeTime(lastFetched) : "Waiting for first fetch"}
+                </div>
+              </div>
+
+              <div className="glass-card p-5">
+                <div className="mb-5 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold">Autofill</div>
+                    <div className="mt-1 text-xs text-zinc-500">Move from job discovery to application faster.</div>
+                  </div>
+                  <div className="rounded-xl border border-violet-300/10 bg-violet-300/[0.06] p-2 text-violet-200">
+                    <Zap size={16} />
+                  </div>
+                </div>
+                <p className="text-sm leading-6 text-zinc-300">
+                  Companion Chrome extension for filling supported application forms with one click while keeping profile data in Chrome Sync.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="meta-pill">Manifest V3</span>
+                  <span className="meta-pill">Review first</span>
+                  <span className="meta-pill">Local profile</span>
+                </div>
+                <div className="mt-5 grid gap-2">
+                  <a className="button-primary w-full justify-center" href={AUTOFILL_DOWNLOAD_URL}>
+                    <Zap size={14} />
+                    Download extension
+                  </a>
+                  <a className="button-secondary w-full justify-center" href={AUTOFILL_GITHUB_URL} target="_blank" rel="noreferrer">
+                    View Autofill project
+                    <ExternalLink size={14} />
+                  </a>
+                </div>
+                <div className="mt-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-[11px] leading-5 text-zinc-500">
+                  Chrome Web Store one-click install can be added after the extension is published there. For now, download the ZIP and load it as an unpacked extension in Chrome.
+                </div>
+              </div>
+            </section>
               <div className="glass-card p-5">
                 <div className="mb-5 flex items-center justify-between">
                   <div>
