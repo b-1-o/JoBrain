@@ -381,7 +381,7 @@ export default function Home() {
         cursorSize={50}
         cursorStrength={0.6}
         shine={0.15}
-        opacity={theme === "dark" ? 0.46 : 0.18}
+        opacity={theme === "dark" ? 1 : 0.22}
         className="jb-pattern-waves"
       />
       <header className="jb-topbar">
