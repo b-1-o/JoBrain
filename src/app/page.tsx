@@ -569,7 +569,7 @@ export default function Home() {
                   <span className="jb-kicker">RECENT MOVES / 03</span>
                   <h2>What is moving right now.</h2>
                 </div>
-                <button type="button" className="jb-text-link" onClick={() => setTab("pipeline")}>
+                <button type="button" className="jb-text-link" onClick={() => changeTab("pipeline")}>
                   Open pipeline ↗
                 </button>
               </div>
@@ -758,7 +758,7 @@ export default function Home() {
                 <h1>Your job search, in motion.</h1>
                 <p>Every role has a state. Every active state should have a next action.</p>
               </div>
-              <button type="button" className="jb-button jb-button-solid" onClick={() => setTab("search")}>
+              <button type="button" className="jb-button jb-button-solid" onClick={() => changeTab("search")}>
                 Find new roles
                 <span>↗</span>
               </button>
