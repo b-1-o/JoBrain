@@ -1,22 +1,30 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const captureException = vi.fn();
+const sentry = vi.hoisted(() => ({
+  captureException: vi.fn(),
+  setExtra: vi.fn(),
+}));
 
 vi.mock("@sentry/nextjs", () => ({
-  withScope(callback: (scope: { setExtra: typeof vi.fn }) => void) {
-    callback({ setExtra: vi.fn() });
+  withScope(callback: (scope: { setExtra: typeof sentry.setExtra }) => void) {
+    callback({ setExtra: sentry.setExtra });
   },
-  captureException,
+  captureException: sentry.captureException,
 }));
 
 import { captureError } from "@/lib/telemetry";
 
 describe("captureError", () => {
-  beforeEach(() => captureException.mockClear());
+  beforeEach(() => {
+    sentry.captureException.mockClear();
+    sentry.setExtra.mockClear();
+  });
 
   it("reports errors to Sentry with request context", () => {
     const error = new Error("test");
     captureError(error, { route: "/api/jobs", method: "GET" });
-    expect(captureException).toHaveBeenCalledWith(error);
+    expect(sentry.setExtra).toHaveBeenCalledWith("route", "/api/jobs");
+    expect(sentry.setExtra).toHaveBeenCalledWith("method", "GET");
+    expect(sentry.captureException).toHaveBeenCalledWith(error);
   });
 });
