@@ -1,72 +1,86 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { z } from "zod";
+import { enforceRateLimit } from "@/lib/api-security";
+import { getCachedJobs, setCachedJobs } from "@/lib/job-cache";
 import { searchJobs, type ExperienceLevel, type JobPlatform, type JobSource } from "@/lib/jobs";
 
 export const dynamic = "force-dynamic";
 
+const searchSchema = z.object({
+  query: z.string().trim().max(160).default(""),
+  location: z.string().trim().max(160).default(""),
+  source: z.enum(["all", "remoteok", "remotive", "jobicy", "adzuna", "googlejobs"]).default("all"),
+  platform: z
+    .enum([
+      "all",
+      "linkedin",
+      "indeed",
+      "glassdoor",
+      "ziprecruiter",
+      "dice",
+      "company",
+      "remoteok",
+      "remotive",
+      "jobicy",
+      "adzuna",
+      "other",
+    ])
+    .default("all"),
+  experience: z.enum(["all", "intern", "junior", "mid", "senior", "lead"]).default("all"),
+  remote: z.enum(["true", "false"]).default("false"),
+  limit: z.coerce.number().int().min(10).max(120).default(120),
+});
+
 export async function GET(request: NextRequest) {
-  const params = request.nextUrl.searchParams;
-  const sourceParam = params.get("source") ?? "all";
-  const platformParam = params.get("platform") ?? "all";
-  const experienceParam = params.get("experience") ?? "all";
+  const limited = await enforceRateLimit(request, "jobs-search", 30, "1 m");
+  if (!limited.allowed && limited.response) return limited.response;
 
-  const allowedSources = [
-    "all",
-    "remoteok",
-    "remotive",
-    "jobicy",
-    "adzuna",
-    "googlejobs",
-  ];
+  const parsed = searchSchema.safeParse({
+    query: request.nextUrl.searchParams.get("query") ?? "",
+    location: request.nextUrl.searchParams.get("location") ?? "",
+    source: request.nextUrl.searchParams.get("source") ?? "all",
+    platform: request.nextUrl.searchParams.get("platform") ?? "all",
+    experience: request.nextUrl.searchParams.get("experience") ?? "all",
+    remote: request.nextUrl.searchParams.get("remote") ?? "false",
+    limit: request.nextUrl.searchParams.get("limit") ?? "120",
+  });
 
-  const allowedPlatforms = [
-    "all",
-    "linkedin",
-    "indeed",
-    "glassdoor",
-    "ziprecruiter",
-    "dice",
-    "company",
-    "remoteok",
-    "remotive",
-    "jobicy",
-    "adzuna",
-    "other",
-  ];
-
-  const allowedExperience = [
-    "all",
-    "intern",
-    "junior",
-    "mid",
-    "senior",
-    "lead",
-  ];
-
-  if (!allowedSources.includes(sourceParam)) {
-    return NextResponse.json({ error: "Invalid source" }, { status: 400 });
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid search parameters", issues: parsed.error.flatten() },
+      { status: 400 },
+    );
   }
 
-  if (!allowedPlatforms.includes(platformParam)) {
-    return NextResponse.json({ error: "Invalid platform" }, { status: 400 });
-  }
-
-  if (!allowedExperience.includes(experienceParam)) {
-    return NextResponse.json({ error: "Invalid experience level" }, { status: 400 });
-  }
+  const params = {
+    query: parsed.data.query,
+    location: parsed.data.location,
+    source: parsed.data.source as JobSource | "all",
+    platform: parsed.data.platform as JobPlatform | "all",
+    experience: parsed.data.experience as ExperienceLevel,
+    remoteOnly: parsed.data.remote === "true",
+    limit: parsed.data.limit,
+  };
 
   try {
-    const result = await searchJobs({
-      query: params.get("query") ?? "",
-      location: params.get("location") ?? "",
-      source: sourceParam as JobSource | "all",
-      platform: platformParam as JobPlatform | "all",
-      experience: experienceParam as ExperienceLevel,
-      remoteOnly: params.get("remote") === "true",
-      limit: Number(params.get("limit") ?? 120),
-    });
+    const cached = await getCachedJobs(params);
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: {
+          "Cache-Control": "private, max-age=0, must-revalidate",
+          "X-Cache": "HIT",
+        },
+      });
+    }
+
+    const result = await searchJobs(params);
+    await setCachedJobs(params, result);
 
     return NextResponse.json(result, {
-      headers: { "Cache-Control": "no-store, max-age=0" },
+      headers: {
+        "Cache-Control": "private, max-age=0, must-revalidate",
+        "X-Cache": "MISS",
+      },
     });
   } catch {
     return NextResponse.json(
