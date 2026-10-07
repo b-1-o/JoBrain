@@ -25,12 +25,38 @@ async function main() {
     },
   });
 
+  const defaultStatuses = [
+    ["FOUND", "Found", "neutral", 0],
+    ["APPLIED", "Applied", "blue", 10],
+    ["SCREENING", "Screening", "violet", 20],
+    ["TECH", "Technical", "amber", 30],
+    ["OFFER", "Offer", "green", 40],
+    ["REJECTED", "Rejected", "red", 50],
+  ] as const;
+
+  for (const [key, label, color, sortOrder] of defaultStatuses) {
+    await prisma.applicationStatusDefinition.upsert({
+      where: { userId_key: { userId: user.id, key } },
+      update: { label, color, sortOrder, category: key, isSystem: true },
+      create: {
+        userId: user.id,
+        key,
+        label,
+        color,
+        sortOrder,
+        category: key,
+        isSystem: true,
+      },
+    });
+  }
+
   const userCount = await prisma.user.count();
 
   console.warn("Seed completed successfully.");
   console.warn(`Total users in database: ${userCount}`);
   console.warn(`Demo account: ${user.email} (id: ${user.id})`);
   console.warn("Applications: 0 (will be seeded in Stage 2)");
+  console.warn("Default application statuses: 6");
 }
 
 main()
