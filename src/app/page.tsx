@@ -13,8 +13,8 @@ import {
   Trash2,
   type LucideIcon,
 } from "lucide-react";
-import { ColorBends } from "../components/ColorBends";
-import { DotField } from "../components/DotField";
+import { ColorBends } from "@components/ColorBends";
+import { DotField } from "@components/DotField";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Status = "FOUND" | "APPLIED" | "SCREENING" | "TECH" | "OFFER" | "REJECTED";
@@ -147,6 +147,25 @@ export default function Home() {
   const [manualLoading, setManualLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
+  const changeTab = useCallback(
+    (nextTab: "overview" | "search" | "pipeline") => {
+      if (nextTab === tab) return;
+
+      const transitionDocument = document as Document & {
+        startViewTransition?: (callback: () => void) => {
+          finished: Promise<void>;
+        };
+      };
+
+      if (transitionDocument.startViewTransition) {
+        transitionDocument.startViewTransition(() => setTab(nextTab));
+      } else {
+        setTab(nextTab);
+      }
+    },
+    [tab],
+  );
+
   const searchJobs = useCallback(
     async () => {
       abortRef.current?.abort();
@@ -254,7 +273,7 @@ export default function Home() {
     if (response.ok) {
       const data = await response.json();
       setApps((current) => [data.application, ...current]);
-      setTab("pipeline");
+      changeTab("pipeline");
     } else {
       setError("Could not track this role.");
     }
@@ -346,7 +365,7 @@ export default function Home() {
       if (!applicationsResponse.ok) throw new Error("applications");
       const applicationsData = await applicationsResponse.json();
       setApps(applicationsData.applications ?? []);
-      setTab("overview");
+      changeTab("overview");
     } catch {
       setError("Could not load demo data. Check your database connection.");
     } finally {
@@ -417,7 +436,7 @@ export default function Home() {
           </div>
         ) : null}
 
-        {tab === "overview" ? (
+        <div key={tab} className="jb-view-transition">\n        {tab === "overview" ? (
           <section className="jb-overview">
             <div className="jb-hero">
               <div className="jb-hero-copy">
@@ -434,7 +453,7 @@ export default function Home() {
                   Search the market, track the signal, and move without losing context.
                 </p>
                 <div className="jb-hero-actions">
-                  <button type="button" className="jb-button jb-button-solid" onClick={() => setTab("search")}>
+                  <button type="button" className="jb-button jb-button-solid" onClick={() => changeTab("search")}>
                     Explore live roles
                     <span>↗</span>
                   </button>
@@ -812,6 +831,7 @@ export default function Home() {
             </div>
           </section>
         ) : null}
+        </div>
       </div>
     </main>
   );
