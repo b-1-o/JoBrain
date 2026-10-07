@@ -44,6 +44,24 @@ describe("/api/applications", () => {
     expect(response.status).toBe(400);
   });
 
+  it("auto-sets appliedAt when creating an APPLIED application", async () => {
+    const request = new NextRequest("http://localhost/api/applications", {
+      method: "POST",
+      body: JSON.stringify({
+        company: "Example",
+        role: "Frontend Developer",
+        status: "APPLIED",
+      }),
+      headers: { "content-type": "application/json", origin: "http://localhost" },
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(201);
+
+    const body = await response.json();
+    expect(body.application.appliedAt).toBeInstanceOf(Date);
+  });
+
   it("accepts validated create payloads and scopes them to workspace user", async () => {
     const request = new NextRequest("http://localhost/api/applications", {
       method: "POST",
