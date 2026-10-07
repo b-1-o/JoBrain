@@ -1,7 +1,7 @@
 import { http, HttpResponse } from "msw";
 
 export const handlers = [
-  http.get("https://remoteok.com/api", () =>
+  http.get(/https:\/\/remoteok\.com\/api\/?$/, () =>
     HttpResponse.json([
       {
         id: 101,
@@ -16,7 +16,7 @@ export const handlers = [
       },
     ]),
   ),
-  http.get("https://remotive.com/api/remote-jobs", () =>
+  http.get(/https:\/\/remotive\.com\/api\/remote-jobs\/?$/, () =>
     HttpResponse.json({
       jobs: [
         {
@@ -32,7 +32,7 @@ export const handlers = [
       ],
     }),
   ),
-  http.get("https://jobicy.com/api/v2/remote-jobs", () =>
+  http.get(/https:\/\/jobicy\.com\/api\/v2\/remote-jobs\/?$/, () =>
     HttpResponse.json({
       jobs: [
         {
@@ -48,7 +48,7 @@ export const handlers = [
       ],
     }),
   ),
-  http.get("https://api.adzuna.com/v1/api/jobs/us/search/1", () =>
+  http.get(/https:\/\/api\.adzuna\.com\/v1\/api\/jobs\/us\/search\/1(?:\?.*)?$/, () =>
     HttpResponse.json({
       results: [
         {
@@ -63,7 +63,7 @@ export const handlers = [
       ],
     }),
   ),
-  http.get("https://serpapi.com/search.json", () =>
+  http.get(/https:\/\/serpapi\.com\/search\.json(?:\?.*)?$/, () =>
     HttpResponse.json({
       jobs_results: [
         {
