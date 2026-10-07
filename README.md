@@ -12,7 +12,7 @@
 - **Workspace isolation** through a signed HTTP-only workspace cookie and user-scoped Prisma queries.
 - **Live-search caching** with TanStack Query in the browser and optional Upstash Redis on the server.
 - **CSV export** for spreadsheet workflows and **iCal export** for scheduled next actions.
-- **Reminder delivery** through SMTP/Nodemailer with Redis-backed deduplication and Vercel Cron.
+- **Reminder delivery** through SMTP/Nodemailer with Redis-backed deduplication. GitHub Actions runs the authenticated reminder worker every 15 minutes.
 - **Review-first Autofill companion** for application forms.
 
 ## Architecture
@@ -49,7 +49,9 @@ Next.js Route Handlers
 | `/api/applications` | GET/POST/PATCH/DELETE | Workspace-scoped application CRUD |
 | `/api/applications/export` | GET | `format=csv` or `format=ics` |
 | `/api/demo` | POST | Seed deterministic demo applications |
-| `/api/reminders` | GET/POST | SMTP reminder worker for scheduled jobs |
+| `/api/statuses` | GET/POST | Workspace-scoped canonical + custom application statuses |
+| `/api/cron/reminders` | GET/POST | Authenticated 15-minute reminder worker with dry-run support |
+| `/api/reminders` | GET/POST | Legacy authenticated SMTP reminder worker |
 
 State-changing routes validate JSON payloads with Zod, apply origin checks, and use workspace-scoped Prisma filters.
 
@@ -78,7 +80,8 @@ Copy `.env.example` to `.env.local`.
 - `SMTP_USER`
 - `SMTP_PASSWORD`
 - `SMTP_FROM`
-- `CRON_SECRET`
+- `CRON_SECRET` — protects both the legacy bearer endpoint and the 15-minute cron endpoint.
+- `JOBRAIN_CRON_URL` — local documentation value for the deployed app URL; the GitHub Actions workflow uses repository secrets `JOBRAIN_CRON_URL` and `CRON_SECRET`.
 
 Never commit real credentials. `JOBRAIN_RATE_LIMIT_DISABLED` is intended only for local/CI development.
 
@@ -115,6 +118,7 @@ npm run db:studio
 - Search results are cached for 60 seconds when Upstash Redis is configured.
 - Production rate limiting fails closed when its required Redis configuration is missing.
 - Reminder sends use Redis deduplication keys.
+- The production reminder schedule runs every 15 minutes from GitHub Actions instead of relying on Vercel Hobby cron frequency.
 - Workspace data access is always scoped by the current workspace user.
 
 ## Scope and follow-ups
