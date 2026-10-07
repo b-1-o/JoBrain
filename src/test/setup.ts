@@ -1,3 +1,4 @@
+import "cross-fetch/polyfill";
 import { afterAll, afterEach, beforeAll } from "vitest";
 import { server } from "./msw";
 
