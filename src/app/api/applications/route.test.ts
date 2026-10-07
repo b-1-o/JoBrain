@@ -59,7 +59,8 @@ describe("/api/applications", () => {
     expect(response.status).toBe(201);
 
     const body = await response.json();
-    expect(body.application.appliedAt).toBeInstanceOf(Date);
+    expect(typeof body.application.appliedAt).toBe("string");
+    expect(Number.isNaN(Date.parse(body.application.appliedAt))).toBe(false);
   });
 
   it("accepts validated create payloads and scopes them to workspace user", async () => {
