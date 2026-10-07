@@ -14,6 +14,12 @@ test("search -> track -> pipeline -> export", async ({ page }) => {
   await page.getByRole("button", { name: "Track" }).click();
 
   await expect(
+    page.getByText("Role added to the pipeline."),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Pipeline" }).click();
+
+  await expect(
     page.getByRole("heading", { name: "Your job search, in motion." }),
   ).toBeVisible();
   await expect(
