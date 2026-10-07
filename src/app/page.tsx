@@ -9,6 +9,8 @@ import {
   Filter,
   Gauge,
   Globe2,
+  MapPin,
+  Clock3,
   Layers3,
   LayoutDashboard,
   Loader2,
@@ -104,6 +106,33 @@ function relativeTime(value: string) {
   return Math.floor(hours / 24) + "d ago";
 }
 
+function platformName(platform: string) {
+  const labels: Record<string, string> = {
+    linkedin: "LinkedIn",
+    indeed: "Indeed",
+    glassdoor: "Glassdoor",
+    ziprecruiter: "ZipRecruiter",
+    dice: "Dice",
+    company: "Company",
+    remoteok: "Remote OK",
+    remotive: "Remotive",
+    jobicy: "Jobicy",
+    adzuna: "Adzuna US",
+    other: "Other",
+  };
+
+  return labels[platform] ?? platform;
+}
+
+function levelName(level: Job["level"]) {
+  if (level === "intern") return "Intern / Entry";
+  if (level === "junior") return "Junior";
+  if (level === "mid") return "Mid";
+  if (level === "senior") return "Senior";
+  if (level === "lead") return "Lead / Staff";
+  return null;
+}
+
 function StatCard({
   label,
   value,
@@ -116,7 +145,7 @@ function StatCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="glass-card p-5">
+    <div className="glass-card stat-card p-5">
       <div className="mb-7 flex items-start justify-between">
         <span className="text-xs font-medium uppercase tracking-[0.16em] text-zinc-500">{label}</span>
         <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2 text-zinc-400">
@@ -328,6 +357,14 @@ export default function Home() {
     }
   }
 
+  function resetFilters() {
+    setJobQuery("frontend");
+    setLocation("");
+    setPlatform("all");
+    setExperience("all");
+    setRemoteOnly(false);
+  }
+
   async function loadDemo() {
     setDemoLoading(true);
     try {
@@ -354,38 +391,46 @@ export default function Home() {
         <div className="absolute right-[-15%] top-[20%] h-[32rem] w-[32rem] rounded-full bg-sky-500/[0.08] blur-[140px]" />
       </div>
 
-      <header className="sticky top-0 z-30 border-b border-white/[0.07] bg-[#060609]/80 backdrop-blur-2xl">
+      <header className="sticky top-0 z-30 border-b border-white/[0.07] bg-[#060609]/75 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-[1500px] items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.055]">
-              <Target size={19} className="text-violet-300" />
+            <div className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.055] shadow-lg shadow-violet-950/10">
+              <Target size={18} className="text-violet-300" />
             </div>
             <div>
               <div className="text-sm font-semibold tracking-tight">JoBrain</div>
               <div className="text-[11px] text-zinc-500">Job search intelligence</div>
             </div>
           </div>
-          <div className="hidden items-center gap-2 sm:flex">
+          <div className="live-badge">
             <span className="live-dot" />
-            <span className="text-xs text-zinc-500">Live workspace</span>
+            Live data
           </div>
         </div>
       </header>
 
       <div className="mx-auto max-w-[1500px] px-4 pb-16 pt-8 sm:px-6">
-        <section className="mb-7">
-          <div className="flex flex-col justify-between gap-6 xl:flex-row xl:items-end">
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-violet-300/80">Personal command center</p>
-              <h1 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
-                Stop losing applications.
-                <span className="text-zinc-500"> Start seeing the funnel.</span>
-              </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-500">
-                Search fresh roles across multiple sources, track the right ones, and see exactly where the pipeline slows down.
+        <section className="mb-8">
+          <div className="flex flex-col justify-between gap-7 xl:flex-row xl:items-end">
+            <div className="min-w-0">
+              <p className="page-kicker">
+                <span className="size-1.5 rounded-full bg-violet-300" />
+                Personal command center
               </p>
+              <h1 className="hero-title mt-5">
+                Find the right roles.
+                <span className="block text-zinc-600">Keep the whole funnel visible.</span>
+              </h1>
+              <p className="hero-copy mt-5">
+                Search fresh roles across the major job ecosystem, narrow the feed by level and platform, then move the strongest opportunities into one pipeline.
+              </p>
+              <div className="hero-meta mt-5">
+                <span className="meta-pill"><Globe2 size={12} />US + Remote</span>
+                <span className="meta-pill"><Filter size={12} />Platform + level filters</span>
+                <span className="meta-pill"><Target size={12} />One-click tracking</span>
+              </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex shrink-0 flex-wrap gap-2">
               <button className="button-secondary" onClick={() => void searchJobs()}>
                 <RefreshCw size={15} className={loadingJobs ? "animate-spin" : ""} />
                 Refresh
@@ -398,8 +443,9 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="mb-6 flex flex-wrap items-center gap-2">
-          {navItems.map((item) => (
+        <div className="mb-7">
+          <div className="nav-strip">
+            {navItems.map((item) => (
             <button
               key={item.key}
               className={"nav-pill " + (tab === item.key ? "nav-pill-active" : "")}
@@ -409,6 +455,7 @@ export default function Home() {
               {item.label}
             </button>
           ))}
+          </div>
         </div>
 
         {error ? (
@@ -420,11 +467,11 @@ export default function Home() {
         {tab === "overview" ? (
           <>
             <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-              <StatCard label="Tracked" value={stats.total} hint="total applications" icon={BriefcaseBusiness} />
+              <div className="stat-card"><StatCard label="Tracked" value={stats.total} hint="total applications" icon={BriefcaseBusiness} />
               <StatCard label="Active" value={stats.active} hint="still moving" icon={Activity} />
               <StatCard label="Interviews" value={stats.interviews} hint="screening + technical" icon={Gauge} />
               <StatCard label="Offers" value={stats.offers} hint={stats.offerRate + "% of applied"} icon={CheckCircle2} />
-              <StatCard label="Rejection" value={stats.rejectionRate + "%"} hint="of applied outcomes" icon={TrendingDown} />
+              <StatCard label="Rejection" value={stats.rejectionRate + "%"} hint="of applied outcomes" icon={TrendingDown} /></div>
             </section>
 
             <section className="mt-3 grid gap-3 xl:grid-cols-[1.45fr_.75fr]">
@@ -519,7 +566,7 @@ export default function Home() {
                   <Globe2 size={17} className="text-zinc-600" />
                 </div>
                 <div className="grid gap-2">
-                  {["remoteok", "remotive", "jobicy", "adzuna"].map((name) => (
+                  {["googlejobs", "remoteok", "remotive", "jobicy", "adzuna"].map((name) => (
                     <div key={name} className="source-row">
                       <div className="flex items-center gap-3">
                         <span className={"size-2 rounded-full " + (sourceState[name] === "error" ? "bg-rose-400" : sourceState[name] === "ok" ? "bg-emerald-400" : "bg-zinc-700")} />
@@ -541,10 +588,19 @@ export default function Home() {
 
         {tab === "search" ? (
           <section>
-            <div className="glass-card p-4 sm:p-5">
-              <div className="grid gap-3 lg:grid-cols-[1.15fr_.8fr_.65fr_.65fr_auto]">
-                <label className="field-wrap">
-                  <Search size={16} />
+            <div className="search-panel p-3 sm:p-4">
+              <div className="mb-3 flex items-center justify-between gap-3 px-1">
+                <div>
+                  <div className="section-label">Live search</div>
+                  <div className="section-muted">Search once. Compare the market in one feed.</div>
+                </div>
+                <button className="button-secondary hidden sm:inline-flex" onClick={resetFilters}>
+                  Reset filters
+                </button>
+              </div>
+              <div className="grid gap-2.5 lg:grid-cols-[1.35fr_.8fr_.7fr_.7fr_auto]">
+                <label className="field-wrap search-primary"> 
+                  <Search size={17} />
                   <input value={jobQuery} onChange={(event) => setJobQuery(event.target.value)} placeholder="frontend developer" />
                 </label>
                 <label className="field-wrap">
@@ -582,9 +638,40 @@ export default function Home() {
                   <Target size={15} /> Remote
                 </button>
               </div>
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500">
-                <span>{loadingJobs ? "Querying sources…" : jobs.length + " roles matched"}</span>
-                <span className="flex items-center gap-2"><span className="live-dot" />Results update while you type</span>
+              <div className="result-bar mt-3 px-1">
+                <span className="result-count">
+                  {loadingJobs ? "Updating results…" : jobs.length + " roles matched"}
+                </span>
+                <span className="result-status">
+                  <span className={loadingJobs ? "live-dot animate-pulse" : "live-dot"} />
+                  {lastFetched ? "Live source refresh " + relativeTime(lastFetched) : "Searching live sources"}
+                </span>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2 px-1">
+                {[
+                  ["all", "All levels"],
+                  ["intern", "Intern / Entry"],
+                  ["junior", "Junior"],
+                  ["mid", "Mid"],
+                  ["senior", "Senior"],
+                  ["lead", "Lead / Staff"],
+                ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={"filter-chip " + (experience === value ? "filter-chip-active" : "")}
+                    onClick={() => setExperience(value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className={"filter-chip " + (remoteOnly ? "filter-chip-active" : "")}
+                  onClick={() => setRemoteOnly((value) => !value)}
+                >
+                  Remote only
+                </button>
               </div>
             </div>
 
@@ -595,7 +682,7 @@ export default function Home() {
                     <div className="min-w-0">
                       <div className="mb-2 flex flex-wrap gap-2">
                         <span className="source-chip">
-                          {job.platform === "linkedin"
+                          {platformName(job.platform)}
                             ? "LinkedIn"
                             : job.platform === "indeed"
                               ? "Indeed"
@@ -624,30 +711,48 @@ export default function Home() {
                         ) : null}
                         {job.remote ? <span className="source-chip source-chip-accent">Remote</span> : null}
                       </div>
-                      <h3 className="line-clamp-2 text-base font-semibold leading-6">{job.title}</h3>
-                      <div className="mt-1 text-sm text-zinc-500">{job.company}</div>
+                      <h3 className="job-card-title line-clamp-2">{job.title}</h3>
+                      <div className="job-company">{job.company}</div>
                     </div>
                     <a className="icon-button" href={job.url} target="_blank" rel="noreferrer" aria-label="Open job">
                       <ExternalLink size={15} />
                     </a>
                   </div>
-                  <div className="mb-4 flex flex-wrap gap-2 text-xs text-zinc-500">
-                    <span className="inline-flex items-center gap-1"><Globe2 size={12} />{job.location || "Remote"}</span>
-                    <span>·</span><span>{relativeTime(job.postedAt)}</span>
+                  <div className="job-meta mb-4 mt-5">
+                    <span className="job-meta-item"><MapPin size={12} />{job.location || "Remote"}</span>
+                    <span>·</span>
+                    <span className="job-meta-item"><Clock3 size={12} />{relativeTime(job.postedAt)}</span>
                   </div>
-                  {job.salary ? <div className="mb-4 text-xs text-emerald-300">{job.salary}</div> : null}
-                  <p className="line-clamp-3 min-h-[4.2rem] text-xs leading-5 text-zinc-500">{job.description || "No description returned by source."}</p>
-                  <div className="mt-5 flex items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
-                    <div className="flex min-w-0 flex-1 gap-1 overflow-hidden">
-                      {job.tags.slice(0, 3).map((tag) => <span className="tag" key={tag}>{tag}</span>)}
+                  {job.salary ? (
+                    <div className="mb-4 text-xs font-semibold text-emerald-300">{job.salary}</div>
+                  ) : null}
+                  <p className="job-description line-clamp-3 min-h-[4.8rem]">
+                    {job.description || "No description returned by source."}
+                  </p>
+                  <div className="mt-4 flex min-h-7 flex-wrap gap-1.5">
+                    {job.tags.slice(0, 3).map((tag) => <span className="tag" key={tag}>{tag}</span>)}
+                  </div>
+                  <div className="job-footer">
+                    <div className="job-source-line">
+                      <span className="job-source-dot" />
+                      <span className="truncate text-[10px] uppercase tracking-[0.12em] text-zinc-600">
+                        {platformName(job.platform)}
+                      </span>
                     </div>
-                    <button className="button-small" onClick={() => void addApplication(job)}><Plus size={14} />Track</button>
+                    <button className="button-small" onClick={() => void addApplication(job)}>
+                      <Plus size={14} />Track
+                    </button>
                   </div>
                 </article>
               ))}
               {!jobs.length && !loadingJobs ? (
                 <div className="empty-state md:col-span-2 xl:col-span-3">
-                  <Search size={22} />No roles matched. Try a broader query or remove the location filter.
+                  <div className="text-center">
+                    <Search size={22} className="mx-auto mb-3 text-zinc-700" />
+                    <div className="text-sm font-medium text-zinc-400">No roles matched this view.</div>
+                    <div className="mt-1 text-xs text-zinc-600">Try another keyword, broaden the level, or reset the filters.</div>
+                    <button className="button-secondary mt-4" onClick={resetFilters}>Reset filters</button>
+                  </div>
                 </div>
               ) : null}
             </div>
