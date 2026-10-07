@@ -11,10 +11,13 @@ import {
   RefreshCw,
   Search,
   Trash2,
+  Moon,
+  Sun,
   type LucideIcon,
 } from "lucide-react";
 import { ColorBends } from "@components/ColorBends";
 import { DotField } from "@components/DotField";
+import PatternWaves from "@components/PatternWaves";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Status = "FOUND" | "APPLIED" | "SCREENING" | "TECH" | "OFFER" | "REJECTED";
@@ -130,6 +133,7 @@ function platformName(platform: string) {
 
 export default function Home() {
   const [tab, setTab] = useState<"overview" | "search" | "pipeline">("overview");
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [apps, setApps] = useState<App[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [jobQuery, setJobQuery] = useState("frontend");
@@ -146,6 +150,20 @@ export default function Home() {
   const [manualRole, setManualRole] = useState("");
   const [manualLoading, setManualLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("jobrain-theme");
+    if (stored === "light" || stored === "dark") setTheme(stored);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem("jobrain-theme", theme);
+  }, [theme]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((current) => (current === "dark" ? "light" : "dark"));
+  }, []);
 
   const changeTab = useCallback(
     (nextTab: "overview" | "search" | "pipeline") => {
@@ -375,6 +393,19 @@ export default function Home() {
 
   return (
     <main className="jb-shell">
+      <PatternWaves
+        preset="silk"
+        color={theme === "dark" ? "#ffffff" : "#1a2024"}
+        backgroundColor={theme === "dark" ? "#050607" : "#e7eaec"}
+        fade="edges"
+        fadeSize={0.58}
+        interactive
+        cursorSize={50}
+        cursorStrength={0.6}
+        shine={0.15}
+        opacity={theme === "dark" ? 0.46 : 0.18}
+        className="jb-pattern-waves"
+      />
       <ColorBends
         color="#ffffff"
         speed={0.2}
@@ -419,9 +450,21 @@ export default function Home() {
             ))}
           </nav>
 
-          <div className="jb-topbar-status">
-            <span className="jb-status-dot" />
-            <span>{loadingJobs ? "SYNCING" : "LIVE"}</span>
+          <div className="jb-topbar-tools">
+            <button
+              type="button"
+              className="jb-theme-toggle"
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              title={theme === "dark" ? "Light mode" : "Dark mode"}
+            >
+              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+              <span>{theme === "dark" ? "LIGHT" : "DARK"}</span>
+            </button>
+            <div className="jb-topbar-status">
+              <span className="jb-status-dot" />
+              <span>{loadingJobs ? "SYNCING" : "LIVE"}</span>
+            </div>
           </div>
         </div>
       </header>
