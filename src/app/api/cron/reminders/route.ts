@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { captureError } from "@/lib/telemetry";
 import { enforceRateLimit } from "@/lib/api-security";
 import { runReminderWorker } from "@/lib/reminders";
 
@@ -21,7 +22,8 @@ async function handler(request: NextRequest) {
   try {
     const result = await runReminderWorker({ dryRun });
     return NextResponse.json(result);
-  } catch {
+  } catch (error) {
+    captureError(error, { route: "/api/cron/reminders", method: request.method });
     return NextResponse.json(
       { error: "Reminder worker failed" },
       { status: 503 },
