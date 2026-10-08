@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuthUser } from "@/lib/require-auth-user";
+import {
+  parseGitHubRepositoryUrl,
+  scanGitHubRepository,
+  type ScannedProject,
+} from "@/lib/github-scanner";
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
 
 export async function GET() {
   const user = await requireAuthUser();
@@ -14,115 +23,105 @@ export async function GET() {
   return NextResponse.json({ projects });
 }
 
+/**
+ * POST actions:
+ * - { action: "scan", repositoryUrl } → returns scanned draft (not saved)
+ * - { action: "submit", project } → persists after user review
+ * - legacy: { repositoryUrl } → scan + save (kept for compatibility)
+ */
 export async function POST(request: Request) {
   const user = await requireAuthUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = (await request.json()) as Record<string, unknown>;
-  const repositoryUrl = typeof body.repositoryUrl === "string" ? body.repositoryUrl.trim() : "";
-  if (!/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/?$/.test(repositoryUrl)) {
-    return NextResponse.json({ error: "Enter a public GitHub repository URL." }, { status: 400 });
-  }
+  const action = typeof body.action === "string" ? body.action : "legacy";
 
-  const ownerRepo = repositoryUrl.replace(/\/$/, "").split("github.com/")[1];
-  const apiHeaders = {
-    Accept: "application/vnd.github+json",
-    "User-Agent": process.env.JOBRAIN_USER_AGENT ?? "JoBrain/1.0",
-  };
+  if (action === "scan" || action === "legacy") {
+    const repositoryUrl = typeof body.repositoryUrl === "string" ? body.repositoryUrl.trim() : "";
+    const parsed = parseGitHubRepositoryUrl(repositoryUrl);
+    if (!parsed) {
+      return NextResponse.json(
+        { error: "Enter a public GitHub repository URL (https://github.com/owner/repo)." },
+        { status: 400 },
+      );
+    }
 
-  const repoResponse = await fetch(`https://api.github.com/repos/${ownerRepo}`, { headers: apiHeaders, cache: "no-store" });
-  if (!repoResponse.ok) {
-    return NextResponse.json({ error: "GitHub repository could not be read." }, { status: 400 });
-  }
-
-  const repoData = (await repoResponse.json()) as {
-    name: string;
-    description: string | null;
-    html_url: string;
-    homepage: string | null;
-    default_branch: string;
-  };
-
-  const [languagesResponse, packageResponse] = await Promise.all([
-    fetch(`https://api.github.com/repos/${ownerRepo}/languages`, { headers: apiHeaders, cache: "no-store" }),
-    fetch(`https://api.github.com/repos/${ownerRepo}/contents/package.json?ref=${encodeURIComponent(repoData.default_branch)}`, { headers: apiHeaders, cache: "no-store" }),
-  ]);
-
-  const languages = languagesResponse.ok ? await languagesResponse.json() : {};
-  let technologies: string[] = Object.keys(languages);
-
-  if (packageResponse.ok) {
-    const packagePayload = (await packageResponse.json()) as { content?: string; encoding?: string };
-    if (packagePayload.content && packagePayload.encoding === "base64") {
-      try {
-        const packageJson = JSON.parse(Buffer.from(packagePayload.content, "base64").toString("utf8")) as {
-          dependencies?: Record<string, string>;
-          devDependencies?: Record<string, string>;
-        };
-        const allDeps = Object.keys({
-          ...(packageJson.dependencies ?? {}),
-          ...(packageJson.devDependencies ?? {}),
-        });
-        const techMap: Record<string, string> = {
-          next: "Next.js",
-          react: "React",
-          typescript: "TypeScript",
-          vite: "Vite",
-          tailwindcss: "Tailwind CSS",
-          prisma: "Prisma",
-          "@clerk/nextjs": "Clerk",
-          "@tanstack/react-query": "TanStack Query",
-          "framer-motion": "Framer Motion",
-          gsap: "GSAP",
-          ogl: "OGL",
-          "react-hook-form": "React Hook Form",
-          zod: "Zod",
-          zustand: "Zustand",
-        };
-        technologies = Array.from(new Set([
-          ...technologies,
-          ...allDeps.map((dep) => techMap[dep]).filter((value): value is string => Boolean(value)),
-        ]));
-      } catch {
-        // Ignore malformed package.json content.
+    try {
+      const scanned = await scanGitHubRepository(parsed);
+      if (action === "scan") {
+        return NextResponse.json({ draft: scanned });
       }
+      return persistProject(user.id, scanned);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "GitHub repository could not be read.";
+      return NextResponse.json({ error: message }, { status: 400 });
     }
   }
 
-  const readmeResponse = await fetch(
-    `https://raw.githubusercontent.com/${ownerRepo}/${encodeURIComponent(repoData.default_branch)}/README.md`,
-    { headers: { "User-Agent": apiHeaders["User-Agent"] }, cache: "no-store" },
-  );
-  const readme = readmeResponse.ok ? await readmeResponse.text() : "";
+  if (action === "submit") {
+    const project = body.project as Partial<ScannedProject> | undefined;
+    if (!project || typeof project.repositoryUrl !== "string" || typeof project.name !== "string") {
+      return NextResponse.json({ error: "Project payload is incomplete." }, { status: 400 });
+    }
 
-  const liveUrl =
-    repoData.homepage ||
-    readme.match(/https?:\/\/(?:[^\s)]+(?:vercel\.app|netlify\.app|github\.io|pages\.dev)[^\s)]*)/i)?.[0] ||
-    null;
+    const parsed = parseGitHubRepositoryUrl(project.repositoryUrl);
+    if (!parsed) {
+      return NextResponse.json({ error: "Invalid repository URL." }, { status: 400 });
+    }
 
+    const languages =
+      project.languages && typeof project.languages === "object" && !Array.isArray(project.languages)
+        ? (project.languages as Record<string, number>)
+        : {};
+    const technologies = isStringArray(project.technologies)
+      ? project.technologies.map((t) => t.trim()).filter(Boolean).slice(0, 24)
+      : [];
+
+    const payload: ScannedProject = {
+      repositoryUrl: parsed.canonicalUrl,
+      name: project.name.trim().slice(0, 120) || parsed.repo,
+      description:
+        typeof project.description === "string" ? project.description.trim().slice(0, 2000) || null : null,
+      liveUrl:
+        typeof project.liveUrl === "string" && /^https?:\/\//i.test(project.liveUrl.trim())
+          ? project.liveUrl.trim().slice(0, 2048)
+          : null,
+      languages,
+      technologies,
+      readme: typeof project.readme === "string" ? project.readme.slice(0, 20000) : "",
+      framework: typeof project.framework === "string" ? project.framework : null,
+    };
+
+    return persistProject(user.id, payload);
+  }
+
+  return NextResponse.json({ error: "Unknown action." }, { status: 400 });
+}
+
+async function persistProject(userId: string, scanned: ScannedProject) {
   const existing = await prisma.project.findUnique({
-    where: { userId_repositoryUrl: { userId: user.id, repositoryUrl: repoData.html_url } },
+    where: { userId_repositoryUrl: { userId, repositoryUrl: scanned.repositoryUrl } },
   });
 
   const project = await prisma.project.upsert({
-    where: { userId_repositoryUrl: { userId: user.id, repositoryUrl: repoData.html_url } },
+    where: { userId_repositoryUrl: { userId, repositoryUrl: scanned.repositoryUrl } },
     update: {
-      name: repoData.name,
-      description: repoData.description,
-      liveUrl,
-      languages,
-      technologies,
-      readme: readme.slice(0, 20000),
+      name: scanned.name,
+      description: scanned.description,
+      liveUrl: scanned.liveUrl,
+      languages: scanned.languages,
+      technologies: scanned.technologies,
+      readme: scanned.readme.slice(0, 20000),
     },
     create: {
-      userId: user.id,
-      repositoryUrl: repoData.html_url,
-      name: repoData.name,
-      description: repoData.description,
-      liveUrl,
-      languages,
-      technologies,
-      readme: readme.slice(0, 20000),
+      userId,
+      repositoryUrl: scanned.repositoryUrl,
+      name: scanned.name,
+      description: scanned.description,
+      liveUrl: scanned.liveUrl,
+      languages: scanned.languages,
+      technologies: scanned.technologies,
+      readme: scanned.readme.slice(0, 20000),
     },
   });
 
