@@ -29,10 +29,6 @@ export const env = createEnv({
     ADZUNA_APP_KEY: z.string().optional(),
   },
 
-  client: {
-    NEXT_PUBLIC_APP_URL: z.string().url(),
-  },
-
   /**
    * Next.js inlines NEXT_PUBLIC_* at build time — must list them explicitly.
    * Server vars are read from process.env at runtime.
@@ -49,7 +45,6 @@ export const env = createEnv({
     LOG_LEVEL: process.env.LOG_LEVEL,
     ADZUNA_APP_ID: process.env.ADZUNA_APP_ID,
     ADZUNA_APP_KEY: process.env.ADZUNA_APP_KEY,
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },
 
   emptyStringAsUndefined: true,
