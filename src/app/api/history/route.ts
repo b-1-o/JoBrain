@@ -30,6 +30,16 @@ export async function POST(request: Request) {
 
   if (!type) return NextResponse.json({ error: "Invalid history type." }, { status: 400 });
 
+  const settings = await prisma.userSettings.upsert({
+    where: { userId: user.id },
+    update: {},
+    create: { userId: user.id },
+    select: { historyTrackingEnabled: true },
+  });
+  if (!settings.historyTrackingEnabled) {
+    return NextResponse.json({ event: null, tracked: false });
+  }
+
   const title = typeof body.title === "string" ? body.title.trim().slice(0, 240) : null;
   const targetUrl = typeof body.url === "string" ? body.url.trim().slice(0, 2048) : null;
   const company = typeof body.company === "string" ? body.company.trim().slice(0, 160) : null;
