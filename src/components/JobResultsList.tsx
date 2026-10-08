@@ -64,7 +64,10 @@ const PAGE_SIZE = 24;
 
 export default function JobResultsList({ jobs, loading, onTrack, onResetFilters }: Props) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const visibleJobs = useMemo(() => jobs.slice(0, visibleCount), [jobs, visibleCount]);
+  // Parent remounts this list via `key` when the search identity changes.
+  // Still clamp so we never request more than available after a partial update.
+  const shown = Math.min(visibleCount, jobs.length || PAGE_SIZE);
+  const visibleJobs = useMemo(() => jobs.slice(0, shown), [jobs, shown]);
 
   return (
     <div className="jb-job-list">
@@ -129,14 +132,14 @@ export default function JobResultsList({ jobs, loading, onTrack, onResetFilters 
         </article>
       ))}
 
-      {jobs.length > visibleCount ? (
+      {jobs.length > shown ? (
         <div className="jb-results-more">
           <button
             type="button"
             className="jb-button jb-button-ghost"
             onClick={() => setVisibleCount((count) => Math.min(jobs.length, count + PAGE_SIZE))}
           >
-            Show more roles ({jobs.length - visibleCount} remaining)
+            Show more roles ({jobs.length - shown} remaining)
           </button>
         </div>
       ) : null}
