@@ -20,11 +20,21 @@ export async function PATCH(request: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = (await request.json()) as Record<string, unknown>;
+  const toUrl = (value: unknown) => {
+    if (typeof value !== "string" || !value.trim()) return null;
+    try {
+      const parsed = new URL(value.trim());
+      return ["http:", "https:"].includes(parsed.protocol) ? parsed.toString().slice(0, 2048) : null;
+    } catch {
+      return null;
+    }
+  };
+
   const displayName = typeof body.displayName === "string" ? body.displayName.trim().slice(0, 80) : null;
   const bio = typeof body.bio === "string" ? body.bio.trim().slice(0, 1200) : null;
-  const avatarUrl = typeof body.avatarUrl === "string" ? body.avatarUrl.trim().slice(0, 2048) : null;
-  const bannerUrl = typeof body.bannerUrl === "string" ? body.bannerUrl.trim().slice(0, 2048) : null;
-  const backgroundUrl = typeof body.backgroundUrl === "string" ? body.backgroundUrl.trim().slice(0, 2048) : null;
+  const avatarUrl = toUrl(body.avatarUrl);
+  const bannerUrl = toUrl(body.bannerUrl);
+  const backgroundUrl = toUrl(body.backgroundUrl);
   const accentColor = typeof body.accentColor === "string" && /^#[0-9a-fA-F]{6}$/.test(body.accentColor)
     ? body.accentColor
     : null;
