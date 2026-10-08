@@ -158,6 +158,26 @@ export default function Home() {
     window.localStorage.setItem("jobrain-theme", theme);
   }, [theme]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    void fetch("/api/applications", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("applications");
+        return (await response.json()) as { applications?: App[] };
+      })
+      .then((data) => {
+        if (!cancelled) setApps(Array.isArray(data.applications) ? data.applications : []);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Could not load saved applications.");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const toggleTheme = useCallback(() => {
     setTheme((current) => (current === "dark" ? "light" : "dark"));
   }, []);
@@ -383,14 +403,18 @@ export default function Home() {
       <PatternWaves
         preset="silk"
         color={theme === "dark" ? "#ffffff" : "#000000"}
-        backgroundColor={theme === "dark" ? "#050607" : "#dfdfdf"}
+        backgroundColor={theme === "dark" ? "#050607" : "#d3d3d3"}
         fade="edges"
         interactive
         cursorSize={50}
         cursorStrength={0.6}
-        markSize={1}
-        shine={0.75}
-        paused={theme === "light"}
+        markSize={0.95}
+        shine={0.8}
+        contrast={1.2}
+        speed={theme === "dark" ? 0.3 : 0.35}
+        scale={1}
+        direction={20}
+        opacity={theme === "dark" ? 0.72 : 1}
         className="jb-pattern-waves"
       />
       <header className="jb-topbar">
@@ -481,6 +505,12 @@ export default function Home() {
                   <button type="button" className="jb-icon-button" onClick={() => void searchJobs()} aria-label="Refresh live jobs">
                     <RefreshCw size={15} className={loadingJobs ? "jb-spin" : ""} />
                   </button>
+                  <Show when="signed-out">
+                    <a href="/sign-up" className="jb-button jb-button-account">
+                      Create account
+                      <span>↗</span>
+                    </a>
+                  </Show>
                 </div>
               </div>
 
