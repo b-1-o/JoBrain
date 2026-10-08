@@ -93,9 +93,9 @@ const DEFAULT_CHARACTERS = '.:-=+*#%@';
 const GLYPH_FONT = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 const ATLAS_TILE = 128;
 const WAVE_UNIT = 520;
-const RIPPLE_CELL = 16;
-const RIPPLE_RATE = 24;
-const PIXEL_BUDGET = 1.35e6;
+const RIPPLE_CELL = 20;
+const RIPPLE_RATE = 18;
+const PIXEL_BUDGET = 900000;
 const INTRO_SECONDS = 1;
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
@@ -739,7 +739,7 @@ const PatternWaves = ({
       if (!alive) return;
       const s = settingsRef.current;
       if (!s) return;
-      if (now - lastRenderedAt < 1000 / 30) {
+      if (now - lastRenderedAt < 1000 / 24) {
         raf = requestAnimationFrame(frame);
         return;
       }
