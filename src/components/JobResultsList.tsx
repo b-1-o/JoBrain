@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock3, ExternalLink, MapPin, Plus } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 export type JobResult = {
   id: string;
@@ -65,11 +65,6 @@ const PAGE_SIZE = 24;
 export default function JobResultsList({ jobs, loading, onTrack, onResetFilters }: Props) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const visibleJobs = useMemo(() => jobs.slice(0, visibleCount), [jobs, visibleCount]);
-  const jobsKey = jobs.map((j) => j.id).join("|");
-
-  useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
-  }, [jobsKey]);
 
   return (
     <div className="jb-job-list">
