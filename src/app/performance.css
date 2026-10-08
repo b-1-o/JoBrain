@@ -2,6 +2,9 @@
   --jb-glass-alpha: 0.25;
   --jb-user-accent: #b8c9d6;
   --jb-user-background: none;
+  --jb-glass-blur: 12px;
+  --jb-panel-opacity: 0.72;
+  --jb-border-intensity: 0.4;
 }
 
 html[data-custom-background="true"] body {
@@ -87,10 +90,15 @@ html[data-theme="light"] .jb-pattern-waves {
   letter-spacing: -0.025em !important;
 }
 
-.jb-job-main > p {
+.jb-job-main > p,
+.jb-job-desc {
   max-width: 78ch;
   font-size: 0.82rem !important;
   line-height: 1.72 !important;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .jb-job-meta span,
@@ -122,6 +130,24 @@ html[data-theme="light"] .jb-pattern-waves {
 
 @media (prefers-reduced-motion: reduce) {
   .jb-view-transition { animation: none !important; }
+  .jb-pattern-waves,
+  .jb-spin,
+  .jb-atmosphere-glow {
+    animation: none !important;
+  }
+}
+
+html[data-reduced-motion="true"] .jb-pattern-waves,
+html[data-reduced-motion="true"] .jb-spin,
+html[data-reduced-motion="true"] .jb-atmosphere-glow,
+html[data-reduced-motion="true"] .jb-view-transition {
+  animation: none !important;
+}
+
+.jb-results-more {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0 0.25rem;
 }
 
 @media (max-width: 760px) {
