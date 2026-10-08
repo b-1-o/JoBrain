@@ -53,6 +53,7 @@ model User {
   profile       UserProfile?
   settings      UserSettings?
   historyEvents HistoryEvent[]
+  notifications  Notification[]
   projects      Project[]
 
   @@map("users")
@@ -220,4 +221,27 @@ model Project {
   @@unique([userId, repositoryUrl])
   @@index([userId, updatedAt])
   @@map("projects")
+}
+
+enum NotificationType {
+  APPLICATION_CREATED
+  APPLICATION_UPDATED
+  JOB_ALERT
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  url       String?          @db.VarChar(2048)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@map("notifications")
 }
