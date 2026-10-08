@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const clerkSecretKey = process.env.CLERK_SECRET_KEY;
 
-if (process.env.NODE_ENV === "production") {
+if (process.env.VERCEL_ENV === "production") {
   if (!clerkPublishableKey?.startsWith("pk_live_")) {
     throw new Error("JoBrain production requires a Clerk pk_live_ publishable key.");
   }
