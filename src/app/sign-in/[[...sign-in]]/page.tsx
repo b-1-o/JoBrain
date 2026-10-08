@@ -27,7 +27,7 @@ const appearance = {
     dividerLine: "jb-clerk-divider-line",
     dividerText: "jb-clerk-divider-text",
   },
-};
+} as const;
 
 export default function SignInPage() {
   return (
