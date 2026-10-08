@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import AccountNav from "@/components/AccountNav";
-import { applyAppearanceToDocument } from "@/lib/appearance";
+import { applyAppearanceToDocument, readCachedAppearance } from "@/lib/appearance";
 import { MEDIA_LIMITS, type MediaKind } from "@/lib/media";
 
 type Profile = {
@@ -32,6 +32,10 @@ const emptyProfile: Profile = {
   borderIntensity: 40,
 };
 
+function isGifUrl(value: string | null | undefined): boolean {
+  return Boolean(value && /\.gif(?:$|[?#])/i.test(value));
+}
+
 function fromApi(raw: Record<string, unknown> | null | undefined): Profile {
   return {
     displayName: (raw?.displayName as string) ?? "",
@@ -52,6 +56,7 @@ export default function ProfilePage() {
   const [baseline, setBaseline] = useState<Profile>(emptyProfile);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState("");
   const [uploadState, setUploadState] = useState<Record<MediaKind, string>>({
     avatar: "",
@@ -68,13 +73,40 @@ export default function ProfilePage() {
         const next = fromApi(data.profile as Record<string, unknown>);
         setProfile(next);
         setBaseline(next);
+        setLoaded(true);
       })
-      .catch(() => setError("Sign in to edit your profile."));
+      .catch(() => {
+        setError("Sign in to edit your profile.");
+        setLoaded(true);
+      });
   }, []);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  // Keep the shared appearance live while editing, without resetting theme or motion preferences.
+  useEffect(() => {
+    if (!loaded) return;
+    const cached = readCachedAppearance();
+    applyAppearanceToDocument({
+      ...cached,
+      accentColor: profile.accentColor ?? cached.accentColor,
+      glassIntensity: profile.glassIntensity,
+      glassBlur: profile.glassBlur,
+      panelOpacity: profile.panelOpacity,
+      borderIntensity: profile.borderIntensity,
+      backgroundUrl: profile.backgroundUrl || null,
+    });
+  }, [
+    loaded,
+    profile.accentColor,
+    profile.glassIntensity,
+    profile.glassBlur,
+    profile.panelOpacity,
+    profile.borderIntensity,
+    profile.backgroundUrl,
+  ]);
 
   useEffect(() => {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -111,6 +143,7 @@ export default function ProfilePage() {
       setBaseline(next);
       localStorage.setItem("jobrain-profile", JSON.stringify(data.profile));
       applyAppearanceToDocument({
+        ...readCachedAppearance(),
         accentColor: next.accentColor ?? undefined,
         glassIntensity: next.glassIntensity,
         glassBlur: next.glassBlur,
@@ -251,8 +284,55 @@ export default function ProfilePage() {
           </section>
 
           <section className="account-card">
-            <h2>Media</h2>
-            <p>Upload PNG, JPG, WebP or GIF. Animated GIF is supported for avatar and background.</p>
+            <h2>Media studio</h2>
+            <p>Upload PNG, JPG, WebP, or animated GIF for your avatar, banner, and page background. Changes preview here before you save.</p>
+            <div className="profile-media-previews" aria-label="Live media previews">
+              <div className="profile-media-preview">
+                <div className="profile-media-preview-art is-avatar">
+                  {profile.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={profile.avatarUrl} alt="" />
+                  ) : (
+                    <span className="profile-media-empty-mark">A</span>
+                  )}
+                  {isGifUrl(profile.avatarUrl) ? <span className="profile-media-gif-badge">GIF</span> : null}
+                </div>
+                <div className="profile-media-preview-label">
+                  <strong>Avatar</strong>
+                  <small>{isGifUrl(profile.avatarUrl) ? "Animated GIF" : "Square image"}</small>
+                </div>
+              </div>
+              <div className="profile-media-preview">
+                <div className="profile-media-preview-art is-banner">
+                  {profile.bannerUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={profile.bannerUrl} alt="" />
+                  ) : (
+                    <span className="profile-media-empty-mark">BANNER</span>
+                  )}
+                  {isGifUrl(profile.bannerUrl) ? <span className="profile-media-gif-badge">GIF</span> : null}
+                </div>
+                <div className="profile-media-preview-label">
+                  <strong>Banner</strong>
+                  <small>{isGifUrl(profile.bannerUrl) ? "Animated GIF" : "Wide cover"}</small>
+                </div>
+              </div>
+              <div className="profile-media-preview">
+                <div className="profile-media-preview-art is-background">
+                  {profile.backgroundUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={profile.backgroundUrl} alt="" />
+                  ) : (
+                    <span className="profile-media-empty-mark">PATTERN</span>
+                  )}
+                  {isGifUrl(profile.backgroundUrl) ? <span className="profile-media-gif-badge">GIF</span> : null}
+                </div>
+                <div className="profile-media-preview-label">
+                  <strong>Background</strong>
+                  <small>{isGifUrl(profile.backgroundUrl) ? "Animated wallpaper" : profile.backgroundUrl ? "Custom wallpaper" : "Theme default"}</small>
+                </div>
+              </div>
+            </div>
             {(
               [
                 ["avatar", "Avatar", MEDIA_LIMITS.avatar.maxBytes],
