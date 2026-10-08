@@ -1,2 +1,5 @@
-ALTER TABLE "users" ADD COLUMN "clerkId" TEXT;
-CREATE UNIQUE INDEX "users_clerkId_key" ON "users"("clerkId");
+ALTER TABLE "users"
+ADD COLUMN IF NOT EXISTS "clerkId" TEXT;
+
+CREATE UNIQUE INDEX IF NOT EXISTS "users_clerkId_key"
+ON "users"("clerkId");
