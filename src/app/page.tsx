@@ -152,7 +152,7 @@ export default function Home() {
     return stored === "light" || stored === "dark" ? stored : "dark";
   });
   const [apps, setApps] = useState<App[]>([]);
-  const [jobQuery, setJobQuery] = useState("frontend");
+  const [jobQuery, setJobQuery] = useState("");
   const [location, setLocation] = useState("");
   const [platform, setPlatform] = useState("all");
   const [experience, setExperience] = useState("all");
@@ -443,7 +443,7 @@ export default function Home() {
   }
 
   function resetFilters() {
-    setJobQuery("frontend");
+    setJobQuery("");
     setLocation("");
     setPlatform("all");
     setExperience("all");
@@ -460,12 +460,14 @@ export default function Home() {
         fade="edges"
         fadeSize={theme === "dark" ? 0.58 : 0.5}
         interactive
+        paused={theme === "light"}
         cursorSize={50}
         cursorStrength={0.6}
         markSize={theme === "light" ? 1 : 0.95}
         shine={theme === "light" ? 0.75 : 0.15}
         opacity={1}
         className="jb-pattern-waves"
+        style={{ position: "fixed", inset: 0, zIndex: 0 }}
       />
       <header className="jb-topbar">
         <div className="jb-topbar-inner">
