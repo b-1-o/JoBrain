@@ -12,9 +12,6 @@ export const env = createEnv({
     // Direct (non-pooled) URL required for Neon migrations / introspection
     DIRECT_URL: z.string().url(),
 
-    NEXTAUTH_SECRET: z.string().min(32),
-    NEXTAUTH_URL: z.string().url(),
-
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
 
@@ -43,8 +40,6 @@ export const env = createEnv({
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
     DIRECT_URL: process.env.DIRECT_URL,
-    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     EMAIL_SERVER: process.env.EMAIL_SERVER,
