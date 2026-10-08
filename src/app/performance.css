@@ -38,7 +38,6 @@ html[data-theme="light"] .jb-pattern-waves {
   opacity: 0.28 !important;
 }
 
-.jb-topbar,
 .jb-panel,
 .jb-recent,
 .jb-quick-add,
@@ -49,11 +48,11 @@ html[data-theme="light"] .jb-pattern-waves {
 .jb-pipeline-item,
 .jb-metrics,
 .jb-search-counter {
-  backdrop-filter: blur(7px) saturate(115%) !important;
-  -webkit-backdrop-filter: blur(7px) saturate(115%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   background:
     linear-gradient(145deg, rgba(255, 255, 255, var(--jb-glass-alpha)), rgba(255, 255, 255, 0.025)),
-    rgba(10, 12, 13, 0.32);
+    rgba(10, 12, 13, 0.42);
 }
 
 .jb-topbar {
@@ -520,4 +519,32 @@ html[data-theme="light"] .jb-pattern-waves {
   .account-page { padding-inline: 12px; }
   .profile-identity { align-items: flex-start; flex-direction: column; justify-content: flex-end; }
   .history-item { grid-template-columns: 1fr; gap: 5px; }
+}
+
+.jb-account-shortcuts {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.jb-account-shortcut {
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 999px;
+  background: rgba(255,255,255,.05);
+  color: #b6c0c5;
+  text-decoration: none;
+}
+
+.jb-account-shortcut:hover {
+  border-color: rgba(255,255,255,.18);
+  background: rgba(255,255,255,.09);
+  color: #f1f4f5;
+}
+
+@media (max-width: 620px) {
+  .jb-account-shortcuts { display: none; }
 }
