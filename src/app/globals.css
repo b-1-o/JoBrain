@@ -402,19 +402,7 @@ button:disabled {
   font-size: 0.64rem;
 }
 
-.glass-card,
-.job-card,
-.pipeline-card,
-.source-row,
-.row-card,
-.nav-pill,
-.button-primary,
-.button-secondary,
-.button-small,
-.icon-button,
-.filter-chip {
-  will-change: transform;
-}
+/* Avoid promoting static glass surfaces into separate GPU layers. */
 
 .row-card {
   display: flex;
