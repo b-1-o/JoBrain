@@ -399,8 +399,9 @@ export default function Home() {
   }
 
   function resetFilters() {
+    setJobQuery("");
+    clearSearchResults();
     setLocation("");
-    setPlatform("all");
     setPlatform("all");
     setExperience("all");
     setRemoteOnly(false);
