@@ -15,6 +15,7 @@ import {
   Sun,
   type LucideIcon,
 } from "lucide-react";
+import { Show, UserButton } from "@clerk/nextjs";
 import PatternWaves from "@components/PatternWaves";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -138,7 +139,7 @@ export default function Home() {
   });
   const [apps, setApps] = useState<App[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [jobQuery, setJobQuery] = useState("frontend");
+  const [jobQuery, setJobQuery] = useState("");
   const [location, setLocation] = useState("");
   const [platform, setPlatform] = useState("all");
   const [experience, setExperience] = useState("all");
@@ -156,6 +157,26 @@ export default function Home() {
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem("jobrain-theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void fetch("/api/applications", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("applications");
+        return (await response.json()) as { applications?: App[] };
+      })
+      .then((data) => {
+        if (!cancelled) setApps(Array.isArray(data.applications) ? data.applications : []);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Could not load saved applications.");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const toggleTheme = useCallback(() => {
     setTheme((current) => (current === "dark" ? "light" : "dark"));
@@ -220,6 +241,15 @@ export default function Home() {
   );
 
   useEffect(() => {
+    abortRef.current?.abort();
+    if (!jobQuery.trim()) {
+      setJobs([]);
+      setSourceState({});
+      setLastFetched(null);
+      setLoadingJobs(false);
+      return;
+    }
+
     const timer = window.setTimeout(() => void searchJobs(), 450);
     return () => window.clearTimeout(timer);
   }, [jobQuery, location, platform, experience, remoteOnly, searchJobs]);
@@ -373,15 +403,19 @@ export default function Home() {
     <main className="jb-shell">
       <PatternWaves
         preset="silk"
-        color={theme === "dark" ? "#ffffff" : "#1a2024"}
-        backgroundColor={theme === "dark" ? "#050607" : "#e7eaec"}
+        color={theme === "dark" ? "#ffffff" : "#000000"}
+        backgroundColor={theme === "dark" ? "#050607" : "#d3d3d3"}
         fade="edges"
-        fadeSize={0.58}
         interactive
         cursorSize={50}
         cursorStrength={0.6}
-        shine={0.15}
-        opacity={theme === "dark" ? 1 : 0.22}
+        markSize={0.95}
+        shine={0.8}
+        contrast={1.2}
+        speed={theme === "dark" ? 0.3 : 0.35}
+        scale={1}
+        direction={20}
+        opacity={theme === "dark" ? 0.72 : 1}
         className="jb-pattern-waves"
       />
       <header className="jb-topbar">
@@ -420,6 +454,17 @@ export default function Home() {
               <span className="jb-status-dot" />
               <span>{loadingJobs ? "SYNCING" : "LIVE"}</span>
             </div>
+            <Show when="signed-out">
+              <div className="jb-auth-controls" aria-label="Account">
+                <a href="/sign-in" className="jb-auth-link">Sign in</a>
+                <a href="/sign-up" className="jb-auth-link jb-auth-link-primary">Create account</a>
+              </div>
+            </Show>
+            <Show when="signed-in">
+              <div className="jb-auth-user">
+                <UserButton appearance={{ elements: { avatarBox: "jb-auth-avatar" } }} />
+              </div>
+            </Show>
           </div>
         </div>
       </header>
@@ -461,6 +506,12 @@ export default function Home() {
                   <button type="button" className="jb-icon-button" onClick={() => void searchJobs()} aria-label="Refresh live jobs">
                     <RefreshCw size={15} className={loadingJobs ? "jb-spin" : ""} />
                   </button>
+                  <Show when="signed-out">
+                    <a href="/sign-up" className="jb-button jb-button-account">
+                      Create account
+                      <span>↗</span>
+                    </a>
+                  </Show>
                 </div>
               </div>
 
