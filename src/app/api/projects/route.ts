@@ -81,7 +81,7 @@ export async function POST(request: Request) {
         };
         technologies = Array.from(new Set([
           ...technologies,
-          ...allDeps.map((dep) => techMap[dep]).filter(Boolean),
+          ...allDeps.map((dep) => techMap[dep]).filter((value): value is string => Boolean(value)),
         ]));
       } catch {
         // Ignore malformed package.json content.
