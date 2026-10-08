@@ -7,9 +7,6 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  // Enable DIRECT_URL when using Neon PgBouncer / connection pooling.
-  // Migrations and introspection require a direct (non-pooled) connection.
-  // Set DIRECT_URL to the non-pooled connection string from Neon console.
 }
 
 enum ApplicationSource {
@@ -53,7 +50,7 @@ model User {
   profile       UserProfile?
   settings      UserSettings?
   historyEvents HistoryEvent[]
-  notifications  Notification[]
+  notifications Notification[]
   projects      Project[]
 
   @@map("users")
@@ -145,17 +142,20 @@ model SavedSearch {
 }
 
 model UserProfile {
-  id           String   @id @default(cuid())
-  userId       String   @unique
-  displayName  String?
-  bio          String?  @db.Text
-  avatarUrl    String?
-  bannerUrl    String?
-  backgroundUrl String?
-  accentColor  String?  @db.VarChar(7)
-  glassIntensity Int     @default(45)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  displayName     String?
+  bio             String?  @db.Text
+  avatarUrl       String?
+  bannerUrl       String?
+  backgroundUrl   String?
+  accentColor     String?  @db.VarChar(7)
+  glassIntensity  Int      @default(45)
+  glassBlur       Int      @default(12)
+  panelOpacity    Int      @default(72)
+  borderIntensity Int      @default(40)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -163,16 +163,17 @@ model UserProfile {
 }
 
 model UserSettings {
-  id                         String   @id @default(cuid())
-  userId                     String   @unique
-  jobAlertsEnabled           Boolean  @default(false)
-  searchSuggestionsEnabled   Boolean  @default(true)
-  applicationNotificationsEnabled Boolean @default(true)
-  emailNotificationsEnabled  Boolean  @default(false)
-  historyTrackingEnabled     Boolean  @default(true)
-  theme                      String   @default("dark")
-  createdAt                  DateTime @default(now())
-  updatedAt                  DateTime @updatedAt
+  id                              String   @id @default(cuid())
+  userId                          String   @unique
+  jobAlertsEnabled                Boolean  @default(false)
+  searchSuggestionsEnabled        Boolean  @default(true)
+  applicationNotificationsEnabled Boolean  @default(true)
+  emailNotificationsEnabled       Boolean  @default(false)
+  historyTrackingEnabled          Boolean  @default(true)
+  theme                           String   @default("dark")
+  reducedMotion                   Boolean  @default(false)
+  createdAt                       DateTime @default(now())
+  updatedAt                       DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -187,14 +188,14 @@ enum HistoryEventType {
 }
 
 model HistoryEvent {
-  id         String           @id @default(cuid())
-  userId     String
-  type       HistoryEventType
-  title      String?
-  url        String?          @db.VarChar(2048)
-  company    String?
-  metadata   Json?
-  createdAt  DateTime         @default(now())
+  id        String           @id @default(cuid())
+  userId    String
+  type      HistoryEventType
+  title     String?
+  url       String?          @db.VarChar(2048)
+  company   String?
+  metadata  Json?
+  createdAt DateTime         @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
