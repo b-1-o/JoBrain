@@ -103,7 +103,8 @@ export function parseGitHubRepositoryUrl(input: string): ParsedGitHubRepo | null
   if (url.protocol !== "https:") return null;
   if (!GITHUB_HOSTS.has(url.hostname.toLowerCase())) return null;
   if (url.username || url.password) return null;
-  if (url.port) return null;
+  // Reject explicit non-default ports (default https port is empty string in URL API)
+  if (url.port && url.port !== "443") return null;
 
   const segments = url.pathname
     .replace(/\.git$/i, "")
