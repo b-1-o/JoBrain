@@ -249,7 +249,11 @@ export default function ProfilePage() {
               {profile.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={profile.avatarUrl} alt="" />
-              ) : null}
+              ) : (
+                <span className="profile-avatar-placeholder">
+                  {(profile.displayName || "JB").trim().slice(0, 2).toUpperCase()}
+                </span>
+              )}
             </div>
             <div>
               <div className="account-kicker">PROFILE</div>
