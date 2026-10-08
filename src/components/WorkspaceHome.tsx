@@ -1,18 +1,11 @@
 "use client";
 
 import {
-  Clock3,
-  ExternalLink,
   Layers3,
   LayoutDashboard,
-  Loader2,
-  MapPin,
-  Plus,
-  RefreshCw,
   Search,
   Settings,
   UserRound,
-  Trash2,
   Moon,
   Sun,
   type LucideIcon,
@@ -20,7 +13,7 @@ import {
 import { Show, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import PatternWaves from "@components/PatternWaves";
-import JobResultsList from "@/components/JobResultsList";
+import JobResultsList, { type JobResult } from "@/components/JobResultsList";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Status = "FOUND" | "APPLIED" | "SCREENING" | "TECH" | "OFFER" | "REJECTED";
@@ -70,23 +63,6 @@ const stages: Array<{ key: Status; label: string; tone: string }> = [
   { key: "OFFER", label: "Offer", tone: "jb-stage-offer" },
   { key: "REJECTED", label: "Rejected", tone: "jb-stage-rejected" },
 ];
-
-const sourceLabel: Record<string, string> = {
-  remoteok: "Remote OK",
-  remotive: "Remotive",
-  jobicy: "Jobicy",
-  adzuna: "Adzuna US",
-  googlejobs: "Google Jobs",
-  REMOTEOK: "Remote OK",
-  REMOTIVE: "Remotive",
-  COMPANY_SITE: "Company",
-  LINKEDIN: "LinkedIn",
-  OTHER: "Other",
-};
-
-const AUTOFILL_GITHUB_URL = "https://github.com/b-1-o/autofill";
-const AUTOFILL_DOWNLOAD_URL =
-  "https://github.com/b-1-o/autofill/archive/refs/heads/main.zip";
 
 const navItems: Array<{
   key: "overview" | "search" | "pipeline";
@@ -204,24 +180,6 @@ export default function WorkspaceHome() {
     return () => window.clearTimeout(timer);
   }, [jobQuery, location, platform, experience, remoteOnly, searchJobs]);
 
-  const stats = useMemo(() => {
-    const applied = apps.filter((item) => item.status !== "FOUND").length;
-    const offers = apps.filter((item) => item.status === "OFFER").length;
-    const interviews = apps.filter((item) => ["SCREENING", "TECH", "OFFER"].includes(item.status)).length;
-    const active = apps.filter((item) => !["REJECTED", "OFFER"].includes(item.status)).length;
-    return {
-      total: apps.length,
-      active,
-      interviews,
-      offers,
-      applied,
-      offerRate: applied ? Math.round((offers / applied) * 100) : 0,
-      rejectionRate: applied
-        ? Math.round((apps.filter((item) => item.status === "REJECTED").length / applied) * 100)
-        : 0,
-    };
-  }, [apps]);
-
   const funnel = useMemo(
     () =>
       stages.map((stage, index) => ({
@@ -232,7 +190,7 @@ export default function WorkspaceHome() {
     [apps],
   );
 
-  async function addApplication(job: Job) {
+  async function addApplication(job: JobResult) {
     const sourceValue =
       job.platform === "linkedin"
         ? "LINKEDIN"
@@ -263,30 +221,6 @@ export default function WorkspaceHome() {
     }
   }
 
-  async function updateStatus(id: string, status: Status) {
-    const body: { id: string; status: Status; appliedAt?: string } = { id, status };
-    if (status === "APPLIED") body.appliedAt = new Date().toISOString();
-    const response = await fetch("/api/applications", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (response.ok) {
-      setApps((current) =>
-        current.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                status,
-                appliedAt: status === "APPLIED" ? new Date().toISOString() : item.appliedAt,
-                updatedAt: new Date().toISOString(),
-              }
-            : item,
-        ),
-      );
-    }
-  }
-
   async function createManualApplication() {
     if (!manualCompany.trim() || !manualRole.trim()) return;
     setManualLoading(true);
@@ -310,17 +244,6 @@ export default function WorkspaceHome() {
       setError("Could not add the application.");
     } finally {
       setManualLoading(false);
-    }
-  }
-
-  async function deleteApplication(id: string) {
-    const response = await fetch("/api/applications?id=" + encodeURIComponent(id), {
-      method: "DELETE",
-    });
-    if (response.ok) {
-      setApps((current) => current.filter((item) => item.id !== id));
-    } else {
-      setError("Could not remove the application.");
     }
   }
 
