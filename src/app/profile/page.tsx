@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import AccountNav from "@/components/AccountNav";
 import { applyAppearanceToDocument, readCachedAppearance } from "@/lib/appearance";
-import { MEDIA_LIMITS, type MediaKind } from "@/lib/media";
+import { MEDIA_LIMITS, sanitizeImageUrl, type MediaKind } from "@/lib/media";
 
 type Profile = {
   displayName: string | null;
@@ -77,7 +77,6 @@ export default function ProfilePage() {
       })
       .catch(() => {
         setError("Sign in to edit your profile.");
-        setLoaded(true);
       });
   }, []);
 
@@ -96,7 +95,7 @@ export default function ProfilePage() {
       glassBlur: profile.glassBlur,
       panelOpacity: profile.panelOpacity,
       borderIntensity: profile.borderIntensity,
-      backgroundUrl: profile.backgroundUrl || null,
+      backgroundUrl: sanitizeImageUrl(profile.backgroundUrl),
     });
   }, [
     loaded,
