@@ -2,7 +2,7 @@ name: Repair package-lock
 
 on:
   push:
-    branches: ["fix/lockfile-clerk"]
+    branches: ["main"]
 
 permissions:
   contents: write
