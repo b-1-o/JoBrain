@@ -93,9 +93,9 @@ const DEFAULT_CHARACTERS = '.:-=+*#%@';
 const GLYPH_FONT = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 const ATLAS_TILE = 128;
 const WAVE_UNIT = 520;
-const RIPPLE_CELL = 8;
+const RIPPLE_CELL = 12;
 const RIPPLE_RATE = 60;
-const PIXEL_BUDGET = 4.5e6;
+const PIXEL_BUDGET = 1.8e6;
 const INTRO_SECONDS = 2;
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
@@ -659,6 +659,7 @@ const PatternWaves = ({
     let rippleUntil = 0;
     let rippleLive = false;
     let rippleClock = 0;
+    let lastRenderAt = 0;
     let atlasKey = '';
     const pointer = { x: 0, y: 0, inside: false, placed: false, lastX: 0, lastY: 0, burst: 0 };
 
@@ -731,6 +732,12 @@ const PatternWaves = ({
 
     const frame = now => {
       raf = 0;
+      const minFrameMs = 1000 / 30;
+      if (lastRenderAt && now - lastRenderAt < minFrameMs) {
+        raf = requestAnimationFrame(frame);
+        return;
+      }
+      lastRenderAt = now;
       if (!alive) return;
       const s = settingsRef.current;
       const dt = Math.min(0.05, Math.max(1 / 240, (now - last) / 1000));
