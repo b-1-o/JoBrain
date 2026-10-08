@@ -43,6 +43,24 @@ const patchSchema = createSchema.partial().extend({
   id: z.string().min(1),
 });
 
+async function createApplicationNotification(
+  userId: string,
+  type: "APPLICATION_CREATED" | "APPLICATION_UPDATED",
+  title: string,
+  body: string,
+  url?: string | null,
+) {
+  const settings = await prisma.userSettings.upsert({
+    where: { userId },
+    update: {},
+    create: { userId },
+  });
+  if (!settings.applicationNotificationsEnabled) return;
+  await prisma.notification.create({
+    data: { userId, type, title, body, url: url ?? null },
+  });
+}
+
 function setWorkspaceCookie(response: NextResponse, userId: string) {
   response.cookies.set("jobrain_workspace", userId, {
     httpOnly: true,
@@ -91,6 +109,14 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    await createApplicationNotification(
+      user.id,
+      "APPLICATION_CREATED",
+      "Role added to pipeline",
+      `${application.company} · ${application.role} is now tracked in JoBrain.`,
+      "/?tab=pipeline",
+    );
+
     const response = NextResponse.json({ application }, { status: 201 });
     setWorkspaceCookie(response, user.id);
     return response;
@@ -107,6 +133,10 @@ export async function PATCH(request: NextRequest) {
     );
 
     const { id } = body;
+    const existing = await prisma.application.findFirst({
+      where: { id, userId: user.id },
+      select: { company: true, role: true, status: true },
+    });
     const result = await prisma.application.updateMany({
       where: { id, userId: user.id },
       data: {
@@ -127,6 +157,16 @@ export async function PATCH(request: NextRequest) {
           : {}),
       },
     });
+
+    if (result.count === 1 && existing && body.status && body.status !== existing.status) {
+      await createApplicationNotification(
+        user.id,
+        "APPLICATION_UPDATED",
+        "Application status updated",
+        `${existing.company} · ${existing.role} moved from ${existing.status} to ${body.status}.`,
+        "/?tab=pipeline",
+      );
+    }
 
     const response = NextResponse.json({ updated: result.count === 1 });
     setWorkspaceCookie(response, user.id);
