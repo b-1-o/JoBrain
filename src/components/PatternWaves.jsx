@@ -93,10 +93,10 @@ const DEFAULT_CHARACTERS = '.:-=+*#%@';
 const GLYPH_FONT = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 const ATLAS_TILE = 128;
 const WAVE_UNIT = 520;
-const RIPPLE_CELL = 12;
-const RIPPLE_RATE = 30;
-const PIXEL_BUDGET = 1.8e6;
-const INTRO_SECONDS = 1.4;
+const RIPPLE_CELL = 16;
+const RIPPLE_RATE = 24;
+const PIXEL_BUDGET = 1.35e6;
+const INTRO_SECONDS = 1;
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -698,7 +698,11 @@ const PatternWaves = ({
     const resize = () => {
       width = Math.max(1, container.clientWidth);
       height = Math.max(1, container.clientHeight);
-      renderer.dpr = Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(PIXEL_BUDGET / (width * height)));
+      renderer.dpr = Math.min(
+        window.devicePixelRatio || 1,
+        1.5,
+        Math.sqrt(PIXEL_BUDGET / (width * height)),
+      );
       renderer.setSize(width, height);
       buildRipple();
       dirty = true;
