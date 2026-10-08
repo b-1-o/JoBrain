@@ -3,8 +3,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "JoBrain",
-  description: "Job search and application tracking",
+  title: "JoBrain — Job Search Intelligence",
+  description: "Realtime job search, application tracking, and funnel analytics.",
 };
 
 export default function RootLayout({
