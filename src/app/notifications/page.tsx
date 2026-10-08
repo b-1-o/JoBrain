@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import AccountNav from "@/components/AccountNav";
 
 type Notification = {
@@ -15,17 +15,28 @@ type Notification = {
 
 export default function NotificationsPage() {
   const [items, setItems] = useState<Notification[]>([]);
+  const [error, setError] = useState("");
+  const [, startTransition] = useTransition();
 
-  async function load() {
-    const response = await fetch("/api/notifications", { cache: "no-store" });
-    if (!response.ok) return;
-    const data = await response.json();
-    setItems(Array.isArray(data.notifications) ? data.notifications : []);
-  }
+  const load = useCallback(() => {
+    startTransition(() => {
+      void fetch("/api/notifications", { cache: "no-store" })
+        .then(async (response) => {
+          if (!response.ok) {
+            setError("Sign in to view notifications.");
+            return;
+          }
+          const data = (await response.json()) as { notifications?: Notification[] };
+          setItems(Array.isArray(data.notifications) ? data.notifications : []);
+          setError("");
+        })
+        .catch(() => setError("Could not load notifications."));
+    });
+  }, []);
 
   useEffect(() => {
-    void load();
-  }, []);
+    load();
+  }, [load]);
 
   async function markAll() {
     await fetch("/api/notifications", {
@@ -39,7 +50,7 @@ export default function NotificationsPage() {
   return (
     <main className="account-page">
       <div className="account-shell">
-        <AccountNav active="settings" />
+        <AccountNav active="notifications" />
         <header className="account-head">
           <div>
             <div className="account-kicker">NOTIFICATIONS / 05</div>
@@ -48,20 +59,32 @@ export default function NotificationsPage() {
               Application events and future job-alert matches land here. Read status stays synchronized with your account.
             </p>
           </div>
-          <button className="account-button" type="button" onClick={() => void markAll()}>Mark all read</button>
+          <button className="account-button" type="button" onClick={() => void markAll()}>
+            Mark all read
+          </button>
         </header>
+
+        {error ? <p className="account-muted">{error}</p> : null}
 
         <section className="account-card account-card-wide">
           <div className="history-list">
-            {!items.length ? <p className="account-muted">Nothing here yet.</p> : null}
+            {!items.length && !error ? <p className="account-muted">Nothing here yet.</p> : null}
             {items.map((item) => (
-              <article className="history-item" key={item.id}>
+              <article className={`history-item${item.readAt ? "" : " is-unread"}`} key={item.id}>
                 <span className="history-type">{item.type.replaceAll("_", " ")}</span>
                 <div>
-                  <div className="history-title">{item.title}</div>
+                  {item.url ? (
+                    <a className="history-title" href={item.url}>
+                      {item.title}
+                    </a>
+                  ) : (
+                    <div className="history-title">{item.title}</div>
+                  )}
                   <div className="account-muted">{item.body}</div>
                 </div>
-                <time className="history-time" dateTime={item.createdAt}>{new Date(item.createdAt).toLocaleString()}</time>
+                <time className="history-time" dateTime={item.createdAt}>
+                  {new Date(item.createdAt).toLocaleString()}
+                </time>
               </article>
             ))}
           </div>
