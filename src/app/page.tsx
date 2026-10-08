@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import PatternWaves from "@components/PatternWaves";
+import AuthControls from "@/components/AuthControls";
 import WorkflowTools from "@/components/WorkflowTools";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -491,6 +492,7 @@ export default function Home() {
           </nav>
 
           <div className="jb-topbar-tools">
+            <AuthControls />
             <button
               type="button"
               className="jb-theme-toggle"
