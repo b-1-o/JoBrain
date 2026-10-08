@@ -26,7 +26,7 @@ async function putBlob(pathname: string, body: Uint8Array, contentType: string) 
       "x-api-version": "7",
       "x-vercel-blob-access": "public",
     },
-    body,
+    body: Buffer.from(body),
   });
 
   if (!response.ok) {
