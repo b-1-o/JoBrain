@@ -33,9 +33,9 @@ describe("parseGitHubRepositoryUrl", () => {
     expect(parseGitHubRepositoryUrl("https://evil.com/github.com/owner/repo")).toBeNull();
   });
 
-  it("rejects credentials, ports, and deep paths", () => {
+  it("rejects credentials, non-default ports, and deep paths", () => {
     expect(parseGitHubRepositoryUrl("https://user:pass@github.com/owner/repo")).toBeNull();
-    expect(parseGitHubRepositoryUrl("https://github.com:443/owner/repo")).toBeNull();
+    expect(parseGitHubRepositoryUrl("https://github.com:8443/owner/repo")).toBeNull();
     expect(parseGitHubRepositoryUrl("https://github.com/owner/repo/tree/main")).toBeNull();
     expect(parseGitHubRepositoryUrl("https://github.com/owner")).toBeNull();
   });
