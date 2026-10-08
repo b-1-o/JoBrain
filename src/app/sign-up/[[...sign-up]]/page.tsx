@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SignUp } from "@clerk/nextjs";
 import PatternWaves from "@components/PatternWaves";
 
@@ -46,10 +47,10 @@ export default function SignUpPage() {
       />
       <div className="jb-auth-noise" />
       <div className="jb-auth-shell">
-        <a className="jb-auth-brand" href="/">
+        <Link className="jb-auth-brand" href="/">
           <span className="jb-brand-mark">JB</span>
           <span>JOBRAIN</span>
-        </a>
+        </Link>
         <SignUp appearance={appearance} />
       </div>
     </main>
