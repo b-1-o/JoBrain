@@ -58,7 +58,7 @@ const TechText = ({
   sweep = true,
   speed = 1,
   className = '',
-  style
+  style = undefined
 }) => {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
