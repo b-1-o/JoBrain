@@ -5094,3 +5094,50 @@ html[data-theme="light"] .account-nav a[aria-current="page"] {
     transition: none !important;
   }
 }
+
+
+/* Uploaded profile wallpaper is shared across the workspace and account surfaces. */
+html[data-custom-background="true"] .jb-shell {
+  background-image:
+    linear-gradient(rgba(4, 6, 7, .44), rgba(4, 6, 7, .6)),
+    var(--jb-user-background),
+    linear-gradient(160deg, #050607 0%, #080a0b 50%, #050607 100%);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+html[data-theme="light"][data-custom-background="true"] .jb-shell {
+  background-image:
+    linear-gradient(rgba(244, 246, 247, .5), rgba(208, 208, 208, .6)),
+    var(--jb-user-background),
+    linear-gradient(160deg, #e8eaeb 0%, #d0d0d0 50%, #e3e5e6 100%);
+}
+
+html[data-custom-background="true"] .account-page {
+  background-image:
+    linear-gradient(rgba(4, 6, 7, .5), rgba(4, 6, 7, .62)),
+    var(--jb-user-background),
+    radial-gradient(ellipse at 82% 0%, rgba(194, 213, 228, .11), transparent 35rem),
+    #070809;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+html[data-theme="light"][data-custom-background="true"] .account-page {
+  background-image:
+    linear-gradient(rgba(244, 246, 247, .58), rgba(208, 208, 208, .7)),
+    var(--jb-user-background),
+    radial-gradient(ellipse at 82% 0%, rgba(255,255,255,.88), transparent 34rem),
+    #d0d0d0;
+}
+
+@media (max-width: 700px) {
+  html[data-custom-background="true"] .jb-shell,
+  html[data-custom-background="true"] .account-page {
+    background-attachment: scroll;
+  }
+}
