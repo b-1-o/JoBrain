@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-const runReminderWorker = vi.fn(async ({ dryRun }: { dryRun?: boolean } = {}) => ({
-  dryRun: dryRun ?? false,
-  eligible: 1,
-  sent: dryRun ? 0 : 1,
-  skipped: 0,
-  applicationIds: dryRun ? [] : ["app-1"],
+const { runReminderWorker } = vi.hoisted(() => ({
+  runReminderWorker: vi.fn(async ({ dryRun }: { dryRun?: boolean } = {}) => ({
+    dryRun: dryRun ?? false,
+    eligible: 1,
+    sent: dryRun ? 0 : 1,
+    skipped: 0,
+    applicationIds: dryRun ? [] : ["app-1"],
+  })),
 }));
 
 vi.mock("@/lib/reminders", () => ({ runReminderWorker }));
