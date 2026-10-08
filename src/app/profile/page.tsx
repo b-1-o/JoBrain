@@ -111,7 +111,7 @@ export default function ProfilePage() {
       setBaseline(next);
       localStorage.setItem("jobrain-profile", JSON.stringify(data.profile));
       applyAppearanceToDocument({
-        accentColor: next.accentColor,
+        accentColor: next.accentColor ?? undefined,
         glassIntensity: next.glassIntensity,
         glassBlur: next.glassBlur,
         panelOpacity: next.panelOpacity,
@@ -126,7 +126,7 @@ export default function ProfilePage() {
 
   async function uploadMedia(kind: MediaKind, file: File | null) {
     if (!file) return;
-    setUploadState((current) => ({ ...current, [kind]: "Uploading\u2026" }));
+    setUploadState((current) => ({ ...current, [kind]: "Uploading…" }));
     setError("");
     try {
       const form = new FormData();
@@ -138,7 +138,7 @@ export default function ProfilePage() {
         if (data.code === "STORAGE_UNAVAILABLE") {
           setUploadState((current) => ({
             ...current,
-            [kind]: "Storage not configured \u2014 paste a public image URL below instead.",
+            [kind]: "Storage not configured — paste a public image URL below instead.",
           }));
         } else {
           setUploadState((current) => ({ ...current, [kind]: data.error ?? "Upload failed." }));
@@ -147,14 +147,14 @@ export default function ProfilePage() {
       }
       const field = kind === "avatar" ? "avatarUrl" : kind === "banner" ? "bannerUrl" : "backgroundUrl";
       update(field, data.url ?? "");
-      setUploadState((current) => ({ ...current, [kind]: "Uploaded \u2014 save profile to keep." }));
+      setUploadState((current) => ({ ...current, [kind]: "Uploaded — save profile to keep." }));
     } catch {
       setUploadState((current) => ({ ...current, [kind]: "Upload failed." }));
     }
   }
 
   async function removeMedia(kind: MediaKind) {
-    setUploadState((current) => ({ ...current, [kind]: "Removing\u2026" }));
+    setUploadState((current) => ({ ...current, [kind]: "Removing…" }));
     try {
       const response = await fetch("/api/media", {
         method: "DELETE",
@@ -165,7 +165,7 @@ export default function ProfilePage() {
       update(field, "");
       setUploadState((current) => ({
         ...current,
-        [kind]: response.ok ? "Removed \u2014 save profile to keep." : "Cleared locally \u2014 save to persist.",
+        [kind]: response.ok ? "Removed — save profile to keep." : "Cleared locally — save to persist.",
       }));
     } catch {
       const field = kind === "avatar" ? "avatarUrl" : kind === "banner" ? "bannerUrl" : "backgroundUrl";
@@ -187,7 +187,7 @@ export default function ProfilePage() {
           </div>
           <div className="account-actions">
             <Link className="account-button" href="/projects">
-              Build portfolio \u2192
+              Build portfolio →
             </Link>
             <button
               className="account-button account-button-primary"
@@ -195,7 +195,7 @@ export default function ProfilePage() {
               disabled={saving || !dirty}
               onClick={() => void save()}
             >
-              {saving ? "Saving\u2026" : saved ? "Saved" : dirty ? "Save profile" : "Up to date"}
+              {saving ? "Saving…" : saved ? "Saved" : dirty ? "Save profile" : "Up to date"}
             </button>
           </div>
         </header>
@@ -262,7 +262,7 @@ export default function ProfilePage() {
             ).map(([kind, label, maxBytes]) => (
               <div key={kind} className="account-field">
                 <span>
-                  {label} \u00b7 max {Math.round(maxBytes / (1024 * 1024))}MB
+                  {label} · max {Math.round(maxBytes / (1024 * 1024))}MB
                 </span>
                 <input
                   type="file"
@@ -292,7 +292,7 @@ export default function ProfilePage() {
                         e.target.value,
                       )
                     }
-                    placeholder="https://\u2026"
+                    placeholder="https://…"
                   />
                 </label>
               </div>
@@ -324,7 +324,7 @@ export default function ProfilePage() {
               />
             </label>
             <label className="account-field">
-              <span>Glass intensity \u00b7 {profile.glassIntensity}%</span>
+              <span>Glass intensity · {profile.glassIntensity}%</span>
               <input
                 type="range"
                 min={0}
@@ -335,7 +335,7 @@ export default function ProfilePage() {
               />
             </label>
             <label className="account-field">
-              <span>Glass blur \u00b7 {profile.glassBlur}px</span>
+              <span>Glass blur · {profile.glassBlur}px</span>
               <input
                 type="range"
                 min={0}
@@ -346,7 +346,7 @@ export default function ProfilePage() {
               />
             </label>
             <label className="account-field">
-              <span>Panel opacity \u00b7 {profile.panelOpacity}%</span>
+              <span>Panel opacity · {profile.panelOpacity}%</span>
               <input
                 type="range"
                 min={40}
@@ -357,7 +357,7 @@ export default function ProfilePage() {
               />
             </label>
             <label className="account-field">
-              <span>Border intensity \u00b7 {profile.borderIntensity}%</span>
+              <span>Border intensity · {profile.borderIntensity}%</span>
               <input
                 type="range"
                 min={0}
