@@ -93,10 +93,10 @@ const DEFAULT_CHARACTERS = '.:-=+*#%@';
 const GLYPH_FONT = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 const ATLAS_TILE = 128;
 const WAVE_UNIT = 520;
-const RIPPLE_CELL = 8;
-const RIPPLE_RATE = 60;
-const PIXEL_BUDGET = 4.5e6;
-const INTRO_SECONDS = 2;
+const RIPPLE_CELL = 16;
+const RIPPLE_RATE = 24;
+const PIXEL_BUDGET = 1.35e6;
+const INTRO_SECONDS = 1;
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -651,6 +651,7 @@ const PatternWaves = ({
     let height = 1;
     let raf = 0;
     let last = performance.now();
+    let lastRenderedAt = 0;
     let time = 0;
     let introClock = 0;
     let visible = true;
@@ -697,7 +698,11 @@ const PatternWaves = ({
     const resize = () => {
       width = Math.max(1, container.clientWidth);
       height = Math.max(1, container.clientHeight);
-      renderer.dpr = Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(PIXEL_BUDGET / (width * height)));
+      renderer.dpr = Math.min(
+        window.devicePixelRatio || 1,
+        1.5,
+        Math.sqrt(PIXEL_BUDGET / (width * height)),
+      );
       renderer.setSize(width, height);
       buildRipple();
       dirty = true;
@@ -733,6 +738,12 @@ const PatternWaves = ({
       raf = 0;
       if (!alive) return;
       const s = settingsRef.current;
+      if (!s) return;
+      if (now - lastRenderedAt < 1000 / 30) {
+        raf = requestAnimationFrame(frame);
+        return;
+      }
+      lastRenderedAt = now;
       const dt = Math.min(0.05, Math.max(1 / 240, (now - last) / 1000));
       last = now;
       if (!s) return;
