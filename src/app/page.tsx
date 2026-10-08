@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Show, UserButton } from "@clerk/nextjs";
+import Link from "next/link";
 import PatternWaves from "@components/PatternWaves";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -242,13 +243,7 @@ export default function Home() {
 
   useEffect(() => {
     abortRef.current?.abort();
-    if (!jobQuery.trim()) {
-      setJobs([]);
-      setSourceState({});
-      setLastFetched(null);
-      setLoadingJobs(false);
-      return;
-    }
+    if (!jobQuery.trim()) return;
 
     const timer = window.setTimeout(() => void searchJobs(), 450);
     return () => window.clearTimeout(timer);
@@ -390,9 +385,22 @@ export default function Home() {
     }
   }
 
+  function clearSearchResults() {
+    abortRef.current?.abort();
+    setJobs([]);
+    setSourceState({});
+    setLastFetched(null);
+    setLoadingJobs(false);
+  }
+
+  function handleJobQueryChange(value: string) {
+    setJobQuery(value);
+    if (!value.trim()) clearSearchResults();
+  }
+
   function resetFilters() {
-    setJobQuery("");
     setLocation("");
+    setPlatform("all");
     setPlatform("all");
     setExperience("all");
     setRemoteOnly(false);
@@ -456,8 +464,8 @@ export default function Home() {
             </div>
             <Show when="signed-out">
               <div className="jb-auth-controls" aria-label="Account">
-                <a href="/sign-in" className="jb-auth-link">Sign in</a>
-                <a href="/sign-up" className="jb-auth-link jb-auth-link-primary">Create account</a>
+                <Link href="/sign-in" className="jb-auth-link">Sign in</Link>
+                <Link href="/sign-up" className="jb-auth-link jb-auth-link-primary">Create account</Link>
               </div>
             </Show>
             <Show when="signed-in">
@@ -507,10 +515,10 @@ export default function Home() {
                     <RefreshCw size={15} className={loadingJobs ? "jb-spin" : ""} />
                   </button>
                   <Show when="signed-out">
-                    <a href="/sign-up" className="jb-button jb-button-account">
+                    <Link href="/sign-up" className="jb-button jb-button-account">
                       Create account
                       <span>↗</span>
-                    </a>
+                    </Link>
                   </Show>
                 </div>
               </div>
@@ -685,7 +693,7 @@ export default function Home() {
                 <Search size={17} />
                 <input
                   value={jobQuery}
-                  onChange={(event) => setJobQuery(event.target.value)}
+                  onChange={(event) => handleJobQueryChange(event.target.value)}
                   placeholder="Search jobs, skills, companies…"
                   aria-label="Search jobs"
                 />
