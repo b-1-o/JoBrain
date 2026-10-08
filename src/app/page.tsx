@@ -391,7 +391,7 @@ export default function Home() {
   }
 
   function resetFilters() {
-    setJobQuery("frontend");
+    setJobQuery("");
     setLocation("");
     setPlatform("all");
     setExperience("all");
