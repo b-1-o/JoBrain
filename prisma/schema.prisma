@@ -7,9 +7,6 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  // Enable DIRECT_URL when using Neon PgBouncer / connection pooling.
-  // Migrations and introspection require a direct (non-pooled) connection.
-  // Set DIRECT_URL to the non-pooled connection string from Neon console.
 }
 
 enum ApplicationSource {
@@ -50,6 +47,11 @@ model User {
   sessions      Session[]
   applications  Application[]
   savedSearches SavedSearch[]
+  profile       UserProfile?
+  settings      UserSettings?
+  historyEvents HistoryEvent[]
+  notifications Notification[]
+  projects      Project[]
 
   @@map("users")
 }
@@ -137,4 +139,110 @@ model SavedSearch {
 
   @@index([userId])
   @@map("saved_searches")
+}
+
+model UserProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  displayName     String?
+  bio             String?  @db.Text
+  avatarUrl       String?
+  bannerUrl       String?
+  backgroundUrl   String?
+  accentColor     String?  @db.VarChar(7)
+  glassIntensity  Int      @default(45)
+  glassBlur       Int      @default(12)
+  panelOpacity    Int      @default(72)
+  borderIntensity Int      @default(40)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model UserSettings {
+  id                              String   @id @default(cuid())
+  userId                          String   @unique
+  jobAlertsEnabled                Boolean  @default(false)
+  searchSuggestionsEnabled        Boolean  @default(true)
+  applicationNotificationsEnabled Boolean  @default(true)
+  emailNotificationsEnabled       Boolean  @default(false)
+  historyTrackingEnabled          Boolean  @default(true)
+  theme                           String   @default("dark")
+  reducedMotion                   Boolean  @default(false)
+  createdAt                       DateTime @default(now())
+  updatedAt                       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+enum HistoryEventType {
+  SEARCH
+  JOB_OPEN
+  EXTERNAL_LINK
+  PAGE_VIEW
+}
+
+model HistoryEvent {
+  id        String           @id @default(cuid())
+  userId    String
+  type      HistoryEventType
+  title     String?
+  url       String?          @db.VarChar(2048)
+  company   String?
+  metadata  Json?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, type])
+  @@map("history_events")
+}
+
+model Project {
+  id            String   @id @default(cuid())
+  userId        String
+  repositoryUrl String   @db.VarChar(2048)
+  name          String
+  description   String?  @db.Text
+  liveUrl       String?  @db.VarChar(2048)
+  languages     Json?
+  technologies  Json?
+  readme        String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, repositoryUrl])
+  @@index([userId, updatedAt])
+  @@map("projects")
+}
+
+enum NotificationType {
+  APPLICATION_CREATED
+  APPLICATION_UPDATED
+  JOB_ALERT
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  url       String?          @db.VarChar(2048)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@map("notifications")
 }

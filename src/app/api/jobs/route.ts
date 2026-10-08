@@ -55,6 +55,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const requestedLimit = Number(params.get("limit") ?? 36);
+    const limit = Number.isFinite(requestedLimit)
+      ? Math.min(48, Math.max(1, Math.round(requestedLimit)))
+      : 36;
+
     const result = await searchJobs({
       query: params.get("query") ?? "",
       location: params.get("location") ?? "",
@@ -62,7 +67,7 @@ export async function GET(request: NextRequest) {
       platform: platformParam as JobPlatform | "all",
       experience: experienceParam as ExperienceLevel,
       remoteOnly: params.get("remote") === "true",
-      limit: Number(params.get("limit") ?? 120),
+      limit,
     });
 
     return NextResponse.json(result, {

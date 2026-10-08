@@ -10,6 +10,8 @@ import {
   Plus,
   RefreshCw,
   Search,
+  Settings,
+  UserRound,
   Trash2,
   Moon,
   Sun,
@@ -185,19 +187,7 @@ export default function Home() {
 
   const changeTab = useCallback(
     (nextTab: "overview" | "search" | "pipeline") => {
-      if (nextTab === tab) return;
-
-      const transitionDocument = document as Document & {
-        startViewTransition?: (callback: () => void) => {
-          finished: Promise<void>;
-        };
-      };
-
-      if (transitionDocument.startViewTransition) {
-        transitionDocument.startViewTransition(() => setTab(nextTab));
-      } else {
-        setTab(nextTab);
-      }
+      if (nextTab !== tab) setTab(nextTab);
     },
     [tab],
   );
@@ -231,6 +221,15 @@ export default function Home() {
         setJobs(data.jobs);
         setSourceState(data.sources);
         setLastFetched(data.fetchedAt);
+        void fetch("/api/history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "SEARCH",
+            title: jobQuery.trim(),
+            metadata: { location, platform, experience, remoteOnly },
+          }),
+        }).catch(() => undefined);
       } catch (value) {
         if (value instanceof DOMException && value.name === "AbortError") return;
         setError("Live search is temporarily unavailable.");
@@ -410,23 +409,23 @@ export default function Home() {
 
   return (
     <main className="jb-shell">
-      <PatternWaves
-        preset="silk"
-        color={theme === "dark" ? "#ffffff" : "#000000"}
-        backgroundColor={theme === "dark" ? "#050607" : "#d3d3d3"}
-        fade="edges"
-        interactive
-        cursorSize={50}
-        cursorStrength={0.6}
-        markSize={0.95}
-        shine={0.8}
-        contrast={1.2}
-        speed={theme === "dark" ? 0.3 : 0.35}
-        scale={1}
-        direction={20}
-        opacity={theme === "dark" ? 0.72 : 1}
-        className="jb-pattern-waves"
-      />
+      {theme === "light" ? (
+        <PatternWaves
+          preset="silk"
+          color="#000000"
+          backgroundColor="#d3d3d3"
+          fade="edges"
+          interactive={false}
+          markSize={0.8}
+          shine={0.5}
+          contrast={1}
+          speed={0.08}
+          scale={1}
+          direction={20}
+          opacity={0.28}
+          className="jb-pattern-waves"
+        />
+      ) : null}
       <header className="jb-topbar">
         <div className="jb-topbar-inner">
           <button type="button" className="jb-brand" onClick={() => changeTab("overview")} aria-label="JoBrain home">
@@ -463,6 +462,10 @@ export default function Home() {
               <span className="jb-status-dot" />
               <span>{loadingJobs ? "SYNCING" : "LIVE"}</span>
             </div>
+            <div className="jb-account-shortcuts" aria-label="Account">
+              <Link href="/profile" className="jb-account-shortcut" title="Profile"><UserRound size={14} /></Link>
+              <Link href="/settings" className="jb-account-shortcut" title="Settings"><Settings size={14} /></Link>
+            </div>
             <Show when="signed-out">
               <div className="jb-auth-controls" aria-label="Account">
                 <Link href="/sign-in" className="jb-auth-link">Sign in</Link>
@@ -488,7 +491,7 @@ export default function Home() {
           </div>
         ) : null}
 
-        <div key={tab} className="jb-view-transition">\n        {tab === "overview" ? (
+        <div className="jb-view-transition">\n        {tab === "overview" ? (
           <section className="jb-overview">
             <div className="jb-hero">
               <div className="jb-hero-copy">
@@ -782,7 +785,24 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="jb-job-actions">
-                    <a href={job.url} target="_blank" rel="noreferrer" className="jb-open-link">
+                    <a
+                      href={job.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="jb-open-link"
+                      onClick={() => {
+                        void fetch("/api/history", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            type: "JOB_OPEN",
+                            title: job.title,
+                            company: job.company,
+                            url: job.url,
+                          }),
+                        }).catch(() => undefined);
+                      }}
+                    >
                       Open <ExternalLink size={13} />
                     </a>
                     <button type="button" className="jb-track-button" onClick={() => void addApplication(job)}>

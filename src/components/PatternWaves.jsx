@@ -93,9 +93,9 @@ const DEFAULT_CHARACTERS = '.:-=+*#%@';
 const GLYPH_FONT = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 const ATLAS_TILE = 128;
 const WAVE_UNIT = 520;
-const RIPPLE_CELL = 20;
-const RIPPLE_RATE = 18;
-const PIXEL_BUDGET = 900000;
+const RIPPLE_CELL = 24;
+const RIPPLE_RATE = 14;
+const PIXEL_BUDGET = 600000;
 const INTRO_SECONDS = 1;
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
@@ -512,7 +512,29 @@ const PatternWaves = ({
       paused
     };
     wakeRef.current?.();
-  });
+  }, [
+    colors,
+    pattern,
+    wave,
+    spacing,
+    markSize,
+    depth,
+    light,
+    shine,
+    contrast,
+    speed,
+    scale,
+    direction,
+    opacity,
+    fade,
+    fadeSize,
+    characters,
+    interactive,
+    cursorSize,
+    cursorStrength,
+    intro,
+    paused,
+  ]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -739,7 +761,7 @@ const PatternWaves = ({
       if (!alive) return;
       const s = settingsRef.current;
       if (!s) return;
-      if (now - lastRenderedAt < 1000 / 24) {
+      if (now - lastRenderedAt < 1000 / 18) {
         raf = requestAnimationFrame(frame);
         return;
       }
@@ -884,11 +906,13 @@ const PatternWaves = ({
       if (!document.hidden) start();
     };
 
-    window.addEventListener('pointermove', onPointerMove, { passive: true });
-    window.addEventListener('pointerdown', onPointerDown, { passive: true });
-    window.addEventListener('pointerout', onPointerOut, { passive: true });
-    window.addEventListener('pointerup', onPointerUp, { passive: true });
-    window.addEventListener('blur', onPointerLeave);
+    if (interactive) {
+      window.addEventListener('pointermove', onPointerMove, { passive: true });
+      window.addEventListener('pointerdown', onPointerDown, { passive: true });
+      window.addEventListener('pointerout', onPointerOut, { passive: true });
+      window.addEventListener('pointerup', onPointerUp, { passive: true });
+      window.addEventListener('blur', onPointerLeave);
+    }
     document.addEventListener('visibilitychange', onVisibility);
 
     const resizeObserver = new ResizeObserver(resize);
@@ -911,11 +935,13 @@ const PatternWaves = ({
       cancelAnimationFrame(raf);
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerdown', onPointerDown);
-      window.removeEventListener('pointerout', onPointerOut);
-      window.removeEventListener('pointerup', onPointerUp);
-      window.removeEventListener('blur', onPointerLeave);
+      if (interactive) {
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerdown', onPointerDown);
+        window.removeEventListener('pointerout', onPointerOut);
+        window.removeEventListener('pointerup', onPointerUp);
+        window.removeEventListener('blur', onPointerLeave);
+      }
       document.removeEventListener('visibilitychange', onVisibility);
       wakeRef.current = null;
       if (ripple) {
