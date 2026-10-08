@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AccountNav from "@/components/AccountNav";
+import { applyAppearanceToDocument } from "@/lib/appearance";
+import { MEDIA_LIMITS, type MediaKind } from "@/lib/media";
 
 type Profile = {
   displayName: string | null;
@@ -12,30 +14,77 @@ type Profile = {
   backgroundUrl: string | null;
   accentColor: string | null;
   glassIntensity: number;
+  glassBlur: number;
+  panelOpacity: number;
+  borderIntensity: number;
 };
 
-export default function ProfilePage() {
-  const [profile, setProfile] = useState<Profile>({
-    displayName: "",
-    bio: "",
-    avatarUrl: "",
-    bannerUrl: "",
-    backgroundUrl: "",
-    accentColor: "#b8c9d6",
-    glassIntensity: 45,
-  });
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState("");
+const emptyProfile: Profile = {
+  displayName: "",
+  bio: "",
+  avatarUrl: "",
+  bannerUrl: "",
+  backgroundUrl: "",
+  accentColor: "#b8c9d6",
+  glassIntensity: 45,
+  glassBlur: 12,
+  panelOpacity: 72,
+  borderIntensity: 40,
+};
 
-  useEffect(() => {
+function fromApi(raw: Record<string, unknown> | null | undefined): Profile {
+  return {
+    displayName: (raw?.displayName as string) ?? "",
+    bio: (raw?.bio as string) ?? "",
+    avatarUrl: (raw?.avatarUrl as string) ?? "",
+    bannerUrl: (raw?.bannerUrl as string) ?? "",
+    backgroundUrl: (raw?.backgroundUrl as string) ?? "",
+    accentColor: (raw?.accentColor as string) ?? "#b8c9d6",
+    glassIntensity: typeof raw?.glassIntensity === "number" ? raw.glassIntensity : 45,
+    glassBlur: typeof raw?.glassBlur === "number" ? raw.glassBlur : 12,
+    panelOpacity: typeof raw?.panelOpacity === "number" ? raw.panelOpacity : 72,
+    borderIntensity: typeof raw?.borderIntensity === "number" ? raw.borderIntensity : 40,
+  };
+}
+
+export default function ProfilePage() {
+  const [profile, setProfile] = useState<Profile>(emptyProfile);
+  const [baseline, setBaseline] = useState<Profile>(emptyProfile);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [uploadState, setUploadState] = useState<Record<MediaKind, string>>({
+    avatar: "",
+    banner: "",
+    background: "",
+  });
+  const dirty = JSON.stringify(profile) !== JSON.stringify(baseline);
+
+  const load = useCallback(() => {
     void fetch("/api/profile", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) throw new Error("profile");
         const data = await response.json();
-        setProfile(data.profile);
+        const next = fromApi(data.profile as Record<string, unknown>);
+        setProfile(next);
+        setBaseline(next);
       })
       .catch(() => setError("Sign in to edit your profile."));
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useEffect(() => {
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!dirty) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [dirty]);
 
   function update<K extends keyof Profile>(key: K, value: Profile[K]) {
     setProfile((current) => ({ ...current, [key]: value }));
@@ -43,30 +92,85 @@ export default function ProfilePage() {
   }
 
   async function save() {
+    setSaving(true);
     setSaved(false);
     setError("");
-    const response = await fetch("/api/profile", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(profile),
-    });
-    if (!response.ok) {
-      setError("Could not save profile.");
-      return;
+    try {
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profile),
+      });
+      if (!response.ok) {
+        setError("Could not save profile.");
+        return;
+      }
+      const data = await response.json();
+      const next = fromApi(data.profile as Record<string, unknown>);
+      setProfile(next);
+      setBaseline(next);
+      localStorage.setItem("jobrain-profile", JSON.stringify(data.profile));
+      applyAppearanceToDocument({
+        accentColor: next.accentColor,
+        glassIntensity: next.glassIntensity,
+        glassBlur: next.glassBlur,
+        panelOpacity: next.panelOpacity,
+        borderIntensity: next.borderIntensity,
+        backgroundUrl: next.backgroundUrl || null,
+      });
+      setSaved(true);
+    } finally {
+      setSaving(false);
     }
-    const data = await response.json();
-    setProfile(data.profile);
-    localStorage.setItem("jobrain-profile", JSON.stringify(data.profile));
-    document.documentElement.style.setProperty("--jb-user-accent", data.profile.accentColor ?? "#b8c9d6");
-    document.documentElement.style.setProperty("--jb-glass-alpha", String(0.16 + (data.profile.glassIntensity ?? 45) / 500));
-    if (data.profile.backgroundUrl) {
-      document.documentElement.style.setProperty("--jb-user-background", `url("${data.profile.backgroundUrl}")`);
-      document.documentElement.dataset.customBackground = "true";
-    } else {
-      document.documentElement.style.removeProperty("--jb-user-background");
-      delete document.documentElement.dataset.customBackground;
+  }
+
+  async function uploadMedia(kind: MediaKind, file: File | null) {
+    if (!file) return;
+    setUploadState((current) => ({ ...current, [kind]: "Uploading\u2026" }));
+    setError("");
+    try {
+      const form = new FormData();
+      form.set("kind", kind);
+      form.set("file", file);
+      const response = await fetch("/api/media", { method: "POST", body: form });
+      const data = (await response.json()) as { url?: string; error?: string; code?: string };
+      if (!response.ok) {
+        if (data.code === "STORAGE_UNAVAILABLE") {
+          setUploadState((current) => ({
+            ...current,
+            [kind]: "Storage not configured \u2014 paste a public image URL below instead.",
+          }));
+        } else {
+          setUploadState((current) => ({ ...current, [kind]: data.error ?? "Upload failed." }));
+        }
+        return;
+      }
+      const field = kind === "avatar" ? "avatarUrl" : kind === "banner" ? "bannerUrl" : "backgroundUrl";
+      update(field, data.url ?? "");
+      setUploadState((current) => ({ ...current, [kind]: "Uploaded \u2014 save profile to keep." }));
+    } catch {
+      setUploadState((current) => ({ ...current, [kind]: "Upload failed." }));
     }
-    setSaved(true);
+  }
+
+  async function removeMedia(kind: MediaKind) {
+    setUploadState((current) => ({ ...current, [kind]: "Removing\u2026" }));
+    try {
+      const response = await fetch("/api/media", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind }),
+      });
+      const field = kind === "avatar" ? "avatarUrl" : kind === "banner" ? "bannerUrl" : "backgroundUrl";
+      update(field, "");
+      setUploadState((current) => ({
+        ...current,
+        [kind]: response.ok ? "Removed \u2014 save profile to keep." : "Cleared locally \u2014 save to persist.",
+      }));
+    } catch {
+      const field = kind === "avatar" ? "avatarUrl" : kind === "banner" ? "bannerUrl" : "backgroundUrl";
+      update(field, "");
+    }
   }
 
   return (
@@ -78,19 +182,41 @@ export default function ProfilePage() {
             <div className="account-kicker">ACCOUNT / 01</div>
             <h1 className="account-title">Your professional profile.</h1>
             <p className="account-copy">
-              Build the public-facing identity behind your job search. Avatar, banner, bio, background and glass intensity live with your account.
+              Identity, media and appearance live together. Preview updates live; save when you are ready.
             </p>
           </div>
-          <Link className="account-button" href="/projects">Build portfolio →</Link>
+          <div className="account-actions">
+            <Link className="account-button" href="/projects">
+              Build portfolio \u2192
+            </Link>
+            <button
+              className="account-button account-button-primary"
+              type="button"
+              disabled={saving || !dirty}
+              onClick={() => void save()}
+            >
+              {saving ? "Saving\u2026" : saved ? "Saved" : dirty ? "Save profile" : "Up to date"}
+            </button>
+          </div>
         </header>
 
-        {error ? <p className="account-muted">{error}</p> : null}
+        {error ? (
+          <p className="account-muted" role="alert">
+            {error}
+          </p>
+        ) : null}
 
-        <section className="profile-banner">
-          {profile.bannerUrl ? <img src={profile.bannerUrl} alt="" /> : null}
+        <section className="profile-banner" aria-label="Profile preview">
+          {profile.bannerUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={profile.bannerUrl} alt="" />
+          ) : null}
           <div className="profile-identity">
             <div className="profile-avatar">
-              {profile.avatarUrl ? <img src={profile.avatarUrl} alt="" /> : null}
+              {profile.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.avatarUrl} alt="" />
+              ) : null}
             </div>
             <div>
               <div className="account-kicker">PROFILE</div>
@@ -105,23 +231,142 @@ export default function ProfilePage() {
         <div className="account-grid" style={{ marginTop: 16 }}>
           <section className="account-card">
             <h2>Identity</h2>
-            <label className="account-field"><span>Display name</span><input value={profile.displayName ?? ""} onChange={(e) => update("displayName", e.target.value)} /></label>
-            <label className="account-field"><span>Bio</span><textarea value={profile.bio ?? ""} onChange={(e) => update("bio", e.target.value)} /></label>
-            <label className="account-field"><span>Avatar URL</span><input value={profile.avatarUrl ?? ""} onChange={(e) => update("avatarUrl", e.target.value)} placeholder="https://..." /></label>
-            <label className="account-field"><span>Banner URL</span><input value={profile.bannerUrl ?? ""} onChange={(e) => update("bannerUrl", e.target.value)} placeholder="https://..." /></label>
+            <label className="account-field">
+              <span>Display name</span>
+              <input
+                value={profile.displayName ?? ""}
+                onChange={(e) => update("displayName", e.target.value)}
+                maxLength={80}
+              />
+            </label>
+            <label className="account-field">
+              <span>Bio</span>
+              <textarea
+                value={profile.bio ?? ""}
+                onChange={(e) => update("bio", e.target.value)}
+                maxLength={1200}
+                rows={4}
+              />
+            </label>
           </section>
 
           <section className="account-card">
-            <h2>Interface identity</h2>
-            <p>Use a direct image URL for now. The next storage layer can replace this with persistent PNG/JPG/GIF uploads without changing your profile model.</p>
-            <label className="account-field"><span>Background image URL</span><input value={profile.backgroundUrl ?? ""} onChange={(e) => update("backgroundUrl", e.target.value)} placeholder="PNG / JPG / GIF URL" /></label>
-            <label className="account-field"><span>Accent</span><input type="color" value={profile.accentColor ?? "#b8c9d6"} onChange={(e) => update("accentColor", e.target.value)} /></label>
-            <label className="account-field"><span>Glass intensity · {profile.glassIntensity}%</span><input type="range" min="0" max="80" value={profile.glassIntensity} onChange={(e) => update("glassIntensity", Number(e.target.value))} /></label>
+            <h2>Media</h2>
+            <p>Upload PNG, JPG, WebP or GIF. Animated GIF is supported for avatar and background.</p>
+            {(
+              [
+                ["avatar", "Avatar", MEDIA_LIMITS.avatar.maxBytes],
+                ["banner", "Banner", MEDIA_LIMITS.banner.maxBytes],
+                ["background", "Background", MEDIA_LIMITS.background.maxBytes],
+              ] as Array<[MediaKind, string, number]>
+            ).map(([kind, label, maxBytes]) => (
+              <div key={kind} className="account-field">
+                <span>
+                  {label} \u00b7 max {Math.round(maxBytes / (1024 * 1024))}MB
+                </span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  aria-label={`Upload ${label}`}
+                  onChange={(e) => void uploadMedia(kind, e.target.files?.[0] ?? null)}
+                />
+                <div className="account-actions" style={{ marginTop: 8 }}>
+                  <button className="account-button" type="button" onClick={() => void removeMedia(kind)}>
+                    Remove {label.toLowerCase()}
+                  </button>
+                </div>
+                {uploadState[kind] ? <small className="account-muted">{uploadState[kind]}</small> : null}
+                <label className="account-field" style={{ marginTop: 8 }}>
+                  <span>Or public URL</span>
+                  <input
+                    value={
+                      kind === "avatar"
+                        ? (profile.avatarUrl ?? "")
+                        : kind === "banner"
+                          ? (profile.bannerUrl ?? "")
+                          : (profile.backgroundUrl ?? "")
+                    }
+                    onChange={(e) =>
+                      update(
+                        kind === "avatar" ? "avatarUrl" : kind === "banner" ? "bannerUrl" : "backgroundUrl",
+                        e.target.value,
+                      )
+                    }
+                    placeholder="https://\u2026"
+                  />
+                </label>
+              </div>
+            ))}
             <div className="account-actions">
-              <button className="account-button account-button-primary" type="button" onClick={() => void save()}>
-                {saved ? "Saved" : "Save profile"}
+              <button
+                className="account-button"
+                type="button"
+                onClick={() => {
+                  update("backgroundUrl", "");
+                  setUploadState((c) => ({ ...c, background: "Default background restored locally." }));
+                }}
+              >
+                Restore default background
               </button>
             </div>
+          </section>
+
+          <section className="account-card">
+            <h2>Appearance tokens</h2>
+            <p>These tokens apply across the product through shared CSS variables. Save to persist.</p>
+            <label className="account-field">
+              <span>Accent</span>
+              <input
+                type="color"
+                value={profile.accentColor ?? "#b8c9d6"}
+                onChange={(e) => update("accentColor", e.target.value)}
+                aria-label="Accent color"
+              />
+            </label>
+            <label className="account-field">
+              <span>Glass intensity \u00b7 {profile.glassIntensity}%</span>
+              <input
+                type="range"
+                min={0}
+                max={80}
+                value={profile.glassIntensity}
+                onChange={(e) => update("glassIntensity", Number(e.target.value))}
+                aria-label="Glass intensity"
+              />
+            </label>
+            <label className="account-field">
+              <span>Glass blur \u00b7 {profile.glassBlur}px</span>
+              <input
+                type="range"
+                min={0}
+                max={24}
+                value={profile.glassBlur}
+                onChange={(e) => update("glassBlur", Number(e.target.value))}
+                aria-label="Glass blur"
+              />
+            </label>
+            <label className="account-field">
+              <span>Panel opacity \u00b7 {profile.panelOpacity}%</span>
+              <input
+                type="range"
+                min={40}
+                max={95}
+                value={profile.panelOpacity}
+                onChange={(e) => update("panelOpacity", Number(e.target.value))}
+                aria-label="Panel opacity"
+              />
+            </label>
+            <label className="account-field">
+              <span>Border intensity \u00b7 {profile.borderIntensity}%</span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={profile.borderIntensity}
+                onChange={(e) => update("borderIntensity", Number(e.target.value))}
+                aria-label="Border intensity"
+              />
+            </label>
           </section>
         </div>
       </div>
