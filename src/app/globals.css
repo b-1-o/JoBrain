@@ -4528,7 +4528,7 @@ html[data-theme="light"] .account-button-primary {
   padding: clamp(20px, 2.6vw, 30px);
   border: 1px solid rgba(255,255,255,.13);
   border-radius: 26px;
-  background: linear-gradient(145deg, rgba(255,255,255,.082), rgba(255,255,255,.018)), rgba(11,13,15, calc(.18 + var(--jb-panel-opacity, .72) * .22));
+  background: linear-gradient(145deg, rgba(255,255,255,.082), rgba(255,255,255,.018)), rgba(11,13,15, var(--jb-panel-opacity, .72));
   box-shadow: 0 22px 58px rgba(0,0,0,.15), inset 0 1px rgba(255,255,255,.1);
   backdrop-filter: blur(var(--jb-glass-blur, 12px)) saturate(145%);
   -webkit-backdrop-filter: blur(var(--jb-glass-blur, 12px)) saturate(145%);
