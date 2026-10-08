@@ -26,6 +26,7 @@ export async function PATCH(request: Request) {
     "applicationNotificationsEnabled",
     "emailNotificationsEnabled",
     "historyTrackingEnabled",
+    "reducedMotion",
   ] as const;
 
   const data: Partial<Record<(typeof booleanKeys)[number], boolean>> & { theme?: string } = {};

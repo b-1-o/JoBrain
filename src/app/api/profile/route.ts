@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuthUser } from "@/lib/require-auth-user";
+import { sanitizeImageUrl } from "@/lib/media";
+import { clamp } from "@/lib/appearance";
 
 export async function GET() {
   const user = await requireAuthUser();
@@ -20,41 +22,44 @@ export async function PATCH(request: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = (await request.json()) as Record<string, unknown>;
-  const toUrl = (value: unknown) => {
-    if (typeof value !== "string" || !value.trim()) return null;
-    try {
-      const parsed = new URL(value.trim());
-      return ["http:", "https:"].includes(parsed.protocol) ? parsed.toString().slice(0, 2048) : null;
-    } catch {
-      return null;
-    }
-  };
+  const data: Record<string, unknown> = {};
 
-  const displayName = typeof body.displayName === "string" ? body.displayName.trim().slice(0, 80) : null;
-  const bio = typeof body.bio === "string" ? body.bio.trim().slice(0, 1200) : null;
-  const avatarUrl = toUrl(body.avatarUrl);
-  const bannerUrl = toUrl(body.bannerUrl);
-  const backgroundUrl = toUrl(body.backgroundUrl);
-  const accentColor = typeof body.accentColor === "string" && /^#[0-9a-fA-F]{6}$/.test(body.accentColor)
-    ? body.accentColor
-    : null;
-  const glassIntensity =
-    typeof body.glassIntensity === "number"
-      ? Math.min(80, Math.max(0, Math.round(body.glassIntensity)))
-      : 45;
+  if ("displayName" in body) {
+    data.displayName =
+      typeof body.displayName === "string" ? body.displayName.trim().slice(0, 80) : null;
+  }
+  if ("bio" in body) {
+    data.bio = typeof body.bio === "string" ? body.bio.trim().slice(0, 1200) : null;
+  }
+  if ("avatarUrl" in body) data.avatarUrl = sanitizeImageUrl(body.avatarUrl);
+  if ("bannerUrl" in body) data.bannerUrl = sanitizeImageUrl(body.bannerUrl);
+  if ("backgroundUrl" in body) data.backgroundUrl = sanitizeImageUrl(body.backgroundUrl);
+  if ("accentColor" in body) {
+    data.accentColor =
+      typeof body.accentColor === "string" && /^#[0-9a-fA-F]{6}$/.test(body.accentColor)
+        ? body.accentColor
+        : null;
+  }
+  if (typeof body.glassIntensity === "number") {
+    data.glassIntensity = clamp(Math.round(body.glassIntensity), 0, 80);
+  }
+  if (typeof body.glassBlur === "number") {
+    data.glassBlur = clamp(Math.round(body.glassBlur), 0, 24);
+  }
+  if (typeof body.panelOpacity === "number") {
+    data.panelOpacity = clamp(Math.round(body.panelOpacity), 40, 95);
+  }
+  if (typeof body.borderIntensity === "number") {
+    data.borderIntensity = clamp(Math.round(body.borderIntensity), 0, 100);
+  }
 
   const profile = await prisma.userProfile.upsert({
     where: { userId: user.id },
-    update: { displayName, bio, avatarUrl, bannerUrl, backgroundUrl, accentColor, glassIntensity },
+    update: data,
     create: {
       userId: user.id,
-      displayName,
-      bio,
-      avatarUrl,
-      bannerUrl,
-      backgroundUrl,
-      accentColor,
-      glassIntensity,
+      displayName: user.name,
+      ...data,
     },
   });
 
