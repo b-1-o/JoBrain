@@ -4391,7 +4391,10 @@ html[data-theme="light"] .account-copy {
   border-radius: 999px;
   background: rgba(255,255,255,.055);
   color: inherit;
-  font: 600 12px/1.2 inherit;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
   text-decoration: none;
   cursor: pointer;
   backdrop-filter: blur(var(--jb-glass-blur, 12px)) saturate(145%);
@@ -4986,5 +4989,108 @@ html[data-theme="light"] .jb-hero-support {
 
   .jb-hero-support {
     font-size: 13px;
+  }
+}
+
+
+/* Persistent account navigation shared by profile, settings and the other tools. */
+.account-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 7px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  background: rgba(255,255,255,.045);
+  box-shadow: inset 0 1px rgba(255,255,255,.07), 0 14px 35px rgba(0,0,0,.1);
+  backdrop-filter: blur(var(--jb-glass-blur, 12px)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--jb-glass-blur, 12px)) saturate(145%);
+}
+
+.account-nav a {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 13px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: #aeb8bf;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.account-nav a:hover {
+  transform: translateY(-1px);
+  color: #f6f8f9;
+  background: rgba(255,255,255,.075);
+}
+
+.account-nav a[aria-current="page"] {
+  border-color: rgba(255,255,255,.2);
+  background: rgba(235,242,247,.13);
+  color: #fff;
+  box-shadow: inset 0 1px rgba(255,255,255,.11);
+}
+
+html[data-theme="light"] .account-nav {
+  border-color: rgba(25,30,35,.13);
+  background: rgba(255,255,255,.4);
+  box-shadow: inset 0 1px rgba(255,255,255,.78), 0 12px 30px rgba(35,40,45,.05);
+}
+
+html[data-theme="light"] .account-nav a {
+  color: #4b565e;
+}
+
+html[data-theme="light"] .account-nav a:hover {
+  background: rgba(20,25,30,.055);
+  color: #111619;
+}
+
+html[data-theme="light"] .account-nav a[aria-current="page"] {
+  border-color: rgba(25,30,35,.12);
+  background: #22272b;
+  color: #fff;
+}
+
+@media (max-width: 600px) {
+  .account-nav {
+    gap: 4px;
+    border-radius: 20px;
+    padding: 6px;
+  }
+
+  .account-nav a {
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 10px;
+  }
+}
+
+
+.profile-avatar-placeholder {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: rgba(255,255,255,.9);
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -.07em;
+  background: radial-gradient(circle at 32% 24%, rgba(255,255,255,.2), transparent 52%), linear-gradient(145deg, #515b63, #171b1f);
+}
+
+.profile-avatar:has(.profile-avatar-placeholder) {
+  display: grid;
+  place-items: stretch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-nav a {
+    transition: none !important;
   }
 }
