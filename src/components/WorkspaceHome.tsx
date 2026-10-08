@@ -366,17 +366,32 @@ export default function WorkspaceHome() {
                   <input
                     value={jobQuery}
                     onChange={(event) => handleJobQueryChange(event.target.value)}
-                    placeholder="Search jobs, skills, companies…"
+                    placeholder="Search jobs, skills, companies\u2026"
                     aria-label="Search jobs"
                   />
                   <span className="jb-search-hint">LIVE</span>
                 </div>
               </div>
               <div className="jb-results-head">
-                <span>{loadingJobs ? "Searching live sources…" : "Latest matching roles"}</span>
-                <span>{lastFetched ? "UPDATED" : "LIVE SOURCES"}</span>
+                <span>
+                  {loadingJobs
+                    ? "Searching live sources\u2026"
+                    : jobs.length
+                      ? `${jobs.length} matching roles`
+                      : "Latest matching roles"}
+                </span>
+                <span>
+                  {Object.keys(sourceState).length
+                    ? Object.entries(sourceState)
+                        .map(([name, status]) => `${name}:${status === "ok" ? "ok" : "err"}`)
+                        .join(" \u00b7 ")
+                    : lastFetched
+                      ? "UPDATED"
+                      : "LIVE SOURCES"}
+                </span>
               </div>
               <JobResultsList
+                key={lastFetched ?? `empty-${jobQuery}-${location}-${platform}-${experience}-${remoteOnly}`}
                 jobs={jobs}
                 loading={loadingJobs}
                 onTrack={(job) => void addApplication(job)}
@@ -408,7 +423,7 @@ export default function WorkspaceHome() {
                   <input value={manualCompany} onChange={(e) => setManualCompany(e.target.value)} placeholder="Company" />
                   <input value={manualRole} onChange={(e) => setManualRole(e.target.value)} placeholder="Role" />
                   <button type="button" className="jb-button jb-button-solid" onClick={() => void createManualApplication()} disabled={manualLoading}>
-                    {manualLoading ? "Adding…" : "Add"}
+                    {manualLoading ? "Adding\u2026" : "Add"}
                   </button>
                 </div>
               </section>
