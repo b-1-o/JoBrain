@@ -6,7 +6,6 @@ import {
   Bell,
   FolderKanban,
   History,
-  House,
   Image as ImageIcon,
   SlidersHorizontal,
   UserRound,
@@ -53,11 +52,6 @@ export default function AccountNav({ active }: { active: AccountSection }) {
           <small>Command center</small>
         </span>
         <span className="account-nav-brand-signal" aria-hidden="true" />
-      </Link>
-      <Link className="account-nav-home" href="/" aria-label="Go to Home">
-        <House size={15} strokeWidth={1.8} />
-        <span>Home</span>
-        <span className="account-nav-home-hint">↗</span>
       </Link>
       <Link className="account-nav-media" href="/settings?section=media" aria-label="Open avatar, banner and background settings">
         <span className="account-nav-media-icon"><ImageIcon size={15} strokeWidth={1.8} /></span>
