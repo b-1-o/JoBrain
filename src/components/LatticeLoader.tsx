@@ -182,7 +182,7 @@ export default function LatticeLoader({
         </span>
         <span className="lattice-loader__layer lattice-loader__mark">
           {resolved.cells.map((_, index) => (
-            <span key={index} className="lattice-loader__cell" data-on={mark !== "working" && markSet[mark].includes(index) ? "" : undefined} />
+            <span key={index} className="lattice-loader__cell" data-on={markSet[mark].includes(index) ? "" : undefined} />
           ))}
         </span>
       </span>
