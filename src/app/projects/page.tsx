@@ -80,10 +80,19 @@ export default function ProjectsPage() {
         setGithubLogin(data.connected && typeof data.login === "string" ? data.login : null);
         setGithubRepositories(Array.isArray(data.repositories) ? data.repositories : []);
         const githubStatus = new URLSearchParams(window.location.search).get("github");
-        if (githubStatus === "connected" && data.login) setMessage("GitHub connected as @" + data.login + ". Choose a verified repository below.");
-        else if (githubStatus === "not-configured") setMessage("GitHub OAuth is not configured. Add GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET in Vercel and register https://jobrain.vercel.app/api/github/callback as the callback URL in your GitHub OAuth App. GITHUB_REDIRECT_URI is already set for production.");
-        else if (githubStatus === "denied") setMessage("GitHub connection was cancelled.");
-        else if (githubStatus && githubStatus !== "connected") setMessage("Could not complete GitHub connection (" + githubStatus + "). Please try again.");
+        const githubStatusMessages: Record<string, string> = {
+          "connected": data.login
+            ? "GitHub connected as @" + data.login + ". Choose a verified repository below."
+            : "GitHub authorized successfully. Refresh the page to load your connection.",
+          "not-configured": "GitHub OAuth is not configured. Add GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET to Vercel Production, then redeploy. The registered callback must be https://jobrain.vercel.app/api/github/callback.",
+          "denied": "GitHub connection was cancelled.",
+          "state-error": "GitHub sign-in expired or its security cookie was missing. Start again from Projects in the same browser session.",
+          "token-error": "GitHub rejected the OAuth token exchange. Verify the Client ID, Client Secret, and exact callback URL in both GitHub and Vercel, then redeploy.",
+          "profile-error": "GitHub authorization returned, but JoBrain could not read the GitHub profile. Try reconnecting your personal GitHub account.",
+          "connection-error": "GitHub authorized the account, but JoBrain could not save the connection. The production database or server logs need checking.",
+        };
+        if (githubStatus && githubStatusMessages[githubStatus]) setMessage(githubStatusMessages[githubStatus]);
+        else if (githubStatus) setMessage("Could not complete GitHub connection (" + githubStatus + "). Please try again.");
       })
       .catch((cause: unknown) => {
         if (!cancelled) setMessage(cause instanceof Error ? cause.message : "Could not load your GitHub repositories.");
