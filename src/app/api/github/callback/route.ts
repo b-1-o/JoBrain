@@ -1,12 +1,12 @@
 import { timingSafeEqual } from "node:crypto";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuthUser } from "@/lib/require-auth-user";
 
 export const runtime = "nodejs";
 const STATE_COOKIE = "jobrain_github_oauth_state";
 
-function callbackUrl(request: Request) {
+function callbackUrl(request: NextRequest) {
   return process.env.GITHUB_REDIRECT_URI?.trim() ||
     new URL("/api/github/callback", request.url).toString();
 }
@@ -23,12 +23,11 @@ function projectsRedirect(request: Request, status: string) {
   return NextResponse.redirect(url);
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const origin = url.origin;
   const state = url.searchParams.get("state") ?? "";
-  const storedState = (request as Request & { cookies?: { get: (name: string) => { value: string } | undefined } })
-    .cookies?.get(STATE_COOKIE)?.value ?? "";
+  const storedState = request.cookies.get(STATE_COOKIE)?.value ?? "";
 
   const user = await requireAuthUser().catch(() => null);
   if (!user) return NextResponse.redirect(new URL("/sign-in?redirect_url=%2Fprojects", origin));
