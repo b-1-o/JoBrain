@@ -59,28 +59,28 @@ export default function ProfilePage() {
     profile.displayName !== baseline.displayName ||
     profile.bio !== baseline.bio;
 
-  const load = useCallback(async () => {
-    try {
-      const response = await fetch("/api/profile", { cache: "no-store" });
-      const data = (await response.json().catch(() => ({}))) as {
-        profile?: Record<string, unknown>;
-        error?: unknown;
-      };
-      if (!response.ok || !data.profile) {
-        throw new Error(
-          typeof data.error === "string"
-            ? data.error
-            : "Could not load your profile. Please retry.",
-        );
-      }
-      const next = fromApi(data.profile);
-      setProfile(next);
-      setBaseline(next);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not load your profile. Please retry.");
-    } finally {
-      setLoading(false);
-    }
+  const load = useCallback(() => {
+    void fetch("/api/profile", { cache: "no-store" })
+      .then(async (response) => {
+        const data = (await response.json().catch(() => ({}))) as {
+          profile?: Record<string, unknown>;
+          error?: unknown;
+        };
+        if (!response.ok || !data.profile) {
+          throw new Error(
+            typeof data.error === "string"
+              ? data.error
+              : "Could not load your profile. Please retry.",
+          );
+        }
+        const next = fromApi(data.profile);
+        setProfile(next);
+        setBaseline(next);
+      })
+      .catch((cause: unknown) => {
+        setError(cause instanceof Error ? cause.message : "Could not load your profile. Please retry.");
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
