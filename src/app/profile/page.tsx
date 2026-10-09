@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AccountNav from "@/components/AccountNav";
 import { applyAppearanceToDocument, readCachedAppearance } from "@/lib/appearance";
 import { MEDIA_LIMITS, sanitizeImageUrl, type MediaKind } from "@/lib/media";
@@ -63,6 +63,20 @@ export default function ProfilePage() {
     banner: "",
     background: "",
   });
+  const [localMediaPreview, setLocalMediaPreview] = useState<Record<MediaKind, string>>({
+    avatar: "",
+    banner: "",
+    background: "",
+  });
+  const previewUrls = useRef<Record<MediaKind, string>>({ avatar: "", banner: "", background: "" });
+
+  useEffect(() => {
+    return () => {
+      Object.values(previewUrls.current).forEach((url) => {
+        if (url.startsWith("blob:")) URL.revokeObjectURL(url);
+      });
+    };
+  }, []);
   const dirty = JSON.stringify(profile) !== JSON.stringify(baseline);
 
   const load = useCallback(() => {
@@ -156,6 +170,14 @@ export default function ProfilePage() {
     }
   }
 
+  function setLocalPreview(kind: MediaKind, file: File | null) {
+    const previous = previewUrls.current[kind];
+    if (previous.startsWith("blob:")) URL.revokeObjectURL(previous);
+    const next = file ? URL.createObjectURL(file) : "";
+    previewUrls.current[kind] = next;
+    setLocalMediaPreview((current) => ({ ...current, [kind]: next }));
+  }
+
   async function uploadMedia(kind: MediaKind, file: File | null) {
     if (!file) return;
     setUploadState((current) => ({ ...current, [kind]: "Uploading…" }));
@@ -170,7 +192,7 @@ export default function ProfilePage() {
         if (data.code === "STORAGE_UNAVAILABLE") {
           setUploadState((current) => ({
             ...current,
-            [kind]: "Storage not configured — paste a public image URL below instead.",
+            [kind]: "Preview only: connect Vercel Blob storage to save uploaded files, or paste a public image URL.",
           }));
         } else {
           setUploadState((current) => ({ ...current, [kind]: data.error ?? "Upload failed." }));
@@ -179,13 +201,15 @@ export default function ProfilePage() {
       }
       const field = kind === "avatar" ? "avatarUrl" : kind === "banner" ? "bannerUrl" : "backgroundUrl";
       update(field, data.url ?? "");
-      setUploadState((current) => ({ ...current, [kind]: "Uploaded — save profile to keep." }));
+      setLocalPreview(kind, null);
+      setUploadState((current) => ({ ...current, [kind]: "Upload complete." }));
     } catch {
       setUploadState((current) => ({ ...current, [kind]: "Upload failed." }));
     }
   }
 
   async function removeMedia(kind: MediaKind) {
+    setLocalPreview(kind, null);
     setUploadState((current) => ({ ...current, [kind]: "Removing…" }));
     try {
       const response = await fetch("/api/media", {
@@ -193,17 +217,21 @@ export default function ProfilePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ kind }),
       });
+      if (!response.ok) {
+        setUploadState((current) => ({ ...current, [kind]: "Could not remove media. Please try again." }));
+        return;
+      }
       const field = kind === "avatar" ? "avatarUrl" : kind === "banner" ? "bannerUrl" : "backgroundUrl";
       update(field, "");
-      setUploadState((current) => ({
-        ...current,
-        [kind]: response.ok ? "Removed — save profile to keep." : "Cleared locally — save to persist.",
-      }));
+      setUploadState((current) => ({ ...current, [kind]: "Removed." }));
     } catch {
-      const field = kind === "avatar" ? "avatarUrl" : kind === "banner" ? "bannerUrl" : "backgroundUrl";
-      update(field, "");
+      setUploadState((current) => ({ ...current, [kind]: "Could not remove media. Please try again." }));
     }
   }
+
+  const previewAvatarUrl = localMediaPreview.avatar || profile.avatarUrl;
+  const previewBannerUrl = localMediaPreview.banner || profile.bannerUrl;
+  const previewBackgroundUrl = localMediaPreview.background || profile.backgroundUrl;
 
   return (
     <main className="account-page">
@@ -239,15 +267,15 @@ export default function ProfilePage() {
         ) : null}
 
         <section className="profile-banner" aria-label="Profile preview">
-          {profile.bannerUrl ? (
+          {previewBannerUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={profile.bannerUrl} alt="" />
+            <img src={previewBannerUrl} alt="" decoding="async" />
           ) : null}
           <div className="profile-identity">
             <div className="profile-avatar">
-              {profile.avatarUrl ? (
+              {previewAvatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatarUrl} alt="" />
+                <img src={previewAvatarUrl} alt="" decoding="async" />
               ) : (
                 <span className="profile-avatar-placeholder">
                   {(profile.displayName || "JB").trim().slice(0, 2).toUpperCase()}
@@ -292,47 +320,47 @@ export default function ProfilePage() {
             <div className="profile-media-previews" aria-label="Live media previews">
               <div className="profile-media-preview">
                 <div className="profile-media-preview-art is-avatar">
-                  {profile.avatarUrl ? (
+                  {previewAvatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={profile.avatarUrl} alt="" />
+                    <img src={previewAvatarUrl} alt="" decoding="async" />
                   ) : (
                     <span className="profile-media-empty-mark">A</span>
                   )}
-                  {isGifUrl(profile.avatarUrl) ? <span className="profile-media-gif-badge">GIF</span> : null}
+                  {isGifUrl(previewAvatarUrl) ? <span className="profile-media-gif-badge">GIF</span> : null}
                 </div>
                 <div className="profile-media-preview-label">
                   <strong>Avatar</strong>
-                  <small>{isGifUrl(profile.avatarUrl) ? "Animated GIF" : "Square image"}</small>
+                  <small>{isGifUrl(previewAvatarUrl) ? "Animated GIF" : "Square image"}</small>
                 </div>
               </div>
               <div className="profile-media-preview">
                 <div className="profile-media-preview-art is-banner">
-                  {profile.bannerUrl ? (
+                  {previewBannerUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={profile.bannerUrl} alt="" />
+                    <img src={previewBannerUrl} alt="" decoding="async" />
                   ) : (
                     <span className="profile-media-empty-mark">BANNER</span>
                   )}
-                  {isGifUrl(profile.bannerUrl) ? <span className="profile-media-gif-badge">GIF</span> : null}
+                  {isGifUrl(previewBannerUrl) ? <span className="profile-media-gif-badge">GIF</span> : null}
                 </div>
                 <div className="profile-media-preview-label">
                   <strong>Banner</strong>
-                  <small>{isGifUrl(profile.bannerUrl) ? "Animated GIF" : "Wide cover"}</small>
+                  <small>{isGifUrl(previewBannerUrl) ? "Animated GIF" : "Wide cover"}</small>
                 </div>
               </div>
               <div className="profile-media-preview">
                 <div className="profile-media-preview-art is-background">
-                  {profile.backgroundUrl ? (
+                  {previewBackgroundUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={profile.backgroundUrl} alt="" />
+                    <img src={previewBackgroundUrl} alt="" decoding="async" />
                   ) : (
                     <span className="profile-media-empty-mark">PATTERN</span>
                   )}
-                  {isGifUrl(profile.backgroundUrl) ? <span className="profile-media-gif-badge">GIF</span> : null}
+                  {isGifUrl(previewBackgroundUrl) ? <span className="profile-media-gif-badge">GIF</span> : null}
                 </div>
                 <div className="profile-media-preview-label">
                   <strong>Background</strong>
-                  <small>{isGifUrl(profile.backgroundUrl) ? "Animated wallpaper" : profile.backgroundUrl ? "Custom wallpaper" : "Theme default"}</small>
+                  <small>{isGifUrl(previewBackgroundUrl) ? "Animated wallpaper" : profile.backgroundUrl ? "Custom wallpaper" : "Theme default"}</small>
                 </div>
               </div>
             </div>
@@ -351,7 +379,14 @@ export default function ProfilePage() {
                   type="file"
                   accept="image/png,image/jpeg,image/webp,image/gif"
                   aria-label={`Upload ${label}`}
-                  onChange={(e) => void uploadMedia(kind, e.target.files?.[0] ?? null)}
+                  onChange={(e) => {
+                    const input = e.currentTarget;
+                    const file = input.files?.[0] ?? null;
+                    if (!file) return;
+                    setLocalPreview(kind, file);
+                    void uploadMedia(kind, file);
+                    input.value = "";
+                  }}
                 />
                 <div className="account-actions" style={{ marginTop: 8 }}>
                   <button className="account-button" type="button" onClick={() => void removeMedia(kind)}>
@@ -369,12 +404,13 @@ export default function ProfilePage() {
                           ? (profile.bannerUrl ?? "")
                           : (profile.backgroundUrl ?? "")
                     }
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      setLocalPreview(kind, null);
                       update(
                         kind === "avatar" ? "avatarUrl" : kind === "banner" ? "bannerUrl" : "backgroundUrl",
                         e.target.value,
-                      )
-                    }
+                      );
+                    }}
                     placeholder="https://…"
                   />
                 </label>
@@ -385,6 +421,7 @@ export default function ProfilePage() {
                 className="account-button"
                 type="button"
                 onClick={() => {
+                  setLocalPreview("background", null);
                   update("backgroundUrl", "");
                   setUploadState((c) => ({ ...c, background: "Default background restored locally." }));
                 }}
