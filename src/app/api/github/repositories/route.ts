@@ -35,7 +35,7 @@ export async function GET() {
     }
 
     const response = await fetch(
-      \`https://api.github.com/users/\${encodeURIComponent(connection.login)}/repos?type=owner&sort=updated&per_page=100\`,
+      `https://api.github.com/users/${encodeURIComponent(connection.login)}/repos?type=owner&sort=updated&per_page=100`,
       {
         headers: {
           Accept: "application/vnd.github+json",
