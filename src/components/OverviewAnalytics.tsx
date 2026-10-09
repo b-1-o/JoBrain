@@ -44,8 +44,6 @@ export default function OverviewAnalytics() {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [error, setError] = useState("");
-  const [emailState, setEmailState] = useState<"idle" | "working" | "done" | "error">("idle");
-  const [emailMessage, setEmailMessage] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -66,25 +64,6 @@ export default function OverviewAnalytics() {
       });
     return () => { cancelled = true; };
   }, [range, refreshKey]);
-
-  async function emailReport() {
-    setEmailState("working");
-    setEmailMessage("");
-    try {
-      const response = await fetch("/api/analytics/email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ range }),
-      });
-      const data = (await response.json().catch(() => ({}))) as { sent?: boolean; email?: string; error?: string };
-      if (!response.ok || !data.sent) throw new Error(data.error ?? "Could not send the report.");
-      setEmailState("done");
-      setEmailMessage("Report sent to " + (data.email ?? "your registered email") + ".");
-    } catch (cause) {
-      setEmailState("error");
-      setEmailMessage(cause instanceof Error ? cause.message : "Could not send your report.");
-    }
-  }
 
   return (
     <section className="jb-analytics-panel" aria-labelledby="jb-analytics-title">
@@ -111,10 +90,6 @@ export default function OverviewAnalytics() {
               </button>
             ))}
           </div>
-          <button type="button" className="jb-button jb-button-ghost jb-analytics-email" onClick={() => void emailReport()} disabled={emailState === "working"}>
-            <Mail size={14} />
-            Email report
-          </button>
         </div>
       </div>
 
@@ -181,22 +156,6 @@ export default function OverviewAnalytics() {
           </>
         ) : null}
       </div>
-      {emailState !== "idle" ? (
-        <div className={"jb-analytics-feedback is-" + emailState} role="status" aria-live="polite">
-          <LatticeLoader
-            label="Sending report"
-            doneLabel="Sent"
-            errorLabel="Could not send"
-            status={emailState}
-            cellSize={4}
-            gap={1}
-            fontSize={10}
-            showTimer={false}
-          />
-          {emailMessage || (emailState === "working" ? "Preparing your report…" : "")}
-        </div>
-      ) : null}
-      <p className="jb-analytics-note">Reports go only to the primary email address on your JoBrain account.</p>
     </section>
   );
 }

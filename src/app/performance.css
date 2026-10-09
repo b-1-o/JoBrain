@@ -2690,7 +2690,6 @@ html[data-theme="light"] .jb-route-pending { background: rgba(248,250,251,.84); 
 .jb-analytics-range button { min-height: 29px; padding: 0 10px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #85939c; font-size: 10px; font-weight: 650; cursor: pointer; transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease; }
 .jb-analytics-range button:hover { color: #e8eff3; }
 .jb-analytics-range button.is-active { border-color: rgba(255,255,255,.1); background: rgba(255,255,255,.08); color: #f1f5f7; }
-.jb-analytics-email { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
 .jb-analytics-metrics { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; margin-top: 22px; }
 .jb-analytics-metric { display: grid; grid-template-columns: 28px 1fr; align-items: center; column-gap: 9px; padding: 16px; border: 1px solid rgba(255,255,255,.075); border-radius: 16px; background: rgba(255,255,255,.025); }
 .jb-analytics-metric-icon { display: grid; width: 28px; height: 28px; grid-row: span 2; place-items: center; border: 1px solid color-mix(in srgb, var(--jb-user-accent,#b8c9d6) 20%, transparent); border-radius: 9px; background: color-mix(in srgb, var(--jb-user-accent,#b8c9d6) 8%, transparent); color: #a7bdcd; }
@@ -2716,13 +2715,9 @@ html[data-theme="light"] .jb-route-pending { background: rgba(248,250,251,.84); 
 .jb-analytics-empty { display: grid; min-height: 195px; align-content: center; justify-items: center; gap: 12px; color: #9ba9b2; font-size: 12px; text-align: center; }
 .jb-analytics-empty p { max-width: 520px; margin: 0; }
 .jb-analytics-empty button { display: inline-flex; align-items: center; gap: 7px; }
-.jb-analytics-feedback { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 10px 12px; border: 1px solid rgba(255,255,255,.075); border-radius: 12px; color: #98a7b1; font-size: 10px; line-height: 1.55; background: rgba(255,255,255,.025); }
-.jb-analytics-feedback.is-done { color: #a9c9bd; }
-.jb-analytics-feedback.is-error { color: #e5a5a8; }
-.jb-analytics-note { margin: 12px 1px 0; color: #71808a; font-size: 9px; line-height: 1.5; }
 html[data-theme="light"] .jb-analytics-panel { background: linear-gradient(145deg, rgba(255,255,255,.63), rgba(255,255,255,.28)), rgba(244,247,248,.62); border-color: rgba(30,40,45,.12); }
 html[data-theme="light"] .jb-analytics-head h2, html[data-theme="light"] .jb-analytics-metric strong { color: #1b252b; }
-html[data-theme="light"] .jb-analytics-head p, html[data-theme="light"] .jb-analytics-metric small, html[data-theme="light"] .jb-analytics-note { color: #596973; }
+html[data-theme="light"] .jb-analytics-head p, html[data-theme="light"] .jb-analytics-metric small { color: #596973; }
 html[data-theme="light"] .jb-analytics-metric-label, html[data-theme="light"] .jb-analytics-chart-caption { color: #586972; }
 html[data-theme="light"] .jb-analytics-range { border-color: rgba(30,40,45,.12); background: rgba(255,255,255,.35); }
 html[data-theme="light"] .jb-analytics-range button.is-active { border-color: rgba(30,40,45,.09); background: rgba(35,45,50,.07); color: #172127; }
@@ -2792,7 +2787,6 @@ html[data-theme="light"] .project-repository-search input { color: #253139; }
   .account-nav { height: 430px !important; }
   .jb-analytics-controls { align-items: stretch; flex-direction: column; }
   .jb-analytics-range { justify-content: space-between; }
-  .jb-analytics-email { width: 100%; }
   .jb-analytics-metrics { grid-template-columns: 1fr; }
   .jb-analytics-chart-wrap { padding-right: 7px; padding-left: 7px; }
   .jb-analytics-chart { height: 180px; }
