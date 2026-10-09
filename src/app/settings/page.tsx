@@ -192,44 +192,44 @@ export default function SettingsPage() {
     };
   }, []);
 
-  const load = useCallback(async () => {
-    try {
-      const [profileResponse, settingsResponse] = await Promise.all([
-        fetch("/api/profile", { cache: "no-store" }),
-        fetch("/api/settings", { cache: "no-store" }),
-      ]);
-      const [profileData, settingsData] = await Promise.all([
-        profileResponse.json().catch(() => ({})),
-        settingsResponse.json().catch(() => ({})),
-      ]);
-      if (!profileResponse.ok || !profileData.profile) {
-        throw new Error(typeof profileData.error === "string" ? profileData.error : "Could not load your profile.");
-      }
-      if (!settingsResponse.ok || !settingsData.settings) {
-        throw new Error(typeof settingsData.error === "string" ? settingsData.error : "Could not load your settings.");
-      }
-      const nextProfile = fromProfile(profileData.profile);
-      const nextSettings = fromSettings(settingsData.settings);
-      setProfile(nextProfile);
-      setSettings(nextSettings);
-      setProfileLoaded(true);
-      applyAppearanceToDocument({
-        ...readCachedAppearance(),
-        theme: nextSettings.theme,
-        reducedMotion: nextSettings.reducedMotion,
-        accentColor: nextProfile.accentColor,
-        glassIntensity: nextProfile.glassIntensity,
-        glassBlur: nextProfile.glassBlur,
-        panelOpacity: nextProfile.panelOpacity,
-        borderIntensity: nextProfile.borderIntensity,
-        backgroundUrl: sanitizeImageUrl(nextProfile.backgroundUrl),
-      });
-    } catch (cause) {
-      setActivity("error");
-      setMessage(cause instanceof Error ? cause.message : "Could not load account settings.");
-    } finally {
-      setLoading(false);
-    }
+  const load = useCallback(() => {
+    void Promise.all([
+      fetch("/api/profile", { cache: "no-store" }),
+      fetch("/api/settings", { cache: "no-store" }),
+    ])
+      .then(async ([profileResponse, settingsResponse]) => {
+        const [profileData, settingsData] = await Promise.all([
+          profileResponse.json().catch(() => ({})),
+          settingsResponse.json().catch(() => ({})),
+        ]);
+        if (!profileResponse.ok || !profileData.profile) {
+          throw new Error(typeof profileData.error === "string" ? profileData.error : "Could not load your profile.");
+        }
+        if (!settingsResponse.ok || !settingsData.settings) {
+          throw new Error(typeof settingsData.error === "string" ? settingsData.error : "Could not load your settings.");
+        }
+        const nextProfile = fromProfile(profileData.profile);
+        const nextSettings = fromSettings(settingsData.settings);
+        setProfile(nextProfile);
+        setSettings(nextSettings);
+        setProfileLoaded(true);
+        applyAppearanceToDocument({
+          ...readCachedAppearance(),
+          theme: nextSettings.theme,
+          reducedMotion: nextSettings.reducedMotion,
+          accentColor: nextProfile.accentColor,
+          glassIntensity: nextProfile.glassIntensity,
+          glassBlur: nextProfile.glassBlur,
+          panelOpacity: nextProfile.panelOpacity,
+          borderIntensity: nextProfile.borderIntensity,
+          backgroundUrl: sanitizeImageUrl(nextProfile.backgroundUrl),
+        });
+      })
+      .catch((cause: unknown) => {
+        setActivity("error");
+        setMessage(cause instanceof Error ? cause.message : "Could not load account settings.");
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
