@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import AccountNav from "@/components/AccountNav";
+import LatticeLoader from "@/components/LatticeLoader";
 
 type Event = {
   id: string;
@@ -15,12 +16,14 @@ type Event = {
 
 export default function HistoryPage() {
   const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     void fetch("/api/history?take=100", { cache: "no-store" })
       .then((response) => response.json())
       .then((data) => setEvents(Array.isArray(data.history) ? data.history : []))
-      .catch(() => setEvents([]));
+      .catch(() => setEvents([]))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -38,7 +41,8 @@ export default function HistoryPage() {
 
         <section className="account-card account-card-wide">
           <div className="history-list">
-            {!events.length ? <p className="account-muted">No activity recorded yet.</p> : null}
+            {loading ? <div className="account-operation"><LatticeLoader label="Loading history" status="working" cellSize={5} gap={2} fontSize={11} showTimer={false} /></div> : null}
+            {!loading && !events.length ? <p className="account-muted">No activity recorded yet.</p> : null}
             {events.map((event) => (
               <article className="history-item" key={event.id}>
                 <span className="history-type">{event.type.replaceAll("_", " ")}</span>
