@@ -60,8 +60,6 @@ export default function ProfilePage() {
     profile.bio !== baseline.bio;
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError("");
     try {
       const response = await fetch("/api/profile", { cache: "no-store" });
       const data = (await response.json().catch(() => ({}))) as {
