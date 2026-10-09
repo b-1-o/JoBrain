@@ -11,6 +11,15 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
 
+function isHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function responseForProjectError(error: unknown) {
   console.error("[JoBrain] Project persistence failed.", error);
   return NextResponse.json(
@@ -106,7 +115,7 @@ export async function POST(request: Request) {
         description:
           typeof project.description === "string" ? project.description.trim().slice(0, 2000) || null : null,
         liveUrl:
-          typeof project.liveUrl === "string" && /^https?:\\/\\//i.test(project.liveUrl.trim())
+          typeof project.liveUrl === "string" && isHttpUrl(project.liveUrl)
             ? project.liveUrl.trim().slice(0, 2048)
             : null,
         languages,
