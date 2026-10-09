@@ -373,6 +373,9 @@ export default function WorkspaceHome() {
   const showWaves = !hasCustomBackground;
   const isDark = theme === "dark";
   const sourceEntries = Object.entries(sourceState);
+  const experienceIndex = Math.max(0, EXPERIENCE_OPTIONS.findIndex((option) => option.value === experience));
+  const selectedExperience = EXPERIENCE_OPTIONS[experienceIndex] ?? { value: "all", label: "Any level" };
+  const experienceProgress = (experienceIndex / Math.max(1, EXPERIENCE_OPTIONS.length - 1)) * 100;
 
   return (
     <main className="jb-shell">
@@ -592,16 +595,6 @@ export default function WorkspaceHome() {
                         ))}
                       </select>
                     </label>
-                    <label>
-                      <span>Experience</span>
-                      <select value={experience} onChange={(e) => setExperience(e.target.value)} aria-label="Experience filter">
-                        {EXPERIENCE_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
                     <button
                       type="button"
                       className={"jb-command-toggle" + (remoteOnly ? " is-on" : "")}
@@ -614,6 +607,38 @@ export default function WorkspaceHome() {
                     <button type="button" className="jb-command-reset" onClick={resetFilters}>
                       Reset
                     </button>
+                    <section className="jb-experience-control" aria-labelledby="jb-experience-label">
+                      <div className="jb-experience-heading">
+                        <label id="jb-experience-label" htmlFor="jb-experience-slider">Experience level</label>
+                        <output htmlFor="jb-experience-slider">{selectedExperience.label}</output>
+                      </div>
+                      <input
+                        id="jb-experience-slider"
+                        className="jb-experience-range"
+                        type="range"
+                        min={0}
+                        max={EXPERIENCE_OPTIONS.length - 1}
+                        step={1}
+                        value={experienceIndex}
+                        aria-label="Experience level"
+                        aria-valuetext={selectedExperience.label}
+                        onChange={(e) => setExperience(EXPERIENCE_OPTIONS[Number(e.currentTarget.value)]?.value ?? "all")}
+                        style={{ "--experience-progress": `${experienceProgress}%` } as CSSProperties}
+                      />
+                      <div className="jb-experience-steps" role="group" aria-label="Choose experience level">
+                        {EXPERIENCE_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            className={"jb-experience-step" + (experience === option.value ? " is-active" : "")}
+                            aria-pressed={experience === option.value}
+                            onClick={() => setExperience(option.value)}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </section>
                   </div>
                 </div>
                 <div className="jb-results-head">
