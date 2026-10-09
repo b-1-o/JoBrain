@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
   type ReactNode,
@@ -301,7 +302,7 @@ export default function OptionWheel({
         "--ow-active-color": activeColor,
         "--ow-font-size": \`\${fontSize}rem\`,
         "--ow-inset": \`\${inset}px\`,
-      } as React.CSSProperties}
+      } as CSSProperties}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerEnd}
@@ -316,6 +317,12 @@ export default function OptionWheel({
           aria-selected={selectedIndex === index}
           className={\`option-wheel__item\${selectedIndex === index ? " option-wheel__item--selected" : ""}\`}
           onClick={() => handleItemClick(index)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              handleItemClick(index);
+            }
+          }}
         >
           {icons[index] ? <span className="option-wheel__icon" aria-hidden="true">{icons[index]}</span> : null}
           <span className="option-wheel__label">{label}</span>
