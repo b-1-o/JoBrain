@@ -96,7 +96,7 @@ export default function AccountNav({ active }: { active: AccountSection }) {
       />
       <div className="account-nav-footer">
         <span className="account-nav-footer-dot" aria-hidden="true" />
-        <span>YOUR WORKSPACE</span>
+        <span>ACCOUNT NAVIGATION</span>
       </div>
     </nav>
   );
