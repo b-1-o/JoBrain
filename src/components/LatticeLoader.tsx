@@ -54,12 +54,12 @@ function resolvePattern(pattern: PatternName | PatternShape, grid: GridSize): Re
 }
 
 function formatDs(ds: number): string {
-  return ds < 600 ? \`\${(ds / 10).toFixed(1)}s\` : \`\${Math.floor(ds / 600)}m \${((ds % 600) / 10).toFixed(1)}s\`;
+  return ds < 600 ? `${(ds / 10).toFixed(1)}s` : `${Math.floor(ds / 600)}m ${((ds % 600) / 10).toFixed(1)}s`;
 }
 function spokenDs(ds: number): string {
   return ds < 600
-    ? \`\${(ds / 10).toFixed(1)} seconds\`
-    : \`\${Math.floor(ds / 600)} minutes \${((ds % 600) / 10).toFixed(1)} seconds\`;
+    ? `${(ds / 10).toFixed(1)} seconds`
+    : `${Math.floor(ds / 600)} minutes ${((ds % 600) / 10).toFixed(1)} seconds`;
 }
 
 type LatticeLoaderProps = {
@@ -119,7 +119,7 @@ export default function LatticeLoader({
   const markRef = useRef<Exclude<LoaderStatus, "working">>("done");
   const mark = status === "working" ? markRef.current : status;
   markRef.current = mark;
-  const [announce, setAnnounce] = useState(\`\${label}, in progress\`);
+  const [announce, setAnnounce] = useState(`${label}, in progress`);
 
   const paint = (deciseconds: number) => {
     elapsedRef.current = deciseconds;
@@ -142,29 +142,29 @@ export default function LatticeLoader({
 
   useEffect(() => {
     const next = status === "working"
-      ? \`\${label}, in progress\`
-      : \`\${status === "done" ? doneLabel : errorLabel}\${showTimer ? \` \${spokenDs(elapsedRef.current)}\` : ""}\`;
+      ? `${label}, in progress`
+      : `${status === "done" ? doneLabel : errorLabel}${showTimer ? ` ${spokenDs(elapsedRef.current)}` : ""}`;
     setAnnounce(next);
   }, [status, label, doneLabel, errorLabel, showTimer]);
 
   return (
     <span
       role="status"
-      className={\`lattice-loader\${className ? \` \${className}\` : ""}\`}
+      className={`lattice-loader${className ? ` ${className}` : ""}`}
       data-status={status}
       data-shape={shape}
       data-glow={glow ? "" : undefined}
       style={{
         "--ll-n": count,
-        "--ll-cell": \`\${cellSize}px\`,
-        "--ll-gap": \`\${gap}px\`,
-        "--ll-font": \`\${fontSize}px\`,
+        "--ll-cell": `${cellSize}px`,
+        "--ll-gap": `${gap}px`,
+        "--ll-font": `${fontSize}px`,
         "--ll-color": color,
         "--ll-mark": status === "error" ? errorColor : doneColor,
         "--ll-idle": idleOpacity,
         "--ll-glow": glowColor || color,
         "--ll-mark-glow": glowColor || (status === "error" ? errorColor : doneColor),
-        "--ll-cycle": \`\${cycle}ms\`,
+        "--ll-cycle": `${cycle}ms`,
         ...style,
       } as CSSProperties}
     >
@@ -176,7 +176,7 @@ export default function LatticeLoader({
               className="lattice-loader__cell"
               data-hole={unit === null ? "" : undefined}
               data-lit={resolved.lit !== 0.62 ? Math.round(resolved.lit * 100) : undefined}
-              style={unit === null ? undefined : { animationDelay: \`\${Math.round(unit * durationStep)}ms\` }}
+              style={unit === null ? undefined : { animationDelay: `${Math.round(unit * durationStep)}ms` }}
             />
           ))}
         </span>
