@@ -46,11 +46,6 @@ export default function AccountNav({ active }: { active: AccountSection }) {
 
   return (
     <nav className="account-nav" aria-label="Account navigation">
-      {navigatingTo ? (
-        <div className="account-nav-loading" role="status" aria-live="polite">
-          <LatticeLoader label="Opening section" doneLabel="Ready" status="working" cellSize={5} gap={2} fontSize={11} showTimer={false} />
-        </div>
-      ) : null}
       <Link className="account-nav-brand" href="/" aria-label="JoBrain home">
         <span className="account-nav-mark" aria-hidden="true">J</span>
         <span className="account-nav-brand-copy">
@@ -72,7 +67,10 @@ export default function AccountNav({ active }: { active: AccountSection }) {
         </span>
         <span aria-hidden="true">↗</span>
       </Link>
-      <div className="account-nav-kicker">NAVIGATE</div>
+      <div className="account-nav-kicker-row">
+        <div className="account-nav-kicker">NAVIGATE</div>
+        {navigatingTo ? <LatticeLoader label="Opening section" status="working" cellSize={4} gap={1} fontSize={9} showTimer={false} /> : null}
+      </div>
       <OptionWheel
         items={accountItems.map((item) => item.label)}
         icons={accountItems.map(({ icon: Icon, label }) => <Icon key={label} size={17} strokeWidth={1.7} />)}
@@ -88,7 +86,7 @@ export default function AccountNav({ active }: { active: AccountSection }) {
         minOpacity={0.18}
         smoothing={180}
         inset={16}
-        onChange={(index) => {
+        onActivate={(index) => {
           const next = accountItems[index];
           if (next) navigate(next.href);
         }}
