@@ -113,7 +113,7 @@ export function applyAppearanceToDocument(raw: Partial<AppearanceState> | null |
   root.dataset.reducedMotion = appearance.reducedMotion ? "true" : "false";
 
   root.style.setProperty("--jb-user-accent", appearance.accentColor);
-  root.style.setProperty("--jb-glass-alpha", String(0.1 + appearance.glassIntensity / 500));
+  root.style.setProperty("--jb-glass-alpha", String((appearance.glassIntensity / 80) * 0.28));
   root.style.setProperty("--jb-glass-blur", `${appearance.glassBlur}px`);
   root.style.setProperty("--jb-panel-opacity", String(appearance.panelOpacity / 100));
   root.style.setProperty("--jb-border-intensity", String(appearance.borderIntensity / 100));
