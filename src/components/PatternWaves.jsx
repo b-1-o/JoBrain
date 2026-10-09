@@ -758,10 +758,10 @@ const PatternWaves = ({
 
     const frame = now => {
       raf = 0;
-      if (!alive) return;
+      if (!alive || !visible || document.hidden) return;
       const s = settingsRef.current;
       if (!s) return;
-      if (now - lastRenderedAt < 1000 / 18) {
+      if (now - lastRenderedAt < 1000 / 30) {
         raf = requestAnimationFrame(frame);
         return;
       }
@@ -854,7 +854,7 @@ const PatternWaves = ({
     };
 
     const start = () => {
-      if (raf || !visible || !alive) return;
+      if (raf || !visible || !alive || document.hidden) return;
       last = performance.now();
       raf = requestAnimationFrame(frame);
     };
