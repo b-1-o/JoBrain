@@ -176,6 +176,21 @@ export default function SettingsPage() {
   const [busyMedia, setBusyMedia] = useState<MediaKind | null>(null);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (cancelled) return;
+      const section = new URLSearchParams(window.location.search).get("section");
+      if (section === "media") setActiveSection("Media studio");
+      else if (section === "appearance") setActiveSection("Appearance");
+      else if (section === "preferences") setActiveSection("Preferences");
+    }, 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, []);
+
   const setMediaPreview = useCallback((kind: MediaKind, url: string) => {
     const previous = previewUrls.current[kind];
     if (previous.startsWith("blob:")) URL.revokeObjectURL(previous);
