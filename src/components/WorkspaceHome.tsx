@@ -648,7 +648,7 @@ export default function WorkspaceHome() {
                     </button>
                     <section className="jb-experience-control" aria-labelledby="jb-experience-label">
                       <div className="jb-experience-heading">
-                        <label id="jb-experience-label">Experience level</label>
+                        <span id="jb-experience-label">Experience level</span>
                       </div>
                       <div className="jb-experience-steps" role="group" aria-label="Choose experience level">
                         {EXPERIENCE_OPTIONS.map((option) => (
