@@ -81,7 +81,7 @@ export default function ProjectsPage() {
         setGithubRepositories(Array.isArray(data.repositories) ? data.repositories : []);
         const githubStatus = new URLSearchParams(window.location.search).get("github");
         if (githubStatus === "connected" && data.login) setMessage("GitHub connected as @" + data.login + ". Choose a verified repository below.");
-        else if (githubStatus === "not-configured") setMessage("GitHub OAuth is not configured yet. Set GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET and GITHUB_REDIRECT_URI in Vercel.");
+        else if (githubStatus === "not-configured") setMessage("GitHub OAuth is not configured. Add GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET in Vercel and register https://jobrain.vercel.app/api/github/callback as the callback URL in your GitHub OAuth App. GITHUB_REDIRECT_URI is already set for production.");
         else if (githubStatus === "denied") setMessage("GitHub connection was cancelled.");
         else if (githubStatus && githubStatus !== "connected") setMessage("Could not complete GitHub connection (" + githubStatus + "). Please try again.");
       })

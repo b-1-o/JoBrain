@@ -2805,3 +2805,8 @@ html[data-theme="light"] .project-repository-search input { color: #253139; }
   }
 }
 html[data-reduced-motion="true"] .jb-view-panel, html[data-reduced-motion="true"] .jb-view-panel > * { animation: none !important; }
+
+
+.account-nav-kicker-row { display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:20px; }
+.account-nav-kicker-row .lattice-loader { color:var(--jb-text,#d8e2e8); white-space:nowrap; }
+html[data-theme="light"] .account-nav-kicker-row .lattice-loader { color:#28343b; }

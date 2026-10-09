@@ -559,7 +559,7 @@ export default function SettingsPage() {
                 <div className="settings-card-heading">
                   <div>
                     <h2>Media studio</h2>
-                    <p>Avatar, banner and page wallpaper are saved to your profile. Use a hosted URL or upload a file when storage is connected.</p>
+                    <p>Avatar, banner and page wallpaper are saved to your profile. Upload an image directly or use a public HTTPS image URL.</p>
                   </div>
                 </div>
                 <div className="settings-media-preview-grid">
