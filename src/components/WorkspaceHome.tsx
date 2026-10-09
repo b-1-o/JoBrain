@@ -126,6 +126,27 @@ function useReducedMotionPreferred() {
 }
 
 export default function WorkspaceHome() {
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void fetch("/api/profile", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as { profile?: { avatarUrl?: unknown } };
+      })
+      .then((data) => {
+        const url = data?.profile?.avatarUrl;
+        if (active && typeof url === "string" && /^https?:\/\//i.test(url)) {
+          setProfileAvatarUrl(url);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const reduceMotion = useReducedMotionPreferred();
   const [tab, setTab] = useState<"overview" | "search" | "pipeline">("overview");
   const [theme, setTheme] = useState<"dark" | "light">(() => {
@@ -366,6 +387,8 @@ export default function WorkspaceHome() {
             cursorSize={50}
             cursorStrength={0.6}
             shine={0.15}
+            speed={0}
+            opacity={1}
             paused={reduceMotion}
             className="jb-pattern-waves"
           />
@@ -379,6 +402,8 @@ export default function WorkspaceHome() {
             cursorSize={50}
             cursorStrength={0.6}
             shine={0.15}
+            speed={0}
+            opacity={1}
             paused={reduceMotion}
             className="jb-pattern-waves"
           />
@@ -426,8 +451,13 @@ export default function WorkspaceHome() {
               <span>{loadingJobs ? "SYNCING" : "LIVE"}</span>
             </div>
             <div className="jb-account-shortcuts" aria-label="Account">
-              <Link href="/profile" className="jb-account-shortcut" title="Profile">
-                <UserRound size={14} />
+              <Link href="/profile" className="jb-account-shortcut" title="Profile" aria-label="Profile">
+                {profileAvatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={profileAvatarUrl} alt="" loading="lazy" decoding="async" />
+                ) : (
+                  <UserRound size={14} />
+                )}
               </Link>
               <Link href="/settings" className="jb-account-shortcut" title="Settings">
                 <Settings size={14} />
