@@ -16,6 +16,7 @@ import Link from "next/link";
 import PatternWaves from "@components/PatternWaves";
 import JobResultsList, { type JobResult } from "@/components/JobResultsList";
 import DecryptedText from "@/components/DecryptedText";
+import TechText from "@/components/TechText";
 import {
   useCallback,
   useEffect,
@@ -358,33 +359,27 @@ export default function WorkspaceHome() {
         isDark ? (
           <PatternWaves
             preset="silk"
-            color="#9aa8b4"
-            backgroundColor="#050607"
+            color="#ffffff"
+            backgroundColor="#000000"
             fade="edges"
-            interactive={false}
-            markSize={0.75}
-            shine={0.35}
-            contrast={1.05}
-            speed={0.06}
-            scale={1}
-            direction={24}
-            opacity={0.2}
+            interactive
+            cursorSize={50}
+            cursorStrength={0.6}
+            shine={0.15}
+            paused={reduceMotion}
             className="jb-pattern-waves"
           />
         ) : (
           <PatternWaves
             preset="silk"
             color="#000000"
-            backgroundColor="#d3d3d3"
+            backgroundColor="#d0d0d0"
             fade="edges"
-            interactive={false}
-            markSize={0.8}
-            shine={0.5}
-            contrast={1}
-            speed={0.08}
-            scale={1}
-            direction={20}
-            opacity={0.28}
+            interactive
+            cursorSize={50}
+            cursorStrength={0.6}
+            shine={0.15}
+            paused={reduceMotion}
             className="jb-pattern-waves"
           />
         )
@@ -478,8 +473,27 @@ export default function WorkspaceHome() {
                       JOB SEARCH / 01
                     </div>
                     <h1 className="sr-only">Find work. Not another spreadsheet.</h1>
-                    <div className="jb-tech-text-fallback" aria-hidden>
-                      Find work.
+                    <div className="jb-tech-text-wrap">
+                      {reduceMotion ? (
+                        <span className="jb-tech-text-static">Find work.</span>
+                      ) : (
+                        <TechText
+                          text="Find work."
+                          fontWeight={600}
+                          fontSize={150}
+                          color={isDark ? "#ffffff" : "#000000"}
+                          accentColor={isDark ? "#ffffff" : "#000000"}
+                          reveal="letter"
+                          dashLength={4}
+                          dashGap={2}
+                          specks={15}
+                          selection
+                          labels
+                          draggable
+                          sweep
+                          speed={0.8}
+                        />
+                      )}
                     </div>
                     <div className="jb-decrypt">
                       {reduceMotion ? (
