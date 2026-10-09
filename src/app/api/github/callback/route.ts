@@ -1,5 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuthUser } from "@/lib/require-auth-user";
 
