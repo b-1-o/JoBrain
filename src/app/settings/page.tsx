@@ -414,6 +414,7 @@ export default function SettingsPage() {
 
   function applyPreset(name: (typeof presetOrder)[number]) {
     const preset = APPEARANCE_PRESETS[name];
+    if (!preset) return;
     setProfile((current) => ({ ...current, ...preset }));
     void saveProfilePatch(preset, `${name.charAt(0).toUpperCase() + name.slice(1)} appearance saved.`);
   }
@@ -435,7 +436,7 @@ export default function SettingsPage() {
         {activity !== "idle" ? (
           <div className="account-operation" aria-live="polite">
             <LatticeLoader
-              status={activity === "idle" ? "working" : activity}
+              status={activity}
               label="Saving changes"
               doneLabel="Saved"
               errorLabel="Failed"
