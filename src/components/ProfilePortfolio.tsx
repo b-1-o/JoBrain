@@ -37,7 +37,7 @@ function projectLanguages(project: PortfolioProject): Array<[string, number]> {
 
 function repositoryLabel(value: string): string {
   try {
-    return new URL(value).pathname.replace(/^\\/+|\\/+$/g, "");
+    return new URL(value).pathname.replace(/^\/+|\/+$/g, "");
   } catch {
     return value;
   }
