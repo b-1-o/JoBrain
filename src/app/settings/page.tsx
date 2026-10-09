@@ -467,7 +467,7 @@ export default function SettingsPage() {
           </div>
         ) : null}
 
-        {loading ? <p className="account-muted">Loading your preferences…</p> : null}
+        {loading ? <div className="account-operation"><LatticeLoader label="Loading settings" status="working" cellSize={5} gap={2} fontSize={11} showTimer={false} /></div> : null}
 
         <div className="settings-layout">
           <aside className="settings-subnav account-card" aria-label="Settings sections">
@@ -599,7 +599,7 @@ export default function SettingsPage() {
                         <div className="settings-media-actions">
                           <label className="account-button settings-upload-button">
                             <UploadCloud size={14} />
-                            {busyMedia === kind ? "Uploading…" : "Choose file"}
+                            {busyMedia === kind ? <LatticeLoader label="Uploading" status="working" cellSize={3} gap={1} fontSize={10} showTimer={false} /> : "Choose file"}
                             <input
                               type="file"
                               accept="image/png,image/jpeg,image/webp,image/gif"
