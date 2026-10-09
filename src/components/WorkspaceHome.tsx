@@ -387,7 +387,7 @@ export default function WorkspaceHome() {
             cursorSize={50}
             cursorStrength={0.6}
             shine={0.15}
-            speed={0}
+            speed={0.1}
             opacity={1}
             paused={reduceMotion}
             className="jb-pattern-waves"
@@ -402,7 +402,7 @@ export default function WorkspaceHome() {
             cursorSize={50}
             cursorStrength={0.6}
             shine={0.15}
-            speed={0}
+            speed={0.1}
             opacity={1}
             paused={reduceMotion}
             className="jb-pattern-waves"
@@ -516,12 +516,12 @@ export default function WorkspaceHome() {
                           reveal="letter"
                           dashLength={4}
                           dashGap={2}
-                          specks={15}
+                          specks={9}
                           selection
                           labels
                           draggable
                           sweep
-                          speed={0.8}
+                          speed={0.65}
                         />
                       )}
                     </div>
@@ -536,8 +536,8 @@ export default function WorkspaceHome() {
                           speed={35}
                           revealDirection="center"
                           useOriginalCharsOnly
-                          className="jb-decrypt"
-                          encryptedClassName="jb-decrypt"
+                          className="jb-decrypt-character"
+                          encryptedClassName="jb-decrypt-character is-encrypted"
                         />
                       )}
                     </div>
@@ -617,30 +617,36 @@ export default function WorkspaceHome() {
                   </div>
                 </div>
                 <div className="jb-results-head">
-                  <span>
-                    {loadingJobs
-                      ? "Searching live sources…"
-                      : jobs.length
-                        ? `${jobs.length} matching roles`
-                        : jobQuery.trim()
-                          ? "No matches yet"
-                          : "Ready when you are"}
-                  </span>
-                  <div className="jb-source-pills" aria-label="Live sources">
-                    {sourceEntries.length ? (
-                      sourceEntries.map(([name, status]) => (
-                        <span key={name} className={"jb-source-pill" + (status === "ok" ? " is-ok" : " is-err")} title={status === "ok" ? "Responding" : "Unavailable"}>
-                          <i />
-                          {SOURCE_LABELS[name] ?? name}
+                  <section className="jb-results-status" aria-labelledby="jb-search-status-label">
+                    <span className="jb-results-label" id="jb-search-status-label">SEARCH STATUS</span>
+                    <span className="jb-results-status-value" role="status" aria-live="polite">
+                      {loadingJobs
+                        ? "Searching live sources…"
+                        : jobs.length
+                          ? `${jobs.length} matching roles`
+                          : jobQuery.trim()
+                            ? "No matches yet"
+                            : "Ready when you are"}
+                    </span>
+                  </section>
+                  <section className="jb-source-cluster" aria-labelledby="jb-live-sources-label">
+                    <span className="jb-results-label" id="jb-live-sources-label">LIVE SOURCES</span>
+                    <div className="jb-source-pills" aria-label="Live sources">
+                      {sourceEntries.length ? (
+                        sourceEntries.map(([name, status]) => (
+                          <span key={name} className={"jb-source-pill" + (status === "ok" ? " is-ok" : " is-err")} title={status === "ok" ? "Responding" : "Unavailable"}>
+                            <i aria-hidden="true" />
+                            {SOURCE_LABELS[name] ?? name}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="jb-source-pill">
+                          <i aria-hidden="true" />
+                          Waiting for data
                         </span>
-                      ))
-                    ) : (
-                      <span className="jb-source-pill">
-                        <i />
-                        Live sources
-                      </span>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  </section>
                 </div>
                 {!jobQuery.trim() && !loadingJobs ? (
                   <div className="jb-search-empty">
