@@ -22,7 +22,7 @@ import {
   readCachedAppearance,
   type AppearanceTheme,
 } from "@/lib/appearance";
-import { MEDIA_LIMITS, type MediaKind } from "@/lib/media";
+import { MEDIA_LIMITS, sanitizeImageUrl, type MediaKind } from "@/lib/media";
 
 type Settings = {
   jobAlertsEnabled: boolean;
@@ -222,7 +222,7 @@ export default function SettingsPage() {
         glassBlur: nextProfile.glassBlur,
         panelOpacity: nextProfile.panelOpacity,
         borderIntensity: nextProfile.borderIntensity,
-        backgroundUrl: nextProfile.backgroundUrl || null,
+        backgroundUrl: sanitizeImageUrl(nextProfile.backgroundUrl),
       });
     } catch (cause) {
       setActivity("error");
@@ -247,7 +247,7 @@ export default function SettingsPage() {
       glassBlur: profile.glassBlur,
       panelOpacity: profile.panelOpacity,
       borderIntensity: profile.borderIntensity,
-      backgroundUrl: profile.backgroundUrl || null,
+      backgroundUrl: sanitizeImageUrl(profile.backgroundUrl),
     });
   }, [
     profileLoaded,
@@ -548,7 +548,7 @@ export default function SettingsPage() {
                 <div className="settings-media-preview-grid">
                   {(["avatar", "banner", "background"] as const).map((kind) => {
                     const field = mediaFields[kind];
-                    const source = mediaPreviews[kind] || profile[field];
+                    const source = mediaPreviews[kind] || sanitizeImageUrl(profile[field]) || "";
                     return (
                       <div className={"settings-media-preview settings-media-preview-" + kind} key={kind}>
                         <div className="settings-media-art">
