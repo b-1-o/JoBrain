@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     const from = process.env.SMTP_FROM?.trim() || smtpUser;
     if (!host || !Number.isFinite(port) || !smtpUser || !smtpPass || !from) {
       return NextResponse.json(
-        { error: "Email delivery is not configured yet. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS and SMTP_FROM in Vercel." },
+        { error: "Email delivery is not configured yet. Set SMTP_HOST, SMTP_USER and SMTP_PASS in Vercel. SMTP_PORT defaults to 587; SMTP_FROM is optional and defaults to SMTP_USER." },
         { status: 503 },
       );
     }
