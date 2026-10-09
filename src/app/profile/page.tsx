@@ -161,7 +161,7 @@ export default function ProfilePage() {
               disabled={saving || loading || !dirty}
               onClick={() => void saveProfile()}
             >
-              {saving ? "Saving…" : saved ? "Saved" : dirty ? "Save profile" : "Up to date"}
+              {saving ? <LatticeLoader label="Saving" status="working" cellSize={3} gap={1} fontSize={10} showTimer={false} /> : saved ? "Saved" : dirty ? "Save profile" : "Up to date"}
             </button>
           </div>
         </header>
@@ -203,7 +203,7 @@ export default function ProfilePage() {
                 <h2>Identity</h2>
                 <p>Name and bio appear on your profile. Media and visual controls now live in Settings.</p>
               </div>
-              {loading ? <span className="account-muted">Loading profile…</span> : null}
+              {loading ? <LatticeLoader label="Loading profile" status="working" cellSize={4} gap={1} fontSize={10} showTimer={false} /> : null}
             </div>
             <label className="account-field">
               <span>Display name</span>
@@ -232,7 +232,7 @@ export default function ProfilePage() {
                 disabled={saving || loading || !dirty}
                 onClick={() => void saveProfile()}
               >
-                {saving ? "Saving…" : saved ? "Saved" : "Save identity"}
+                {saving ? <LatticeLoader label="Saving" status="working" cellSize={3} gap={1} fontSize={10} showTimer={false} /> : saved ? "Saved" : "Save identity"}
               </button>
             </div>
           </section>
