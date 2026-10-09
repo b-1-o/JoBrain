@@ -163,9 +163,9 @@ export default function OptionWheel({
         x = -mirror * radius * (1 - Math.cos(angle)) * cfg.curve;
         rotation = (mirror * angle * 180) / Math.PI;
       }
-      element.style.transform = \`translate(\${x.toFixed(2)}px, calc(\${y.toFixed(2)}px - 50%)) rotate(\${rotation.toFixed(3)}deg)\`;
+      element.style.transform = `translate(${x.toFixed(2)}px, calc(${y.toFixed(2)}px - 50%)) rotate(${rotation.toFixed(3)}deg)`;
       element.style.opacity = String(Math.max(cfg.minOpacity, 1 - magnitude * cfg.fade));
-      element.style.filter = cfg.blur > 0 ? \`blur(\${(magnitude * cfg.blur).toFixed(2)}px)\` : "none";
+      element.style.filter = cfg.blur > 0 ? `blur(${(magnitude * cfg.blur).toFixed(2)}px)` : "none";
       element.style.setProperty("--ow-p", Math.max(0, 1 - Math.min(magnitude, 1)).toFixed(4));
     }
 
@@ -296,12 +296,12 @@ export default function OptionWheel({
       role="listbox"
       tabIndex={0}
       aria-label="Navigation options"
-      className={\`option-wheel\${side === "right" ? " option-wheel--right" : ""}\${isDragging ? " option-wheel--dragging" : ""}\${className ? \` \${className}\` : ""}\`}
+      className={`option-wheel${side === "right" ? " option-wheel--right" : ""}${isDragging ? " option-wheel--dragging" : ""}${className ? ` ${className}` : ""}`}
       style={{
         "--ow-text-color": textColor,
         "--ow-active-color": activeColor,
-        "--ow-font-size": \`\${fontSize}rem\`,
-        "--ow-inset": \`\${inset}px\`,
+        "--ow-font-size": `${fontSize}rem`,
+        "--ow-inset": `${inset}px`,
       } as CSSProperties}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -311,11 +311,11 @@ export default function OptionWheel({
     >
       {items.map((label, index) => (
         <div
-          key={\`\${label}-\${index}\`}
+          key={`${label}-${index}`}
           ref={(element) => { itemRefs.current[index] = element; }}
           role="option"
           aria-selected={selectedIndex === index}
-          className={\`option-wheel__item\${selectedIndex === index ? " option-wheel__item--selected" : ""}\`}
+          className={`option-wheel__item${selectedIndex === index ? " option-wheel__item--selected" : ""}`}
           onClick={() => handleItemClick(index)}
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
