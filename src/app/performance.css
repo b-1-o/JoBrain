@@ -1359,7 +1359,7 @@ html[data-reduced-motion="true"] .jb-suggest-chip {
   justify-content: space-between;
   gap: 12px;
 }
-.jb-experience-control .jb-experience-heading label {
+.jb-experience-control .jb-experience-heading > span {
   display: block;
   min-width: 0;
   min-height: 0;
