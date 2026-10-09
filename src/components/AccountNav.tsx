@@ -42,7 +42,7 @@ export default function AccountNav({ active }: { active: AccountSection }) {
       <div className="account-nav-kicker">NAVIGATE</div>
       <OptionWheel
         items={accountItems.map((item) => item.label)}
-        icons={accountItems.map(({ icon: Icon }) => <Icon size={17} strokeWidth={1.7} />)}
+        icons={accountItems.map(({ icon: Icon, label }) => <Icon key={label} size={17} strokeWidth={1.7} />)}
         defaultSelected={selected}
         textColor="#86949e"
         activeColor="#f3f7fa"
