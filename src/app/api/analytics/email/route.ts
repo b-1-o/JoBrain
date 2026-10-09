@@ -51,26 +51,26 @@ export async function POST(request: Request) {
     const rows = analytics.series
       .filter((point) => point.tracked || point.submitted)
       .map((point) => (
-        \`<tr><td style="padding:8px 10px;border-bottom:1px solid #e5e7eb">\${point.date}</td><td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:right">\${point.tracked}</td><td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:right">\${point.submitted}</td></tr>\`
+        `<tr><td style="padding:8px 10px;border-bottom:1px solid #e5e7eb">${point.date}</td><td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:right">${point.tracked}</td><td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:right">${point.submitted}</td></tr>`
       ))
       .join("");
-    const periodLabel = \`\${analytics.startDate} — \${analytics.endDate}\`;
+    const periodLabel = `${analytics.startDate} — ${analytics.endDate}`;
     const name = escapeHtml(user.name ?? "there");
 
     await transport.sendMail({
       from,
       to: user.email,
-      subject: \`JoBrain job search report · \${analytics.range}\`,
+      subject: `JoBrain job search report · ${analytics.range}`,
       text: [
-        \`Hi \${user.name ?? "there"},\`,
+        `Hi ${user.name ?? "there"},`,
         "",
-        \`Your JoBrain job-search report for \${periodLabel}:\`,
-        \`Roles tracked: \${analytics.trackedCount}\`,
-        \`Applications submitted: \${analytics.submittedCount}\`,
+        `Your JoBrain job-search report for ${periodLabel}:`,
+        `Roles tracked: ${analytics.trackedCount}`,
+        `Applications submitted: ${analytics.submittedCount}`,
         "",
         "Sent to the primary email address on your JoBrain account.",
       ].join("\n"),
-      html: \`<!doctype html><html><body style="margin:0;padding:32px;background:#f4f6f8;font-family:Arial,sans-serif;color:#18212a"><main style="max-width:640px;margin:0 auto;padding:28px;border:1px solid #dde3e8;border-radius:22px;background:#fff"><div style="font-size:11px;letter-spacing:2px;color:#64748b;font-weight:700">JOBRAIN · ACTIVITY REPORT</div><h1 style="font-size:27px;letter-spacing:-.8px;margin:12px 0 8px">Your search, in motion.</h1><p style="color:#64748b;font-size:13px">Hi \${name} — here is your activity from \${periodLabel}.</p><div style="display:flex;gap:12px;margin:24px 0"><div style="flex:1;background:#f3f6f8;padding:18px;border-radius:14px"><div style="font-size:10px;color:#64748b">ROLES TRACKED</div><div style="font-size:30px;font-weight:700;margin-top:6px">\${analytics.trackedCount}</div></div><div style="flex:1;background:#f3f6f8;padding:18px;border-radius:14px"><div style="font-size:10px;color:#64748b">APPLICATIONS SUBMITTED</div><div style="font-size:30px;font-weight:700;margin-top:6px">\${analytics.submittedCount}</div></div></div><h2 style="font-size:16px;margin:24px 0 10px">Daily activity</h2><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="text-align:left;padding:8px 10px;background:#f3f6f8">Date</th><th style="text-align:right;padding:8px 10px;background:#f3f6f8">Tracked</th><th style="text-align:right;padding:8px 10px;background:#f3f6f8">Submitted</th></tr></thead><tbody>\${rows || '<tr><td colspan="3" style="padding:12px 10px;color:#64748b">No application activity recorded in this period.</td></tr>'}</tbody></table><p style="margin-top:24px;color:#94a3b8;font-size:11px">This report was sent to your primary JoBrain account email.</p></main></body></html>\`,
+      html: `<!doctype html><html><body style="margin:0;padding:32px;background:#f4f6f8;font-family:Arial,sans-serif;color:#18212a"><main style="max-width:640px;margin:0 auto;padding:28px;border:1px solid #dde3e8;border-radius:22px;background:#fff"><div style="font-size:11px;letter-spacing:2px;color:#64748b;font-weight:700">JOBRAIN · ACTIVITY REPORT</div><h1 style="font-size:27px;letter-spacing:-.8px;margin:12px 0 8px">Your search, in motion.</h1><p style="color:#64748b;font-size:13px">Hi ${name} — here is your activity from ${periodLabel}.</p><div style="display:flex;gap:12px;margin:24px 0"><div style="flex:1;background:#f3f6f8;padding:18px;border-radius:14px"><div style="font-size:10px;color:#64748b">ROLES TRACKED</div><div style="font-size:30px;font-weight:700;margin-top:6px">${analytics.trackedCount}</div></div><div style="flex:1;background:#f3f6f8;padding:18px;border-radius:14px"><div style="font-size:10px;color:#64748b">APPLICATIONS SUBMITTED</div><div style="font-size:30px;font-weight:700;margin-top:6px">${analytics.submittedCount}</div></div></div><h2 style="font-size:16px;margin:24px 0 10px">Daily activity</h2><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="text-align:left;padding:8px 10px;background:#f3f6f8">Date</th><th style="text-align:right;padding:8px 10px;background:#f3f6f8">Tracked</th><th style="text-align:right;padding:8px 10px;background:#f3f6f8">Submitted</th></tr></thead><tbody>${rows || '<tr><td colspan="3" style="padding:12px 10px;color:#64748b">No application activity recorded in this period.</td></tr>'}</tbody></table><p style="margin-top:24px;color:#94a3b8;font-size:11px">This report was sent to your primary JoBrain account email.</p></main></body></html>`,
     });
 
     return NextResponse.json({ sent: true, email: user.email, range });
