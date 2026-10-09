@@ -33,7 +33,8 @@ export default function AccountNav({ active }: { active: AccountSection }) {
   const selected = Math.max(0, accountItems.findIndex((item) => item.href === activeHref));
 
   useEffect(() => {
-    setNavigatingTo(null);
+    const frame = window.requestAnimationFrame(() => setNavigatingTo(null));
+    return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
 
   function navigate(href: string) {
