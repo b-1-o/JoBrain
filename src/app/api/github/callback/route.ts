@@ -70,7 +70,7 @@ export async function GET(request: Request) {
     const githubResponse = await fetch("https://api.github.com/user", {
       headers: {
         Accept: "application/vnd.github+json",
-        Authorization: \`Bearer \${tokenData.access_token}\`,
+        Authorization: `Bearer ${tokenData.access_token}`,
         "X-GitHub-Api-Version": "2022-11-28",
         "User-Agent": process.env.JOBRAIN_USER_AGENT ?? "JoBrain/1.0",
       },
