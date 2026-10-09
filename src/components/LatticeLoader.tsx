@@ -116,9 +116,7 @@ export default function LatticeLoader({
   const cycle = Math.round(resolved.loop * durationStep);
   const timerRef = useRef<HTMLSpanElement>(null);
   const elapsedRef = useRef(0);
-  const markRef = useRef<Exclude<LoaderStatus, "working">>("done");
-  const mark = status === "working" ? markRef.current : status;
-  markRef.current = mark;
+  const mark: Exclude<LoaderStatus, "working"> = status === "error" ? "error" : "done";
   const [announce, setAnnounce] = useState(`${label}, in progress`);
 
   const paint = (deciseconds: number) => {
