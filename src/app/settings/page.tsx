@@ -473,9 +473,10 @@ export default function SettingsPage() {
           <aside className="settings-subnav account-card" aria-label="Settings sections">
             <div className="account-kicker">SETTINGS MENU</div>
             <OptionWheel
+              key={activeSection}
               items={settingsSections.map((section) => section.label)}
               icons={settingsSections.map(({ icon: Icon, label }) => <Icon key={label} size={17} strokeWidth={1.7} />)}
-              defaultSelected={0}
+              defaultSelected={Math.max(0, settingsSections.findIndex((section) => section.label === activeSection))}
               textColor="#8997a0"
               activeColor="#f4f7f9"
               fontSize={1}
