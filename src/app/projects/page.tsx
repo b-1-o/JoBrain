@@ -97,8 +97,25 @@ export default function ProjectsPage() {
   }
 
   async function remove(id: string) {
-    await fetch("/api/projects?id=" + encodeURIComponent(id), { method: "DELETE" });
-    setProjects((current) => current.filter((project) => project.id !== id));
+    setMessage("");
+    try {
+      const response = await fetch("/api/projects?id=" + encodeURIComponent(id), {
+        method: "DELETE",
+      });
+      const data = (await response.json().catch(() => ({}))) as { error?: unknown };
+      if (!response.ok) {
+        setMessage(
+          typeof data.error === "string"
+            ? data.error
+            : "Project was not removed (HTTP " + response.status + ").",
+        );
+        return;
+      }
+      setProjects((current) => current.filter((project) => project.id !== id));
+      setMessage("Project removed from your portfolio.");
+    } catch {
+      setMessage("Could not reach the project service. The project has not been removed.");
+    }
   }
 
   function updateDraft<K extends keyof Draft>(key: K, value: Draft[K]) {
