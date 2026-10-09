@@ -1,0 +1,67 @@
+.option-wheel {
+  --ow-text-color: #98a5ae;
+  --ow-active-color: #f4f7f8;
+  --ow-font-size: 1.1rem;
+  --ow-inset: 16px;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  outline: none;
+  isolation: isolate;
+}
+.option-wheel:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--jb-user-accent, #b8c9d6) 75%, transparent);
+  outline-offset: 3px;
+  border-radius: 14px;
+}
+.option-wheel--dragging { cursor: grabbing; }
+.option-wheel__item {
+  position: absolute;
+  top: 50%;
+  left: var(--ow-inset);
+  display: inline-flex;
+  align-items: center;
+  gap: .7rem;
+  max-width: calc(100% - var(--ow-inset) - 4px);
+  white-space: nowrap;
+  font-size: var(--ow-font-size);
+  line-height: 1;
+  font-weight: 420;
+  letter-spacing: -.035em;
+  transform-origin: left center;
+  cursor: pointer;
+  will-change: transform, opacity, filter;
+  color: color-mix(in srgb, var(--ow-active-color) calc(var(--ow-p, 0) * 100%), var(--ow-text-color));
+}
+.option-wheel__icon {
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  border-radius: 11px;
+  background: color-mix(in srgb, currentColor 7%, transparent);
+  color: inherit;
+  transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+.option-wheel__icon svg { width: 17px; height: 17px; stroke-width: 1.7; }
+.option-wheel__item--selected .option-wheel__icon {
+  border-color: color-mix(in srgb, var(--jb-user-accent, #b8c9d6) 55%, transparent);
+  background: color-mix(in srgb, var(--jb-user-accent, #b8c9d6) 16%, transparent);
+  transform: scale(1.03);
+}
+.option-wheel__label { overflow: hidden; text-overflow: ellipsis; }
+.option-wheel--right .option-wheel__item {
+  left: auto;
+  right: var(--ow-inset);
+  flex-direction: row-reverse;
+  transform-origin: right center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .option-wheel__icon { transition: none; }
+}
