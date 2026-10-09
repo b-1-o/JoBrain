@@ -16,6 +16,7 @@ type OptionWheelProps = {
   items: string[];
   defaultSelected?: number;
   onChange?: (index: number, item: string) => void;
+  onActivate?: (index: number, item: string) => void;
   icons?: ReactNode[];
   textColor?: string;
   activeColor?: string;
@@ -57,6 +58,7 @@ export default function OptionWheel({
   items,
   defaultSelected = 0,
   onChange,
+  onActivate,
   icons = [],
   textColor = "#98a5ae",
   activeColor = "#f4f7f8",
@@ -84,6 +86,7 @@ export default function OptionWheel({
   const rafRef = useRef<number | null>(null);
   const lastRef = useRef(0);
   const onChangeRef = useRef(onChange);
+  const onActivateRef = useRef(onActivate);
   const selectedRef = useRef(initialIndex);
   const wheelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragRef = useRef<{ y: number; start: number; id: number } | null>(null);
@@ -113,6 +116,7 @@ export default function OptionWheel({
 
   useEffect(() => {
     onChangeRef.current = onChange;
+    onActivateRef.current = onActivate;
     cfgRef.current = {
       count: items.length,
       items,
@@ -129,7 +133,7 @@ export default function OptionWheel({
       soundUrl,
       soundVolume,
     };
-  }, [items, fontSize, spacing, curve, tilt, blur, fade, minOpacity, side, loop, smoothing, draggable, soundUrl, soundVolume, onChange]);
+  }, [items, fontSize, spacing, curve, tilt, blur, fade, minOpacity, side, loop, smoothing, draggable, soundUrl, soundVolume, onChange, onActivate]);
 
   const runFrameRef = useRef<(now: number) => void>(() => undefined);
 
@@ -276,9 +280,17 @@ export default function OptionWheel({
       else if (distance < -cfg.count / 2) distance += cfg.count;
     }
     applyTarget(current + distance, true);
+    onActivateRef.current?.(index, cfg.items[index] ?? "");
   }, [applyTarget]);
 
   const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      const cfg = cfgRef.current;
+      const index = selectedRef.current;
+      onActivateRef.current?.(index, cfg.items[index] ?? "");
+      return;
+    }
     const delta = event.key === "ArrowUp" || event.key === "ArrowLeft"
       ? -1
       : event.key === "ArrowDown" || event.key === "ArrowRight"
