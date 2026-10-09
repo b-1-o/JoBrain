@@ -536,7 +536,6 @@ html[data-reduced-motion="true"] .jb-view-panel {
   .jb-account-shortcuts { display: none; }
 }
 
-
 /* Final pass: share theme, wallpaper, and glass tokens with Clerk authentication. */
 .jb-pattern-waves {
   opacity: 1 !important;
@@ -647,7 +646,6 @@ html[data-custom-background="true"] .jb-auth-pattern {
     background-attachment: scroll;
   }
 }
-
 
 /* --------------------------------------------------------------------------
    Search UI finish: readable type, balanced status panels, and smooth controls.
@@ -1334,8 +1332,7 @@ html[data-reduced-motion="true"] .jb-suggest-chip {
   transform: none !important;
 }
 
-
-/* Experience: a real range input plus direct labeled choices, all driven by React state. */
+/* Experience filtering: direct labeled choices, driven by React state. */
 .jb-command-filters {
   grid-template-columns: minmax(200px, 1.2fr) minmax(185px, 1fr) minmax(170px, .9fr) auto;
 }
@@ -1362,7 +1359,7 @@ html[data-reduced-motion="true"] .jb-suggest-chip {
   justify-content: space-between;
   gap: 12px;
 }
-.jb-experience-control .jb-experience-heading label {
+.jb-experience-control .jb-experience-heading > span {
   display: block;
   min-width: 0;
   min-height: 0;
@@ -1377,96 +1374,6 @@ html[data-reduced-motion="true"] .jb-suggest-chip {
   line-height: 1.35;
   letter-spacing: -.01em;
   box-shadow: none;
-}
-.jb-experience-heading output {
-  display: inline-flex;
-  min-height: 28px;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  border: 1px solid rgba(255,255,255,.16);
-  border-radius: 999px;
-  background: rgba(255,255,255,.065);
-  color: #f2f6f8;
-  font-size: 12px;
-  font-weight: 620;
-  line-height: 1.25;
-  letter-spacing: 0;
-  text-transform: none;
-  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
-}
-.jb-experience-range {
-  display: block;
-  width: 100%;
-  min-width: 0;
-  min-height: 28px;
-  margin: 7px 0 3px;
-  padding: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  cursor: pointer;
-  accent-color: #dce8ee;
-  touch-action: pan-y;
-}
-.jb-experience-range::-webkit-slider-runnable-track {
-  height: 5px;
-  border: 0;
-  border-radius: 999px;
-  background: linear-gradient(
-    90deg,
-    rgba(225,239,246,.98) 0%,
-    rgba(192,218,232,.92) var(--experience-progress, 0%),
-    rgba(255,255,255,.14) var(--experience-progress, 0%),
-    rgba(255,255,255,.14) 100%
-  );
-}
-.jb-experience-range::-moz-range-track {
-  height: 5px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255,255,255,.14);
-}
-.jb-experience-range::-moz-range-progress {
-  height: 5px;
-  border-radius: 999px;
-  background: #c6dce7;
-}
-.jb-experience-range::-webkit-slider-thumb {
-  width: 18px;
-  height: 18px;
-  margin-top: -6.5px;
-  appearance: none;
-  border: 2px solid #f7fbfd;
-  border-radius: 50%;
-  background: #cadde7;
-  box-shadow: 0 0 0 4px rgba(202,221,231,.13), 0 4px 14px rgba(0,0,0,.24);
-  transition: transform 140ms cubic-bezier(.2,.8,.2,1), box-shadow 140ms ease;
-}
-.jb-experience-range::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  border: 2px solid #f7fbfd;
-  border-radius: 50%;
-  background: #cadde7;
-  box-shadow: 0 0 0 4px rgba(202,221,231,.13), 0 4px 14px rgba(0,0,0,.24);
-  transition: transform 140ms cubic-bezier(.2,.8,.2,1), box-shadow 140ms ease;
-}
-.jb-experience-range:hover::-webkit-slider-thumb,
-.jb-experience-range:active::-webkit-slider-thumb {
-  transform: scale(1.12);
-  box-shadow: 0 0 0 6px rgba(202,221,231,.16), 0 4px 15px rgba(0,0,0,.25);
-}
-.jb-experience-range:hover::-moz-range-thumb,
-.jb-experience-range:active::-moz-range-thumb {
-  transform: scale(1.12);
-  box-shadow: 0 0 0 6px rgba(202,221,231,.16), 0 4px 15px rgba(0,0,0,.25);
-}
-.jb-experience-range:focus-visible {
-  outline: 2px solid rgba(218,232,240,.75);
-  outline-offset: 3px;
-  border-radius: 999px;
 }
 .jb-experience-steps {
   display: grid;
@@ -1526,39 +1433,6 @@ html[data-theme="light"] .jb-experience-control:focus-within {
 html[data-theme="light"] .jb-experience-control .jb-experience-heading label {
   color: #3b474e;
 }
-html[data-theme="light"] .jb-experience-heading output {
-  border-color: rgba(22,29,34,.13);
-  background: rgba(255,255,255,.55);
-  color: #192025;
-}
-html[data-theme="light"] .jb-experience-range {
-  accent-color: #252c31;
-}
-html[data-theme="light"] .jb-experience-range::-webkit-slider-runnable-track {
-  background: linear-gradient(
-    90deg,
-    #252c31 0%,
-    #252c31 var(--experience-progress, 0%),
-    rgba(24,31,35,.15) var(--experience-progress, 0%),
-    rgba(24,31,35,.15) 100%
-  );
-}
-html[data-theme="light"] .jb-experience-range::-moz-range-track {
-  background: rgba(24,31,35,.15);
-}
-html[data-theme="light"] .jb-experience-range::-moz-range-progress {
-  background: #252c31;
-}
-html[data-theme="light"] .jb-experience-range::-webkit-slider-thumb {
-  border-color: #fff;
-  background: #252c31;
-  box-shadow: 0 0 0 4px rgba(37,44,49,.09), 0 4px 14px rgba(0,0,0,.15);
-}
-html[data-theme="light"] .jb-experience-range::-moz-range-thumb {
-  border-color: #fff;
-  background: #252c31;
-  box-shadow: 0 0 0 4px rgba(37,44,49,.09), 0 4px 14px rgba(0,0,0,.15);
-}
 html[data-theme="light"] .jb-experience-step {
   border-color: rgba(22,29,34,.12);
   background: rgba(255,255,255,.34);
@@ -1612,23 +1486,16 @@ html[data-theme="light"] .jb-experience-step.is-active {
 }
 @media (prefers-reduced-motion: reduce) {
   .jb-experience-control,
-  .jb-experience-heading output,
-  .jb-experience-range::-webkit-slider-thumb,
-  .jb-experience-range::-moz-range-thumb,
   .jb-experience-step {
     transition: none !important;
     transform: none !important;
   }
 }
 html[data-reduced-motion="true"] .jb-experience-control,
-html[data-reduced-motion="true"] .jb-experience-heading output,
-html[data-reduced-motion="true"] .jb-experience-range::-webkit-slider-thumb,
-html[data-reduced-motion="true"] .jb-experience-range::-moz-range-thumb,
 html[data-reduced-motion="true"] .jb-experience-step {
   transition: none !important;
   transform: none !important;
 }
-
 
 /* Portfolio showcase: turn the profile from a settings form into a project-led portfolio. */
 .portfolio-showcase {
@@ -2165,7 +2032,6 @@ html[data-theme="light"] .portfolio-skeleton {
   .portfolio-skeleton { animation: none !important; }
 }
 
-
 /* --------------------------------------------------------------------------
    Account shell + settings redesign: OptionWheel navigation and live tokens.
    -------------------------------------------------------------------------- */
@@ -2588,7 +2454,6 @@ html[data-theme="light"] .settings-preview-chip { color: #29343b; }
   .profile-avatar { width: 76px; height: 76px; border-radius: 22px; }
 }
 
-
 /* Smooth transitions and progress feedback; preserve all existing ambient art. */
 @keyframes jb-tab-enter {
   from { opacity: 0; transform: translate3d(0, 10px, 0) scale(.994); filter: blur(3px); }
@@ -2614,24 +2479,12 @@ html[data-theme="light"] .settings-preview-chip { color: #29343b; }
 .account-grid > .account-card:nth-child(3) { animation-delay: 95ms; }
 .account-grid > .account-card:nth-child(4) { animation-delay: 140ms; }
 .account-nav {
-  grid-template-rows: auto auto auto auto minmax(0, 1fr) auto !important;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto !important;
   gap: 9px !important;
   height: 438px !important;
   padding: 15px !important;
 }
 .account-nav-brand { min-height: 47px !important; }
-.account-nav-home {
-  display: flex !important; min-height: 34px !important; align-items: center !important; gap: 9px !important;
-  padding: 0 10px !important; border: 1px solid rgba(255,255,255,.085) !important; border-radius: 11px !important;
-  background: rgba(255,255,255,.035) !important; color: #c5d0d7 !important; font-size: 11px !important; font-weight: 620 !important;
-  text-decoration: none !important; transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease, color 180ms ease !important;
-}
-.account-nav-home:hover {
-  border-color: color-mix(in srgb, var(--jb-user-accent,#b8c9d6) 30%, transparent) !important;
-  background: color-mix(in srgb, var(--jb-user-accent,#b8c9d6) 8%, rgba(255,255,255,.035)) !important;
-  color: #f2f6f8 !important; transform: translateY(-1px) !important;
-}
-.account-nav-home-hint { margin-left: auto; color: #76858f; }
 .account-nav-media {
   display: flex !important; min-height: 44px !important; align-items: center !important; gap: 9px !important;
   padding: 5px 8px !important; border: 1px solid color-mix(in srgb, var(--jb-user-accent,#b8c9d6) 18%, rgba(255,255,255,.08)) !important;
@@ -2658,7 +2511,7 @@ html[data-theme="light"] .settings-preview-chip { color: #29343b; }
   backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); animation: jb-surface-enter .2s ease both;
 }
 .account-nav-loading .lattice-loader { color: #d8e2e8; }
-html[data-theme="light"] .account-nav-home, html[data-theme="light"] .account-nav-media {
+html[data-theme="light"] .account-nav-media {
   border-color: rgba(25,30,35,.12) !important; background: rgba(255,255,255,.34) !important; color: #28343b !important;
 }
 html[data-theme="light"] .account-nav-media-copy strong { color: #202a30; }
@@ -2800,7 +2653,20 @@ html[data-theme="light"] .project-repository-search input { color: #253139; }
 }
 html[data-reduced-motion="true"] .jb-view-panel, html[data-reduced-motion="true"] .jb-view-panel > * { animation: none !important; }
 
-
 .account-nav-kicker-row { display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:20px; }
 .account-nav-kicker-row .lattice-loader { color:var(--jb-text,#d8e2e8); white-space:nowrap; }
 html[data-theme="light"] .account-nav-kicker-row .lattice-loader { color:#28343b; }
+
+/* Keep wallpaper mode responsive on devices with limited GPU headroom. */
+html[data-custom-background="true"] .jb-topbar,
+html[data-custom-background="true"] .jb-command,
+html[data-custom-background="true"] .jb-quick-add,
+html[data-custom-background="true"] .jb-pipeline-signal,
+html[data-custom-background="true"] .jb-job-row {
+  backdrop-filter: blur(4px) saturate(108%) !important;
+  -webkit-backdrop-filter: blur(4px) saturate(108%) !important;
+}
+
+html[data-custom-background="true"] .jb-job-row {
+  background-color: rgba(10, 12, 13, 0.72) !important;
+}

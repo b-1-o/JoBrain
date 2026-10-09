@@ -132,6 +132,41 @@ const mediaLabels: Record<MediaKind, string> = {
 
 const presetOrder = ["graphite", "mist", "snow", "oled", "frost"] as const;
 
+async function optimizeBackgroundImage(file: File): Promise<File> {
+  if (file.type === "image/gif" || typeof createImageBitmap !== "function") return file;
+  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) return file;
+
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    return file;
+  }
+
+  try {
+    const longestSide = Math.max(bitmap.width, bitmap.height);
+    if (longestSide <= 2200 && file.size <= 2.5 * 1024 * 1024) return file;
+
+    const scale = Math.min(1, 2200 / longestSide);
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d", { alpha: true });
+    if (!context) return file;
+    context.drawImage(bitmap, 0, 0, width, height);
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.84));
+    if (!blob || blob.size >= file.size) return file;
+
+    const stem = file.name.replace(/\.[^.]+$/, "") || "background";
+    return new File([blob], `${stem}.webp`, { type: "image/webp", lastModified: Date.now() });
+  } finally {
+    bitmap.close();
+  }
+}
+
 function fromProfile(raw: Record<string, unknown> | null | undefined): Profile {
   return {
     displayName: typeof raw?.displayName === "string" ? raw.displayName : "",
@@ -163,6 +198,7 @@ function fromSettings(raw: Record<string, unknown> | null | undefined): Settings
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings>(emptySettings);
   const [profile, setProfile] = useState<Profile>(emptyProfile);
+  const [activeBackgroundUrl, setActiveBackgroundUrl] = useState("");
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [activeSection, setActiveSection] = useState<SettingsSection>("Preferences");
   const [activity, setActivity] = useState<Activity>("idle");
@@ -226,6 +262,7 @@ export default function SettingsPage() {
         const nextProfile = fromProfile(profileData.profile);
         const nextSettings = fromSettings(settingsData.settings);
         setProfile(nextProfile);
+        setActiveBackgroundUrl(nextProfile.backgroundUrl);
         setSettings(nextSettings);
         setProfileLoaded(true);
         applyAppearanceToDocument({
@@ -262,16 +299,16 @@ export default function SettingsPage() {
       glassBlur: profile.glassBlur,
       panelOpacity: profile.panelOpacity,
       borderIntensity: profile.borderIntensity,
-      backgroundUrl: sanitizeImageUrl(profile.backgroundUrl),
+      backgroundUrl: sanitizeImageUrl(activeBackgroundUrl),
     });
   }, [
     profileLoaded,
+    activeBackgroundUrl,
     profile.accentColor,
     profile.glassIntensity,
     profile.glassBlur,
     profile.panelOpacity,
     profile.borderIntensity,
-    profile.backgroundUrl,
     settings.theme,
     settings.reducedMotion,
   ]);
@@ -300,6 +337,9 @@ export default function SettingsPage() {
       }
       const next = fromProfile(data.profile);
       setProfile(next);
+      if (Object.prototype.hasOwnProperty.call(patch, "backgroundUrl")) {
+        setActiveBackgroundUrl(next.backgroundUrl);
+      }
       setProfileLoaded(true);
       setActivity("done");
       setMessage(successMessage);
@@ -357,19 +397,34 @@ export default function SettingsPage() {
 
   async function uploadMedia(kind: MediaKind, file: File | null) {
     if (!file) return;
-    if (file.size > MEDIA_LIMITS[kind].maxBytes) {
+    const sourceLimit = kind === "background" ? 24 * 1024 * 1024 : MEDIA_LIMITS[kind].maxBytes;
+    if (file.size > sourceLimit) {
       setActivity("error");
-      setMessage(`${mediaLabels[kind]} is too large. Choose a smaller image.`);
+      setMessage(
+        kind === "background"
+          ? "Background file is too large to process. Choose an image under 24 MB."
+          : `${mediaLabels[kind]} is too large. Choose a smaller image.`,
+      );
       return;
     }
+
     setBusyMedia(kind);
     setActivity("working");
     setMessage("");
-    setMediaPreview(kind, URL.createObjectURL(file));
+    if (kind !== "background") setMediaPreview(kind, URL.createObjectURL(file));
+
     try {
+      // Large wallpapers can force expensive image decoding and GPU compositing.
+      // Downscale/compress them before previewing or uploading.
+      const uploadFile = kind === "background" ? await optimizeBackgroundImage(file) : file;
+      if (uploadFile.size > MEDIA_LIMITS[kind].maxBytes) {
+        throw new Error(`${mediaLabels[kind]} is too large after optimization. Choose a smaller image.`);
+      }
+      if (kind === "background") setMediaPreview(kind, URL.createObjectURL(uploadFile));
+
       const form = new FormData();
       form.set("kind", kind);
-      form.set("file", file);
+      form.set("file", uploadFile, uploadFile.name);
       const response = await fetch("/api/media", { method: "POST", body: form });
       const data = (await response.json().catch(() => ({}))) as {
         url?: string;
@@ -384,7 +439,9 @@ export default function SettingsPage() {
             : data.error ?? "Upload failed. The image was not saved.",
         );
       }
-      setProfile(fromProfile(data.profile));
+      const nextProfile = fromProfile(data.profile);
+      setProfile(nextProfile);
+      if (kind === "background") setActiveBackgroundUrl(nextProfile.backgroundUrl);
       setProfileLoaded(true);
       setMediaPreview(kind, "");
       setActivity("done");
@@ -415,7 +472,9 @@ export default function SettingsPage() {
       if (!response.ok || !data.profile) {
         throw new Error(data.error ?? `Could not remove ${mediaLabels[kind].toLowerCase()}.`);
       }
-      setProfile(fromProfile(data.profile));
+      const nextProfile = fromProfile(data.profile);
+      setProfile(nextProfile);
+      if (kind === "background") setActiveBackgroundUrl("");
       setMediaPreview(kind, "");
       setActivity("done");
       setMessage(`${mediaLabels[kind]} removed.`);
