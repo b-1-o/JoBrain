@@ -1,6 +1,7 @@
 "use client";
 
 import { Clock3, ExternalLink, MapPin, Plus } from "lucide-react";
+import LatticeLoader from "@/components/LatticeLoader";
 import { useMemo, useState } from "react";
 
 export type JobResult = {
@@ -71,6 +72,12 @@ export default function JobResultsList({ jobs, loading, onTrack, onResetFilters 
 
   return (
     <div className="jb-job-list">
+      {loading ? (
+        <div className="jb-search-loading-state" aria-live="polite">
+          <LatticeLoader label="Searching roles" status="working" cellSize={6} gap={2} fontSize={12} showTimer />
+          <div className="jb-search-skeleton" aria-hidden="true">{[0, 1, 2].map((item) => <div className="jb-search-skeleton-card" key={item}><i /><i /><i /></div>)}</div>
+        </div>
+      ) : null}
       {visibleJobs.map((job, index) => (
         <article key={job.id} className="jb-job-row">
           <div className="jb-job-index">{String(index + 1).padStart(2, "0")}</div>
