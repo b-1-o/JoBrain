@@ -85,7 +85,7 @@ const TechText = ({
     const reducedMotion =
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ||
       document.documentElement.dataset.reducedMotion === 'true';
-    let width = 1, height = 1, dpr = 1, raf = 0, last = performance.now();
+    let width = 1, height = 1, dpr = 1, raf = 0, last = performance.now(), lastRenderedAt = 0;
     let visible = true, alive = true, layoutKey = '', requestedFont = '';
     let word = null, glyphs = [], presence = 0, clock = 0, pulse = 0, placed = false, dragging = -1;
     const pointer = { x: 0, y: 0, inside: false };
@@ -355,6 +355,12 @@ const TechText = ({
 
     const tick = now => {
       raf = 0;
+      if (!alive || !visible) return;
+      if (now - lastRenderedAt < 1000 / 30) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+      lastRenderedAt = now;
       const s = settingsRef.current;
       if (!s) return;
       const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
@@ -445,7 +451,7 @@ const TechText = ({
     const resize = () => {
       width = Math.max(1, container.clientWidth);
       height = Math.max(1, container.clientHeight);
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      dpr = Math.min(window.devicePixelRatio || 1, 1.25);
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       layoutKey = '';
