@@ -39,6 +39,7 @@ export default function AccountNav({ active }: { active: AccountSection }) {
   function navigate(href: string) {
     if (href === pathname) return;
     setNavigatingTo(href);
+    window.dispatchEvent(new Event("jobrain:navigate-start"));
     router.push(href);
   }
 
