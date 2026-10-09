@@ -27,7 +27,8 @@ type AccountSection = "profile" | "settings" | "projects" | "history" | "notific
 
 export default function AccountNav({ active }: { active: AccountSection }) {
   const router = useRouter();
-  const selected = Math.max(0, accountItems.findIndex((item) => item.key === active));
+  const activeHref = active === "workspace" ? "/" : `/${active}`;
+  const selected = Math.max(0, accountItems.findIndex((item) => item.href === activeHref));
   return (
     <nav className="account-nav" aria-label="Account navigation">
       <Link className="account-nav-brand" href="/" aria-label="JoBrain workspace">
