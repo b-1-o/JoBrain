@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import ProfilePortfolio from "@/components/ProfilePortfolio";
 import { useCallback, useEffect, useRef, useState } from "react";
 import AccountNav from "@/components/AccountNav";
 import { applyAppearanceToDocument, readCachedAppearance } from "@/lib/appearance";
@@ -82,15 +83,24 @@ export default function ProfilePage() {
   const load = useCallback(() => {
     void fetch("/api/profile", { cache: "no-store" })
       .then(async (response) => {
-        if (!response.ok) throw new Error("profile");
-        const data = await response.json();
-        const next = fromApi(data.profile as Record<string, unknown>);
+        const data = (await response.json().catch(() => ({}))) as {
+          profile?: Record<string, unknown>;
+          error?: unknown;
+        };
+        if (!response.ok || !data.profile) {
+          throw new Error(
+            typeof data.error === "string"
+              ? data.error
+              : "Could not load profile (HTTP " + response.status + ").",
+          );
+        }
+        const next = fromApi(data.profile);
         setProfile(next);
         setBaseline(next);
         setLoaded(true);
       })
-      .catch(() => {
-        setError("Sign in to edit your profile.");
+      .catch((cause: unknown) => {
+        setError(cause instanceof Error ? cause.message : "Could not load your profile. Please retry.");
       });
   }, []);
 
@@ -146,25 +156,48 @@ export default function ProfilePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profile),
       });
-      if (!response.ok) {
-        setError("Could not save profile.");
+      const data = (await response.json().catch(() => ({}))) as {
+        profile?: Record<string, unknown>;
+        error?: unknown;
+      };
+      if (!response.ok || !data.profile) {
+        setError(
+          typeof data.error === "string"
+            ? data.error
+            : "Profile was not saved (HTTP " + response.status + ").",
+        );
         return;
       }
-      const data = await response.json();
-      const next = fromApi(data.profile as Record<string, unknown>);
+
+      const next = fromApi(data.profile);
       setProfile(next);
       setBaseline(next);
-      localStorage.setItem("jobrain-profile", JSON.stringify(data.profile));
-      applyAppearanceToDocument({
-        ...readCachedAppearance(),
-        accentColor: next.accentColor ?? undefined,
-        glassIntensity: next.glassIntensity,
-        glassBlur: next.glassBlur,
-        panelOpacity: next.panelOpacity,
-        borderIntensity: next.borderIntensity,
-        backgroundUrl: next.backgroundUrl || null,
-      });
+      try {
+        // This cache is optional; the successful database response is authoritative.
+        localStorage.setItem("jobrain-profile", JSON.stringify(data.profile));
+      } catch {
+        // A disabled or full localStorage must not prevent a successful save.
+      }
+      try {
+        applyAppearanceToDocument({
+          ...readCachedAppearance(),
+          accentColor: next.accentColor ?? undefined,
+          glassIntensity: next.glassIntensity,
+          glassBlur: next.glassBlur,
+          panelOpacity: next.panelOpacity,
+          borderIntensity: next.borderIntensity,
+          backgroundUrl: next.backgroundUrl || null,
+        });
+      } catch {
+        // Persisted profile settings remain saved even if the local preview cannot update.
+      }
       setSaved(true);
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? "Save failed: " + cause.message
+          : "Could not reach the profile service. Your changes are still unsaved.",
+      );
     } finally {
       setSaving(false);
     }
@@ -291,6 +324,8 @@ export default function ProfilePage() {
             </div>
           </div>
         </section>
+
+        <ProfilePortfolio />
 
         <div className="account-grid" style={{ marginTop: 16 }}>
           <section className="account-card">
