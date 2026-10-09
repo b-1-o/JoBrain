@@ -42,6 +42,7 @@ export default function OverviewAnalytics() {
   const [range, setRange] = useState<Range>("30d");
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [error, setError] = useState("");
   const [emailState, setEmailState] = useState<"idle" | "working" | "done" | "error">("idle");
   const [emailMessage, setEmailMessage] = useState("");
@@ -64,7 +65,7 @@ export default function OverviewAnalytics() {
         if (!cancelled) setLoading(false);
       });
     return () => { cancelled = true; };
-  }, [range]);
+  }, [range, refreshKey]);
 
   async function emailReport() {
     setEmailState("working");
@@ -141,7 +142,7 @@ export default function OverviewAnalytics() {
         ) : error ? (
           <div className="jb-analytics-empty">
             <p>{error}</p>
-            <button type="button" className="jb-button jb-button-ghost" onClick={() => { setLoading(true); setRange((current) => current); }}>
+            <button type="button" className="jb-button jb-button-ghost" onClick={() => { setLoading(true); setRefreshKey((current) => current + 1); }}>
               <RefreshCw size={13} /> Retry
             </button>
           </div>
