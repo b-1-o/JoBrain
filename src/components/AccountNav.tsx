@@ -29,7 +29,7 @@ export default function AccountNav({ active }: { active: AccountSection }) {
   const router = useRouter();
   const pathname = usePathname();
   const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
-  const activeHref = active === "workspace" ? "/" : \`/\${active}\`;
+  const activeHref = active === "workspace" ? "/" : `/${active}`;
   const selected = Math.max(0, accountItems.findIndex((item) => item.href === activeHref));
 
   useEffect(() => {
