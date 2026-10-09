@@ -337,14 +337,14 @@ export default function SettingsPage() {
 
   async function saveMediaUrl(kind: MediaKind) {
     const field = mediaFields[kind];
-    await saveProfilePatch({ [field]: profile[field] }, \`\${mediaLabels[kind]} saved to your account.\`);
+    await saveProfilePatch({ [field]: profile[field] }, `${mediaLabels[kind]} saved to your account.`);
   }
 
   async function uploadMedia(kind: MediaKind, file: File | null) {
     if (!file) return;
     if (file.size > MEDIA_LIMITS[kind].maxBytes) {
       setActivity("error");
-      setMessage(\`\${mediaLabels[kind]} is too large. Choose a smaller image.\`);
+      setMessage(`${mediaLabels[kind]} is too large. Choose a smaller image.`);
       return;
     }
     setBusyMedia(kind);
@@ -373,7 +373,7 @@ export default function SettingsPage() {
       setProfileLoaded(true);
       setMediaPreview(kind, "");
       setActivity("done");
-      setMessage(\`\${mediaLabels[kind]} uploaded and saved.\`);
+      setMessage(`${mediaLabels[kind]} uploaded and saved.`);
     } catch (cause) {
       setMediaPreview(kind, "");
       setActivity("error");
@@ -398,12 +398,12 @@ export default function SettingsPage() {
         error?: string;
       };
       if (!response.ok || !data.profile) {
-        throw new Error(data.error ?? \`Could not remove \${mediaLabels[kind].toLowerCase()}.\`);
+        throw new Error(data.error ?? `Could not remove ${mediaLabels[kind].toLowerCase()}.`);
       }
       setProfile(fromProfile(data.profile));
       setMediaPreview(kind, "");
       setActivity("done");
-      setMessage(\`\${mediaLabels[kind]} removed.\`);
+      setMessage(`${mediaLabels[kind]} removed.`);
     } catch (cause) {
       setActivity("error");
       setMessage(cause instanceof Error ? cause.message : "Could not remove media.");
@@ -415,7 +415,7 @@ export default function SettingsPage() {
   function applyPreset(name: (typeof presetOrder)[number]) {
     const preset = APPEARANCE_PRESETS[name];
     setProfile((current) => ({ ...current, ...preset }));
-    void saveProfilePatch(preset, \`\${name.charAt(0).toUpperCase() + name.slice(1)} appearance saved.\`);
+    void saveProfilePatch(preset, `${name.charAt(0).toUpperCase() + name.slice(1)} appearance saved.`);
   }
 
   const activityLabel = activity === "working" ? "Saving changes" : activity === "done" ? "Saved" : "Save failed";
@@ -587,7 +587,7 @@ export default function SettingsPage() {
                             <input
                               type="file"
                               accept="image/png,image/jpeg,image/webp,image/gif"
-                              aria-label={\`Upload \${mediaLabels[kind]}\`}
+                              aria-label={`Upload ${mediaLabels[kind]}`}
                               disabled={busyMedia !== null}
                               onChange={(event) => {
                                 const input = event.currentTarget;
@@ -600,7 +600,7 @@ export default function SettingsPage() {
                           <button
                             type="button"
                             className="account-button settings-icon-button"
-                            aria-label={\`Remove \${mediaLabels[kind]}\`}
+                            aria-label={`Remove ${mediaLabels[kind]}`}
                             disabled={busyMedia !== null}
                             onClick={() => void removeMedia(kind)}
                           >
