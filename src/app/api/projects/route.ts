@@ -78,6 +78,23 @@ export async function POST(request: Request) {
         );
       }
 
+      const connection = await prisma.gitHubConnection.findUnique({
+        where: { userId: user.id },
+        select: { login: true },
+      });
+      if (!connection) {
+        return NextResponse.json(
+          { error: "Connect GitHub first so JoBrain can verify that this repository belongs to your account." },
+          { status: 409 },
+        );
+      }
+      if (parsed.owner.toLowerCase() !== connection.login.toLowerCase()) {
+        return NextResponse.json(
+          { error: `Ownership check failed: ${parsed.owner}/${parsed.repo} is not owned by your connected GitHub account (@${connection.login}). Choose one of your repositories instead.` },
+          { status: 403 },
+        );
+      }
+
       let scanned: ScannedProject;
       try {
         scanned = await scanGitHubRepository(parsed);
@@ -99,6 +116,23 @@ export async function POST(request: Request) {
       const parsed = parseGitHubRepositoryUrl(project.repositoryUrl);
       if (!parsed) {
         return NextResponse.json({ error: "Invalid repository URL." }, { status: 400 });
+      }
+
+      const connection = await prisma.gitHubConnection.findUnique({
+        where: { userId: user.id },
+        select: { login: true },
+      });
+      if (!connection) {
+        return NextResponse.json(
+          { error: "Connect GitHub before submitting a project so ownership can be verified." },
+          { status: 409 },
+        );
+      }
+      if (parsed.owner.toLowerCase() !== connection.login.toLowerCase()) {
+        return NextResponse.json(
+          { error: `Ownership check failed: only repositories owned by @${connection.login} can be added to this portfolio.` },
+          { status: 403 },
+        );
       }
 
       const languages =

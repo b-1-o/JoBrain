@@ -176,6 +176,21 @@ export default function SettingsPage() {
   const [busyMedia, setBusyMedia] = useState<MediaKind | null>(null);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (cancelled) return;
+      const section = new URLSearchParams(window.location.search).get("section");
+      if (section === "media") setActiveSection("Media studio");
+      else if (section === "appearance") setActiveSection("Appearance");
+      else if (section === "preferences") setActiveSection("Preferences");
+    }, 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, []);
+
   const setMediaPreview = useCallback((kind: MediaKind, url: string) => {
     const previous = previewUrls.current[kind];
     if (previous.startsWith("blob:")) URL.revokeObjectURL(previous);
@@ -452,15 +467,16 @@ export default function SettingsPage() {
           </div>
         ) : null}
 
-        {loading ? <p className="account-muted">Loading your preferences…</p> : null}
+        {loading ? <div className="account-operation"><LatticeLoader label="Loading settings" status="working" cellSize={5} gap={2} fontSize={11} showTimer={false} /></div> : null}
 
         <div className="settings-layout">
           <aside className="settings-subnav account-card" aria-label="Settings sections">
             <div className="account-kicker">SETTINGS MENU</div>
             <OptionWheel
+              key={activeSection}
               items={settingsSections.map((section) => section.label)}
               icons={settingsSections.map(({ icon: Icon, label }) => <Icon key={label} size={17} strokeWidth={1.7} />)}
-              defaultSelected={0}
+              defaultSelected={Math.max(0, settingsSections.findIndex((section) => section.label === activeSection))}
               textColor="#8997a0"
               activeColor="#f4f7f9"
               fontSize={1}
@@ -584,7 +600,7 @@ export default function SettingsPage() {
                         <div className="settings-media-actions">
                           <label className="account-button settings-upload-button">
                             <UploadCloud size={14} />
-                            {busyMedia === kind ? "Uploading…" : "Choose file"}
+                            {busyMedia === kind ? <LatticeLoader label="Uploading" status="working" cellSize={3} gap={1} fontSize={10} showTimer={false} /> : "Choose file"}
                             <input
                               type="file"
                               accept="image/png,image/jpeg,image/webp,image/gif"

@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import "./performance.css";
 import PreferencesBootstrap from "@/components/PreferencesBootstrap";
+import RouteTransitionFeedback from "@/components/RouteTransitionFeedback";
 
 export const metadata: Metadata = {
   title: "JoBrain — Job Search Intelligence",
@@ -27,7 +28,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body><ClerkProvider><PreferencesBootstrap />{children}</ClerkProvider></body>
+      <body><ClerkProvider><PreferencesBootstrap /><RouteTransitionFeedback />{children}</ClerkProvider></body>
     </html>
   );
 }

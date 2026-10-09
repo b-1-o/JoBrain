@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, useTransition } from "react";
 import AccountNav from "@/components/AccountNav";
+import LatticeLoader from "@/components/LatticeLoader";
 
 type Notification = {
   id: string;
@@ -15,6 +16,8 @@ type Notification = {
 
 export default function NotificationsPage() {
   const [items, setItems] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [markingAll, setMarkingAll] = useState(false);
   const [error, setError] = useState("");
   const [, startTransition] = useTransition();
 
@@ -30,7 +33,8 @@ export default function NotificationsPage() {
           setItems(Array.isArray(data.notifications) ? data.notifications : []);
           setError("");
         })
-        .catch(() => setError("Could not load notifications."));
+        .catch(() => setError("Could not load notifications."))
+        .finally(() => setLoading(false));
     });
   }, []);
 
@@ -39,12 +43,20 @@ export default function NotificationsPage() {
   }, [load]);
 
   async function markAll() {
-    await fetch("/api/notifications", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ all: true }),
-    });
-    setItems((current) => current.map((item) => ({ ...item, readAt: new Date().toISOString() })));
+    setMarkingAll(true);
+    try {
+      const response = await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ all: true }),
+      });
+      if (!response.ok) throw new Error("Could not mark notifications as read.");
+      setItems((current) => current.map((item) => ({ ...item, readAt: new Date().toISOString() })));
+    } catch {
+      setError("Could not mark notifications as read.");
+    } finally {
+      setMarkingAll(false);
+    }
   }
 
   return (
@@ -59,8 +71,8 @@ export default function NotificationsPage() {
               Application events and future job-alert matches land here. Read status stays synchronized with your account.
             </p>
           </div>
-          <button className="account-button" type="button" onClick={() => void markAll()}>
-            Mark all read
+          <button className="account-button" type="button" disabled={markingAll || loading || !items.some((item) => !item.readAt)} onClick={() => void markAll()}>
+            {markingAll ? <LatticeLoader label="Marking read" status="working" cellSize={3} gap={1} fontSize={10} showTimer={false} /> : "Mark all read"}
           </button>
         </header>
 
@@ -68,7 +80,8 @@ export default function NotificationsPage() {
 
         <section className="account-card account-card-wide">
           <div className="history-list">
-            {!items.length && !error ? <p className="account-muted">Nothing here yet.</p> : null}
+            {loading ? <div className="account-operation"><LatticeLoader label="Loading notifications" status="working" cellSize={5} gap={2} fontSize={11} showTimer={false} /></div> : null}
+            {!loading && !items.length && !error ? <p className="account-muted">Nothing here yet.</p> : null}
             {items.map((item) => (
               <article className={`history-item${item.readAt ? "" : " is-unread"}`} key={item.id}>
                 <span className="history-type">{item.type.replaceAll("_", " ")}</span>

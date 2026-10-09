@@ -9,12 +9,15 @@ import {
   Moon,
   Sun,
   X,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import { Show, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import PatternWaves from "@components/PatternWaves";
 import JobResultsList, { type JobResult } from "@/components/JobResultsList";
+import LatticeLoader from "@/components/LatticeLoader";
+import OverviewAnalytics from "@/components/OverviewAnalytics";
 import DecryptedText from "@/components/DecryptedText";
 import TechText from "@/components/TechText";
 import {
@@ -162,6 +165,7 @@ export default function WorkspaceHome() {
   const [experience, setExperience] = useState("all");
   const [remoteOnly, setRemoteOnly] = useState(false);
   const [loadingJobs, setLoadingJobs] = useState(false);
+  const [recommendationsMode, setRecommendationsMode] = useState(false);
   const [lastFetched, setLastFetched] = useState<string | null>(null);
   const [sourceState, setSourceState] = useState<Record<string, "ok" | "error">>({});
   const [error, setError] = useState("");
@@ -228,6 +232,7 @@ export default function WorkspaceHome() {
   }, [tab, updateNavIndicator]);
 
   const searchJobs = useCallback(async () => {
+    setRecommendationsMode(false);
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -271,10 +276,10 @@ export default function WorkspaceHome() {
 
   useEffect(() => {
     abortRef.current?.abort();
-    if (!jobQuery.trim()) return;
+    if (recommendationsMode || !jobQuery.trim()) return;
     const timer = window.setTimeout(() => void searchJobs(), 450);
     return () => window.clearTimeout(timer);
-  }, [jobQuery, location, platform, experience, remoteOnly, searchJobs]);
+  }, [jobQuery, location, platform, experience, remoteOnly, searchJobs, recommendationsMode]);
 
   const funnel = useMemo(
     () =>
@@ -351,7 +356,40 @@ export default function WorkspaceHome() {
     setLoadingJobs(false);
   }
 
+  async function loadRecommendations() {
+    abortRef.current?.abort();
+    setRecommendationsMode(true);
+    setJobQuery("");
+    setLoadingJobs(true);
+    setError("");
+    setJobs([]);
+    setLastFetched(null);
+    setSourceState({});
+    try {
+      const response = await fetch("/api/recommendations", { cache: "no-store" });
+      const data = (await response.json().catch(() => ({}))) as {
+        enabled?: boolean;
+        jobs?: Job[];
+        error?: string;
+      };
+      if (!response.ok) throw new Error(data.error ?? "Could not build recommendations.");
+      if (!data.enabled) throw new Error("Search suggestions are disabled in Settings.");
+      const recommendedJobs = Array.isArray(data.jobs) ? data.jobs : [];
+      setJobs(recommendedJobs);
+      setSourceState(Object.fromEntries(
+        [...new Set(recommendedJobs.map((job) => job.platform))].map((source) => [source, "ok"]),
+      ) as Record<string, "ok" | "error">);
+      setLastFetched("recommendations-" + new Date().toISOString());
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not load personalized roles.");
+    } finally {
+      setLoadingJobs(false);
+    }
+  }
+
+
   function handleJobQueryChange(value: string) {
+    setRecommendationsMode(false);
     setJobQuery(value);
     if (!value.trim()) clearSearchResults();
   }
@@ -366,6 +404,7 @@ export default function WorkspaceHome() {
   }
 
   function applySuggestion(value: string) {
+    setRecommendationsMode(false);
     setJobQuery(value);
     changeTab("search");
   }
@@ -451,7 +490,7 @@ export default function WorkspaceHome() {
             </button>
             <div className="jb-topbar-status">
               <span className="jb-status-dot" />
-              <span>{loadingJobs ? "SYNCING" : "LIVE"}</span>
+              <span>{loadingJobs ? <LatticeLoader label="Syncing" status="working" cellSize={3} gap={1} fontSize={9} showTimer={false} /> : "LIVE"}</span>
             </div>
             <div className="jb-account-shortcuts" aria-label="Account">
               <Link href="/profile" className="jb-account-shortcut" title="Profile" aria-label="Profile">
@@ -557,6 +596,9 @@ export default function WorkspaceHome() {
                     </div>
                   </div>
                 </div>
+                <Show when="signed-in">
+                  <OverviewAnalytics />
+                </Show>
               </section>
             ) : null}
 
@@ -583,11 +625,11 @@ export default function WorkspaceHome() {
                   <div className="jb-command-filters">
                     <label>
                       <span>Location</span>
-                      <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="City, region, or remote" aria-label="Location filter" />
+                      <input value={location} onChange={(e) => { setRecommendationsMode(false); setLocation(e.target.value); }} placeholder="City, region, or remote" aria-label="Location filter" />
                     </label>
                     <label>
                       <span>Platform</span>
-                      <select value={platform} onChange={(e) => setPlatform(e.target.value)} aria-label="Platform filter">
+                      <select value={platform} onChange={(e) => { setRecommendationsMode(false); setPlatform(e.target.value); }} aria-label="Platform filter">
                         {PLATFORM_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value}>
                             {opt.label}
@@ -598,7 +640,7 @@ export default function WorkspaceHome() {
                     <button
                       type="button"
                       className={"jb-command-toggle" + (remoteOnly ? " is-on" : "")}
-                      onClick={() => setRemoteOnly((v) => !v)}
+                      onClick={() => { setRecommendationsMode(false); setRemoteOnly((v) => !v); }}
                       aria-pressed={remoteOnly}
                     >
                       <span>Remote only</span>
@@ -622,7 +664,7 @@ export default function WorkspaceHome() {
                         value={experienceIndex}
                         aria-label="Experience level"
                         aria-valuetext={selectedExperience.label}
-                        onChange={(e) => setExperience(EXPERIENCE_OPTIONS[Number(e.currentTarget.value)]?.value ?? "all")}
+                        onChange={(e) => { setRecommendationsMode(false); setExperience(EXPERIENCE_OPTIONS[Number(e.currentTarget.value)]?.value ?? "all"); }}
                         style={{ "--experience-progress": `${experienceProgress}%` } as CSSProperties}
                       />
                       <div className="jb-experience-steps" role="group" aria-label="Choose experience level">
@@ -632,7 +674,7 @@ export default function WorkspaceHome() {
                             type="button"
                             className={"jb-experience-step" + (experience === option.value ? " is-active" : "")}
                             aria-pressed={experience === option.value}
-                            onClick={() => setExperience(option.value)}
+                            onClick={() => { setRecommendationsMode(false); setExperience(option.value); }}
                           >
                             {option.label}
                           </button>
@@ -646,13 +688,24 @@ export default function WorkspaceHome() {
                     <span className="jb-results-label" id="jb-search-status-label">SEARCH STATUS</span>
                     <span className="jb-results-status-value" role="status" aria-live="polite">
                       {loadingJobs
-                        ? "Searching live sources…"
-                        : jobs.length
-                          ? `${jobs.length} matching roles`
-                          : jobQuery.trim()
-                            ? "No matches yet"
-                            : "Ready when you are"}
+                        ? <LatticeLoader label={recommendationsMode ? "Finding roles for you" : "Searching live sources"} status="working" cellSize={4} gap={1} fontSize={11} showTimer={false} />
+                        : recommendationsMode
+                          ? `${jobs.length} personalized roles`
+                          : jobs.length
+                            ? `${jobs.length} matching roles`
+                            : jobQuery.trim()
+                              ? "No matches yet"
+                              : "Ready when you are"}
                     </span>
+                    <button
+                      type="button"
+                      className={"jb-recommendations-trigger" + (recommendationsMode ? " is-active" : "")}
+                      onClick={() => void loadRecommendations()}
+                      disabled={loadingJobs}
+                    >
+                      <Sparkles size={14} />
+                      For you
+                    </button>
                   </section>
                   <section className="jb-source-cluster" aria-labelledby="jb-live-sources-label">
                     <span className="jb-results-label" id="jb-live-sources-label">LIVE SOURCES</span>
@@ -673,7 +726,7 @@ export default function WorkspaceHome() {
                     </div>
                   </section>
                 </div>
-                {!jobQuery.trim() && !loadingJobs ? (
+                {!jobQuery.trim() && !loadingJobs && !recommendationsMode ? (
                   <div className="jb-search-empty">
                     <strong>Explore live roles.</strong>
                     <p>Start with a skill, title, or company. JoBrain queries multiple sources in parallel and keeps your results readable.</p>
@@ -687,7 +740,7 @@ export default function WorkspaceHome() {
                   </div>
                 ) : (
                   <JobResultsList
-                    key={lastFetched ?? `empty-${jobQuery}-${location}-${platform}-${experience}-${remoteOnly}`}
+                    key={recommendationsMode ? (lastFetched ?? "recommendations") : (lastFetched ?? `empty-${jobQuery}-${location}-${platform}-${experience}-${remoteOnly}`)}
                     jobs={jobs}
                     loading={loadingJobs}
                     onTrack={(job) => void addApplication(job)}
@@ -722,7 +775,7 @@ export default function WorkspaceHome() {
                     <input value={manualCompany} onChange={(e) => setManualCompany(e.target.value)} placeholder="Company" />
                     <input value={manualRole} onChange={(e) => setManualRole(e.target.value)} placeholder="Role" />
                     <button type="button" className="jb-button jb-button-solid" onClick={() => void createManualApplication()} disabled={manualLoading}>
-                      {manualLoading ? "Adding…" : "Add"}
+                      {manualLoading ? <LatticeLoader label="Adding" status="working" cellSize={3} gap={1} fontSize={10} showTimer={false} /> : "Add"}
                     </button>
                   </div>
                 </section>
