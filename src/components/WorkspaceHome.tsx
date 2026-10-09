@@ -374,7 +374,7 @@ export default function WorkspaceHome() {
   const isDark = theme === "dark";
   const sourceEntries = Object.entries(sourceState);
   const experienceIndex = Math.max(0, EXPERIENCE_OPTIONS.findIndex((option) => option.value === experience));
-  const selectedExperience = EXPERIENCE_OPTIONS[experienceIndex] ?? EXPERIENCE_OPTIONS[0];
+  const selectedExperience = EXPERIENCE_OPTIONS[experienceIndex] ?? { value: "all", label: "Any level" };
   const experienceProgress = (experienceIndex / Math.max(1, EXPERIENCE_OPTIONS.length - 1)) * 100;
 
   return (
@@ -622,7 +622,7 @@ export default function WorkspaceHome() {
                         value={experienceIndex}
                         aria-label="Experience level"
                         aria-valuetext={selectedExperience.label}
-                        onChange={(e) => setExperience(EXPERIENCE_OPTIONS[Number(e.currentTarget.value)]?.value ?? EXPERIENCE_OPTIONS[0].value)}
+                        onChange={(e) => setExperience(EXPERIENCE_OPTIONS[Number(e.currentTarget.value)]?.value ?? "all")}
                         style={{ "--experience-progress": `${experienceProgress}%` } as CSSProperties}
                       />
                       <div className="jb-experience-steps" role="group" aria-label="Choose experience level">
