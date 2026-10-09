@@ -184,15 +184,15 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
+    const previews = previewUrls.current;
     return () => {
-      Object.values(previewUrls.current).forEach((url) => {
+      Object.values(previews).forEach((url) => {
         if (url.startsWith("blob:")) URL.revokeObjectURL(url);
       });
     };
   }, []);
 
   const load = useCallback(async () => {
-    setLoading(true);
     try {
       const [profileResponse, settingsResponse] = await Promise.all([
         fetch("/api/profile", { cache: "no-store" }),
@@ -459,7 +459,7 @@ export default function SettingsPage() {
             <div className="account-kicker">SETTINGS MENU</div>
             <OptionWheel
               items={settingsSections.map((section) => section.label)}
-              icons={settingsSections.map(({ icon: Icon }) => <Icon size={17} strokeWidth={1.7} />)}
+              icons={settingsSections.map(({ icon: Icon, label }) => <Icon key={label} size={17} strokeWidth={1.7} />)}
               defaultSelected={0}
               textColor="#8997a0"
               activeColor="#f4f7f9"
