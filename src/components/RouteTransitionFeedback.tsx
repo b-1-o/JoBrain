@@ -15,20 +15,26 @@ export default function RouteTransitionFeedback() {
     if (previousPathname.current === pathname) return;
     previousPathname.current = pathname;
 
-    // The indicator communicates progress; this attribute also animates the new
-    // page surface so a successful navigation never feels like a hard cut.
-    document.documentElement.dataset.routeTransition = "enter";
+    const root = document.documentElement;
+    // Clear the previous marker so quick consecutive NAVIGATE changes restart
+    // the entrance animation instead of inheriting a half-finished transition.
+    delete root.dataset.routeTransition;
     if (transitionTimerRef.current !== null) {
       window.clearTimeout(transitionTimerRef.current);
     }
+    const frame = window.requestAnimationFrame(() => {
+      if (previousPathname.current !== pathname) return;
+      root.dataset.routeTransition = "enter";
+      setPending(false);
+    });
     transitionTimerRef.current = window.setTimeout(() => {
-      delete document.documentElement.dataset.routeTransition;
+      delete root.dataset.routeTransition;
       transitionTimerRef.current = null;
-    }, 440);
+    }, 460);
 
-    window.requestAnimationFrame(() => setPending(false));
     if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     timerRef.current = null;
+    return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
 
   useEffect(() => {
