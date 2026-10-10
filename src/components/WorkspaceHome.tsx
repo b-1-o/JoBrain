@@ -130,45 +130,53 @@ function useReducedMotionPreferred() {
 
 export default function WorkspaceHome() {
   const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
+  const [hasCustomBackground, setHasCustomBackground] = useState(false);
+  const [backgroundReady, setBackgroundReady] = useState(false);
 
-  // Apply a trusted local cache before the first browser paint, then refresh it
-  // in the background. This prevents the avatar from flashing to its placeholder
-  // every time the workspace is mounted.
+  // Seed state in a microtask before paint, without forcing a cascading
+  // synchronous render from the layout effect.
   useLayoutEffect(() => {
-    const readCache = (key: string): Record<string, unknown> | null => {
-      try {
-        const value = localStorage.getItem(key);
-        if (!value) return null;
-        const parsed: unknown = JSON.parse(value);
-        return parsed && typeof parsed === "object" ? parsed as Record<string, unknown> : null;
-      } catch {
-        return null;
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      const readCache = (key: string): Record<string, unknown> | null => {
+        try {
+          const value = localStorage.getItem(key);
+          if (!value) return null;
+          const parsed: unknown = JSON.parse(value);
+          return parsed && typeof parsed === "object" ? parsed as Record<string, unknown> : null;
+        } catch {
+          return null;
+        }
+      };
+
+      const cachedProfile = readCache("jobrain-profile");
+      const cachedAppearance = readCache("jobrain-appearance");
+      const cachedAvatar = cachedProfile?.avatarUrl;
+      if (typeof cachedAvatar === "string" && /^https?:\/\//i.test(cachedAvatar)) {
+        setProfileAvatarUrl(cachedAvatar);
       }
+
+      const html = document.documentElement;
+      const cachedProfileBackground = cachedProfile?.backgroundUrl;
+      const cachedAppearanceBackground = cachedAppearance?.backgroundUrl;
+      const hasKnownBackground =
+        html.dataset.customBackground === "true" ||
+        typeof cachedProfileBackground === "string" ||
+        cachedProfileBackground === null ||
+        typeof cachedAppearanceBackground === "string" ||
+        cachedAppearanceBackground === null;
+      const hasBackground =
+        html.dataset.customBackground === "true" ||
+        (typeof cachedProfileBackground === "string" && cachedProfileBackground.trim().length > 0) ||
+        (typeof cachedAppearanceBackground === "string" && cachedAppearanceBackground.trim().length > 0);
+
+      setHasCustomBackground(hasBackground);
+      if (hasKnownBackground) setBackgroundReady(true);
+    });
+    return () => {
+      cancelled = true;
     };
-
-    const cachedProfile = readCache("jobrain-profile");
-    const cachedAppearance = readCache("jobrain-appearance");
-    const cachedAvatar = cachedProfile?.avatarUrl;
-    if (typeof cachedAvatar === "string" && /^https?:\/\//i.test(cachedAvatar)) {
-      setProfileAvatarUrl(cachedAvatar);
-    }
-
-    const html = document.documentElement;
-    const cachedProfileBackground = cachedProfile?.backgroundUrl;
-    const cachedAppearanceBackground = cachedAppearance?.backgroundUrl;
-    const hasKnownBackground =
-      html.dataset.customBackground === "true" ||
-      typeof cachedProfileBackground === "string" ||
-      cachedProfileBackground === null ||
-      typeof cachedAppearanceBackground === "string" ||
-      cachedAppearanceBackground === null;
-    const hasBackground =
-      html.dataset.customBackground === "true" ||
-      (typeof cachedProfileBackground === "string" && cachedProfileBackground.trim().length > 0) ||
-      (typeof cachedAppearanceBackground === "string" && cachedAppearanceBackground.trim().length > 0);
-
-    setHasCustomBackground(hasBackground);
-    if (hasKnownBackground) setBackgroundReady(true);
   }, []);
 
   useEffect(() => {
@@ -225,8 +233,6 @@ export default function WorkspaceHome() {
   const [manualCompany, setManualCompany] = useState("");
   const [manualRole, setManualRole] = useState("");
   const [manualLoading, setManualLoading] = useState(false);
-  const [hasCustomBackground, setHasCustomBackground] = useState(false);
-  const [backgroundReady, setBackgroundReady] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
   const [indicator, setIndicator] = useState({ left: 0, width: 0 });
