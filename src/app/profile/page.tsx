@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import AccountNav from "@/components/AccountNav";
 import LatticeLoader from "@/components/LatticeLoader";
 import ProfilePortfolio from "@/components/ProfilePortfolio";
@@ -76,11 +76,33 @@ export default function ProfilePage() {
         const next = fromApi(data.profile);
         setProfile(next);
         setBaseline(next);
+        try {
+          localStorage.setItem("jobrain-profile", JSON.stringify(data.profile));
+        } catch {
+          // The server response remains authoritative when storage is unavailable.
+        }
       })
       .catch((cause: unknown) => {
         setError(cause instanceof Error ? cause.message : "Could not load your profile. Please retry.");
       })
       .finally(() => setLoading(false));
+  }, []);
+
+  useLayoutEffect(() => {
+    // The account shell is remounted between routes, so seed it from the profile
+    // cache before paint instead of flashing blank placeholders and reloading
+    // the avatar/banner visually on every visit.
+    try {
+      const cached = localStorage.getItem("jobrain-profile");
+      if (cached) {
+        const next = fromApi(JSON.parse(cached) as Record<string, unknown>);
+        setProfile(next);
+        setBaseline(next);
+        setLoading(false);
+      }
+    } catch {
+      // Refresh from the API if the local cache is unavailable or invalid.
+    }
   }, []);
 
   useEffect(() => {
@@ -119,6 +141,11 @@ export default function ProfilePage() {
       const next = fromApi(data.profile);
       setProfile(next);
       setBaseline(next);
+      try {
+        localStorage.setItem("jobrain-profile", JSON.stringify(data.profile));
+      } catch {
+        // The server response remains authoritative when storage is unavailable.
+      }
       setSaved(true);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not reach the profile service.");
@@ -171,13 +198,13 @@ export default function ProfilePage() {
         <section className="profile-banner" aria-label="Profile preview">
           {profile.bannerUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img className="profile-banner-image" src={profile.bannerUrl} alt="" decoding="async" />
+            <img className="profile-banner-image" src={profile.bannerUrl} alt="" loading="eager" fetchPriority="high" decoding="async" />
           ) : null}
           <div className="profile-identity">
             <div className="profile-avatar">
               {profile.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatarUrl} alt="" decoding="async" />
+                <img src={profile.avatarUrl} alt="" loading="eager" fetchPriority="high" decoding="async" />
               ) : (
                 <span className="profile-avatar-placeholder">
                   {(profile.displayName || "JB").trim().slice(0, 2).toUpperCase()}
