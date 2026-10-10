@@ -17,6 +17,7 @@ type OptionWheelProps = {
   defaultSelected?: number;
   onChange?: (index: number, item: string) => void;
   onActivate?: (index: number, item: string) => void;
+  onSettled?: (index: number, item: string) => void;
   icons?: ReactNode[];
   textColor?: string;
   activeColor?: string;
@@ -59,6 +60,7 @@ export default function OptionWheel({
   defaultSelected = 0,
   onChange,
   onActivate,
+  onSettled,
   icons = [],
   textColor = "#98a5ae",
   activeColor = "#f4f7f8",
@@ -87,8 +89,10 @@ export default function OptionWheel({
   const lastRef = useRef(0);
   const onChangeRef = useRef(onChange);
   const onActivateRef = useRef(onActivate);
+  const onSettledRef = useRef(onSettled);
   const selectedRef = useRef(initialIndex);
   const wheelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const settledTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragRef = useRef<{ y: number; start: number; id: number } | null>(null);
   const dragMovedRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -117,6 +121,7 @@ export default function OptionWheel({
   useEffect(() => {
     onChangeRef.current = onChange;
     onActivateRef.current = onActivate;
+    onSettledRef.current = onSettled;
     cfgRef.current = {
       count: items.length,
       items,
@@ -133,7 +138,7 @@ export default function OptionWheel({
       soundUrl,
       soundVolume,
     };
-  }, [items, fontSize, spacing, curve, tilt, blur, fade, minOpacity, side, loop, smoothing, draggable, soundUrl, soundVolume, onChange, onActivate]);
+  }, [items, fontSize, spacing, curve, tilt, blur, fade, minOpacity, side, loop, smoothing, draggable, soundUrl, soundVolume, onChange, onActivate, onSettled]);
 
   const runFrameRef = useRef<(now: number) => void>(() => undefined);
 
@@ -206,6 +211,24 @@ export default function OptionWheel({
     void audioRef.current.play().catch(() => undefined);
   }, []);
 
+
+  const clearSettledTimer = useCallback(() => {
+    if (settledTimerRef.current !== null) {
+      clearTimeout(settledTimerRef.current);
+      settledTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleSettled = useCallback((delay: number) => {
+    clearSettledTimer();
+    settledTimerRef.current = setTimeout(() => {
+      settledTimerRef.current = null;
+      const cfg = cfgRef.current;
+      const index = selectedRef.current;
+      onSettledRef.current?.(index, cfg.items[index] ?? "");
+    }, delay);
+  }, [clearSettledTimer]);
+
   const applyTarget = useCallback((value: number, snap: boolean) => {
     const cfg = cfgRef.current;
     if (cfg.count < 1) return;
@@ -231,23 +254,32 @@ export default function OptionWheel({
       const cfg = cfgRef.current;
       const delta = event.deltaMode === 1 ? event.deltaY * 24 : event.deltaY;
       const step = Math.max(-1, Math.min(1, delta / cfg.rowH));
+      clearSettledTimer();
       applyTarget(targetRef.current + step, false);
       if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current);
-      wheelTimerRef.current = setTimeout(() => applyTarget(targetRef.current, true), 140);
+      wheelTimerRef.current = setTimeout(() => {
+        wheelTimerRef.current = null;
+        applyTarget(targetRef.current, true);
+        // Let the wheel finish its snap before changing routes, and cancel this
+        // callback if another wheel event arrives during the settling window.
+        scheduleSettled(180);
+      }, 140);
     };
     element.addEventListener("wheel", handleWheel, { passive: false });
     return () => {
       element.removeEventListener("wheel", handleWheel);
       if (wheelTimerRef.current) clearTimeout(wheelTimerRef.current);
+      clearSettledTimer();
     };
-  }, [applyTarget]);
+  }, [applyTarget, clearSettledTimer, scheduleSettled]);
 
   const handlePointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
     if (!cfgRef.current.draggable || event.button !== 0) return;
+    clearSettledTimer();
     dragRef.current = { y: event.clientY, start: targetRef.current, id: event.pointerId };
     dragMovedRef.current = false;
     setIsDragging(true);
-  }, []);
+  }, [clearSettledTimer]);
 
   const handlePointerMove = useCallback((event: PointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current;
@@ -266,12 +298,14 @@ export default function OptionWheel({
     setIsDragging(false);
     if (dragMovedRef.current) {
       applyTarget(targetRef.current, true);
+      scheduleSettled(180);
       setTimeout(() => { dragMovedRef.current = false; }, 0);
     }
-  }, [applyTarget]);
+  }, [applyTarget, scheduleSettled]);
 
   const handleItemClick = useCallback((index: number) => {
     if (dragMovedRef.current) return;
+    clearSettledTimer();
     const cfg = cfgRef.current;
     const current = targetRef.current;
     let distance = index - (((current % cfg.count) + cfg.count) % cfg.count);
@@ -281,7 +315,7 @@ export default function OptionWheel({
     }
     applyTarget(current + distance, true);
     onActivateRef.current?.(index, cfg.items[index] ?? "");
-  }, [applyTarget]);
+  }, [applyTarget, clearSettledTimer]);
 
   const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Enter" || event.key === " ") {
@@ -298,8 +332,10 @@ export default function OptionWheel({
         : 0;
     if (!delta) return;
     event.preventDefault();
+    clearSettledTimer();
     applyTarget(Math.round(targetRef.current) + delta, true);
-  }, [applyTarget]);
+    scheduleSettled(120);
+  }, [applyTarget, clearSettledTimer, scheduleSettled]);
 
   useEffect(() => {
     applyTarget(targetRef.current, false);
@@ -307,8 +343,10 @@ export default function OptionWheel({
 
   useEffect(() => () => {
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    if (wheelTimerRef.current !== null) clearTimeout(wheelTimerRef.current);
+    clearSettledTimer();
     audioRef.current?.pause();
-  }, []);
+  }, [clearSettledTimer]);
 
   return (
     <div
