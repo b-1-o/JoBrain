@@ -2805,12 +2805,10 @@ html[data-custom-background="true"] :is(
   from {
     opacity: 0;
     transform: translate3d(0, 12px, 0) scale(.995);
-    filter: blur(.7px);
   }
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
-    filter: blur(0);
   }
 }
 
@@ -2839,12 +2837,10 @@ html[data-custom-background="true"] :is(
   from {
     opacity: 0;
     transform: translate3d(0, 12px, 0) scale(.994);
-    filter: blur(.8px);
   }
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
-    filter: blur(0);
   }
 }
 
