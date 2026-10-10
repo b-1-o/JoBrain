@@ -2690,20 +2690,25 @@ html[data-custom-background="true"] .jb-job-row {
   to { opacity: 1; }
 }
 
-html[data-route-transition="enter"] .account-page,
-html[data-route-transition="enter"] .jb-shell {
+/* Animate content surfaces rather than the shell that owns the fixed WebGL
+   background; this avoids turning the fixed canvas into a transformed child. */
+html[data-route-transition="enter"] .account-page > .account-shell,
+html[data-route-transition="enter"] .jb-shell > .jb-topbar,
+html[data-route-transition="enter"] .jb-shell > .jb-page {
   animation: jb-route-page-enter 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html[data-route-transition="enter"] .account-page,
-  html[data-route-transition="enter"] .jb-shell {
+  html[data-route-transition="enter"] .account-page > .account-shell,
+  html[data-route-transition="enter"] .jb-shell > .jb-topbar,
+  html[data-route-transition="enter"] .jb-shell > .jb-page {
     animation: jb-route-page-fade 140ms ease-out both;
   }
 }
 
-html[data-reduced-motion="true"][data-route-transition="enter"] .account-page,
-html[data-reduced-motion="true"][data-route-transition="enter"] .jb-shell {
+html[data-reduced-motion="true"][data-route-transition="enter"] .account-page > .account-shell,
+html[data-reduced-motion="true"][data-route-transition="enter"] .jb-shell > .jb-topbar,
+html[data-reduced-motion="true"][data-route-transition="enter"] .jb-shell > .jb-page {
   animation: none !important;
 }
 
