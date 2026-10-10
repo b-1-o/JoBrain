@@ -8,15 +8,27 @@ export default function RouteTransitionFeedback() {
   const pathname = usePathname();
   const previousPathname = useRef(pathname);
   const timerRef = useRef<number | null>(null);
+  const transitionTimerRef = useRef<number | null>(null);
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    if (previousPathname.current !== pathname) {
-      previousPathname.current = pathname;
-      window.requestAnimationFrame(() => setPending(false));
-      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
-      timerRef.current = null;
+    if (previousPathname.current === pathname) return;
+    previousPathname.current = pathname;
+
+    // The indicator communicates progress; this attribute also animates the new
+    // page surface so a successful navigation never feels like a hard cut.
+    document.documentElement.dataset.routeTransition = "enter";
+    if (transitionTimerRef.current !== null) {
+      window.clearTimeout(transitionTimerRef.current);
     }
+    transitionTimerRef.current = window.setTimeout(() => {
+      delete document.documentElement.dataset.routeTransition;
+      transitionTimerRef.current = null;
+    }, 440);
+
+    window.requestAnimationFrame(() => setPending(false));
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    timerRef.current = null;
   }, [pathname]);
 
   useEffect(() => {
@@ -27,13 +39,23 @@ export default function RouteTransitionFeedback() {
     }
 
     function onClick(event: MouseEvent) {
-      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
       const target = event.target;
       if (!(target instanceof Element)) return;
       const anchor = target.closest("a[href]");
       if (!(anchor instanceof HTMLAnchorElement) || anchor.target === "_blank" || anchor.hasAttribute("download")) return;
       const url = new URL(anchor.href, window.location.href);
       if (url.origin !== window.location.origin) return;
+      // Hash-only jumps do not replace the page and should not flash a loader.
       if (url.pathname === window.location.pathname && url.search === window.location.search) return;
       markPending();
     }
@@ -44,6 +66,8 @@ export default function RouteTransitionFeedback() {
       window.removeEventListener("jobrain:navigate-start", markPending);
       document.removeEventListener("click", onClick, true);
       if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+      if (transitionTimerRef.current !== null) window.clearTimeout(transitionTimerRef.current);
+      delete document.documentElement.dataset.routeTransition;
     };
   }, []);
 
