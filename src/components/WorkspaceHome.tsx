@@ -130,21 +130,82 @@ function useReducedMotionPreferred() {
 
 export default function WorkspaceHome() {
   const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
+  const [hasCustomBackground, setHasCustomBackground] = useState(false);
+  const [backgroundReady, setBackgroundReady] = useState(false);
+
+  // Seed state in a microtask before paint, without forcing a cascading
+  // synchronous render from the layout effect.
+  useLayoutEffect(() => {
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      const readCache = (key: string): Record<string, unknown> | null => {
+        try {
+          const value = localStorage.getItem(key);
+          if (!value) return null;
+          const parsed: unknown = JSON.parse(value);
+          return parsed && typeof parsed === "object" ? parsed as Record<string, unknown> : null;
+        } catch {
+          return null;
+        }
+      };
+
+      const cachedProfile = readCache("jobrain-profile");
+      const cachedAppearance = readCache("jobrain-appearance");
+      const cachedAvatar = cachedProfile?.avatarUrl;
+      if (typeof cachedAvatar === "string" && /^https?:\/\//i.test(cachedAvatar)) {
+        setProfileAvatarUrl(cachedAvatar);
+      }
+
+      const html = document.documentElement;
+      const cachedProfileBackground = cachedProfile?.backgroundUrl;
+      const cachedAppearanceBackground = cachedAppearance?.backgroundUrl;
+      const hasKnownBackground =
+        html.dataset.customBackground === "true" ||
+        typeof cachedProfileBackground === "string" ||
+        cachedProfileBackground === null ||
+        typeof cachedAppearanceBackground === "string" ||
+        cachedAppearanceBackground === null;
+      const hasBackground =
+        html.dataset.customBackground === "true" ||
+        (typeof cachedProfileBackground === "string" && cachedProfileBackground.trim().length > 0) ||
+        (typeof cachedAppearanceBackground === "string" && cachedAppearanceBackground.trim().length > 0);
+
+      setHasCustomBackground(hasBackground);
+      if (hasKnownBackground) setBackgroundReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
     void fetch("/api/profile", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) return null;
-        return (await response.json()) as { profile?: { avatarUrl?: unknown } };
+        return (await response.json()) as {
+          profile?: { avatarUrl?: unknown; backgroundUrl?: unknown };
+        };
       })
       .then((data) => {
-        const url = data?.profile?.avatarUrl;
-        if (active && typeof url === "string" && /^https?:\/\//i.test(url)) {
-          setProfileAvatarUrl(url);
+        if (!active) return;
+        const avatarUrl = data?.profile?.avatarUrl;
+        if (typeof avatarUrl === "string" && /^https?:\/\//i.test(avatarUrl)) {
+          setProfileAvatarUrl(avatarUrl);
+        }
+        const backgroundUrl = data?.profile?.backgroundUrl;
+        if (typeof backgroundUrl === "string" || backgroundUrl === null) {
+          setHasCustomBackground(typeof backgroundUrl === "string" && backgroundUrl.trim().length > 0);
+          setBackgroundReady(true);
         }
       })
-      .catch(() => undefined);
+      .catch(() => {
+        // Keep any cached avatar/background and let the rest of the workspace load.
+      })
+      .finally(() => {
+        if (active) setBackgroundReady(true);
+      });
     return () => {
       active = false;
     };
@@ -172,7 +233,6 @@ export default function WorkspaceHome() {
   const [manualCompany, setManualCompany] = useState("");
   const [manualRole, setManualRole] = useState("");
   const [manualLoading, setManualLoading] = useState(false);
-  const [hasCustomBackground, setHasCustomBackground] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
   const [indicator, setIndicator] = useState({ left: 0, width: 0 });
@@ -183,12 +243,33 @@ export default function WorkspaceHome() {
   }, [theme]);
 
   useEffect(() => {
-    const read = () =>
-      setHasCustomBackground(document.documentElement.getAttribute("data-custom-background") === "true");
+    const read = () => {
+      const html = document.documentElement;
+      if (html.dataset.customBackground === "true") {
+        setHasCustomBackground(true);
+        setBackgroundReady(true);
+        return;
+      }
+
+      // Only conclude that the background was removed when a cached appearance
+      // explicitly says so. Before preferences load, the server may still have
+      // a saved wallpaper and PatternWaves must stay unmounted.
+      try {
+        const raw = localStorage.getItem("jobrain-appearance");
+        if (!raw) return;
+        const appearance = JSON.parse(raw) as { backgroundUrl?: unknown };
+        if (typeof appearance.backgroundUrl === "string" || appearance.backgroundUrl === null) {
+          setHasCustomBackground(typeof appearance.backgroundUrl === "string" && appearance.backgroundUrl.trim().length > 0);
+          setBackgroundReady(true);
+        }
+      } catch {
+        // The profile request below resolves background state on cache misses.
+      }
+    };
+    const observer = new MutationObserver(read);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-custom-background"] });
     read();
-    const obs = new MutationObserver(read);
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-custom-background"] });
-    return () => obs.disconnect();
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -409,7 +490,9 @@ export default function WorkspaceHome() {
     changeTab("search");
   }
 
-  const showWaves = !hasCustomBackground;
+  // Do not create a WebGL renderer until saved background state is known.
+  // A wallpaper means no PatternWaves component, not merely a hidden canvas.
+  const showWaves = backgroundReady && !hasCustomBackground;
   const isDark = theme === "dark";
   const sourceEntries = Object.entries(sourceState);
 
@@ -493,7 +576,7 @@ export default function WorkspaceHome() {
               <Link href="/profile" className="jb-account-shortcut" title="Profile" aria-label="Profile">
                 {profileAvatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={profileAvatarUrl} alt="" loading="lazy" decoding="async" />
+                  <img src={profileAvatarUrl} alt="" loading="eager" fetchPriority="high" decoding="async" />
                 ) : (
                   <UserRound size={14} />
                 )}

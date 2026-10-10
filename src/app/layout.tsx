@@ -28,7 +28,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body><ClerkProvider><PreferencesBootstrap /><RouteTransitionFeedback />{children}</ClerkProvider></body>
+      <body><div className="jb-wallpaper-layer" aria-hidden="true" /><ClerkProvider><PreferencesBootstrap /><RouteTransitionFeedback />{children}</ClerkProvider></body>
     </html>
   );
 }

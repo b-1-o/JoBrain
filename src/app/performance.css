@@ -20,17 +20,11 @@
 }
 
 html[data-custom-background="true"] body {
-  background:
-    linear-gradient(rgba(5, 6, 7, 0.72), rgba(5, 6, 7, 0.82)),
-    var(--jb-user-background) center / cover fixed no-repeat,
-    #050607;
+  background: #050607;
 }
 
 html[data-theme="light"][data-custom-background="true"] body {
-  background:
-    linear-gradient(rgba(238, 241, 243, 0.7), rgba(230, 233, 236, 0.78)),
-    var(--jb-user-background) center / cover fixed no-repeat,
-    #d3d3d3;
+  background: #d3d3d3;
 }
 
 html[data-custom-background="true"] .jb-pattern-waves {
@@ -2717,4 +2711,195 @@ html[data-reduced-motion="true"][data-route-transition="enter"] .jb-shell > .jb-
 .jb-job-row {
   content-visibility: auto;
   contain-intrinsic-size: auto 320px;
+}
+
+
+/* --------------------------------------------------------------------------
+   Stable wallpaper rendering + dependable transitions
+   --------------------------------------------------------------------------
+   The saved wallpaper is rendered once in a fixed viewport layer. The previous
+   setup painted the same large image on body, .jb-shell and .account-page and
+   used background-attachment:fixed on long documents, causing scroll jank.
+*/
+body {
+  isolation: isolate;
+}
+
+.jb-wallpaper-layer {
+  display: none;
+  position: fixed;
+  z-index: -2;
+  inset: 0;
+  pointer-events: none;
+  contain: strict;
+  background-color: #050607;
+  transform: translateZ(0);
+}
+
+html[data-custom-background="true"] .jb-wallpaper-layer {
+  display: block;
+  background-image:
+    linear-gradient(rgba(4, 6, 7, .42), rgba(4, 6, 7, .55)),
+    var(--jb-user-background),
+    linear-gradient(160deg, #050607 0%, #080a0b 50%, #050607 100%);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+
+html[data-theme="light"][data-custom-background="true"] .jb-wallpaper-layer {
+  background-image:
+    linear-gradient(rgba(244, 246, 247, .36), rgba(208, 208, 208, .5)),
+    var(--jb-user-background),
+    linear-gradient(160deg, #e8eaeb 0%, #d0d0d0 50%, #e3e5e6 100%);
+}
+
+/* Let the shared wallpaper show through without repainting it per page. */
+html[data-custom-background="true"] .jb-shell,
+html[data-custom-background="true"] .account-page {
+  background: transparent !important;
+  background-image: none !important;
+  background-attachment: initial !important;
+}
+
+html[data-custom-background="true"] .jb-pattern-waves,
+html[data-custom-background="true"] .pattern-waves {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Preserve the liquid-glass look with a smaller blur radius over photo pixels.
+   Strong backdrop blurs on many cards are one of the main wallpaper-mode costs. */
+html[data-custom-background="true"] :is(
+  .jb-topbar,
+  .jb-command,
+  .jb-quick-add,
+  .jb-pipeline-signal,
+  .jb-job-row,
+  .jb-panel,
+  .jb-recent,
+  .jb-pipeline-column,
+  .jb-pipeline-item,
+  .jb-search-counter,
+  .jb-results-status,
+  .jb-source-cluster,
+  .jb-search-empty,
+  .jb-analytics-panel,
+  .account-card,
+  .account-nav,
+  .profile-banner,
+  .portfolio-showcase,
+  .portfolio-project-card,
+  .portfolio-data-panel,
+  .settings-preview-panel
+) {
+  backdrop-filter: blur(4px) saturate(122%) !important;
+  -webkit-backdrop-filter: blur(4px) saturate(122%) !important;
+}
+
+/* Real page entrance on every App Router route. Keyed template.tsx remounts the
+   surface on pathname changes; we no longer depend on an ad-hoc root attribute. */
+@keyframes jb-route-surface-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(.995);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes jb-route-fade-enter {
+  from { opacity: .68; }
+  to { opacity: 1; }
+}
+
+.jb-route-transition-surface {
+  min-height: 100%;
+  animation: jb-route-fade-enter 360ms ease-out both;
+}
+
+.jb-route-transition-surface > .account-page > .account-shell,
+.jb-route-transition-surface > .jb-shell > .jb-page {
+  animation: jb-route-surface-enter 420ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.jb-route-transition-surface > .jb-shell > .jb-topbar {
+  animation: jb-route-fade-enter 260ms ease-out both;
+}
+
+/* Workspace tabs mount a fresh keyed panel; animate them even when the OS or
+   an old saved preference requests reduced motion (use a short fade there). */
+@keyframes jb-tab-enter-smooth {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(.994);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes jb-panel-content-enter {
+  from { opacity: 0; transform: translate3d(0, 7px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes jb-motion-safe-fade {
+  from { opacity: .72; }
+  to { opacity: 1; }
+}
+
+.jb-view-panel {
+  animation: jb-tab-enter-smooth 440ms cubic-bezier(.22, 1, .36, 1) both !important;
+  transform-origin: top center;
+}
+
+.jb-view-panel > * {
+  animation: jb-panel-content-enter 480ms cubic-bezier(.22, 1, .36, 1) both !important;
+}
+
+.jb-view-panel > *:nth-child(2) { animation-delay: 55ms !important; }
+.jb-view-panel > *:nth-child(3) { animation-delay: 100ms !important; }
+.jb-view-panel > *:nth-child(4) { animation-delay: 145ms !important; }
+
+/* This panel swaps between Preferences, Media studio and Appearance. */
+.settings-panel {
+  animation: jb-route-surface-enter 380ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jb-route-transition-surface,
+  .jb-route-transition-surface > .account-page > .account-shell,
+  .jb-route-transition-surface > .jb-shell > .jb-page,
+  .jb-route-transition-surface > .jb-shell > .jb-topbar,
+  .jb-view-panel,
+  .jb-view-panel > *,
+  .settings-panel {
+    animation: jb-motion-safe-fade 220ms ease-out both !important;
+    filter: none !important;
+    transform: none !important;
+  }
+}
+
+html[data-reduced-motion="true"] .jb-route-transition-surface,
+html[data-reduced-motion="true"] .jb-route-transition-surface > .account-page > .account-shell,
+html[data-reduced-motion="true"] .jb-route-transition-surface > .jb-shell > .jb-page,
+html[data-reduced-motion="true"] .jb-route-transition-surface > .jb-shell > .jb-topbar,
+html[data-reduced-motion="true"] .jb-view-panel,
+html[data-reduced-motion="true"] .jb-view-panel > *,
+html[data-reduced-motion="true"] .settings-panel {
+  animation: jb-motion-safe-fade 220ms ease-out both !important;
+  filter: none !important;
+  transform: none !important;
+}
+
+@media (max-width: 700px) {
+  html[data-custom-background="true"] .jb-wallpaper-layer {
+    transform: none;
+  }
 }

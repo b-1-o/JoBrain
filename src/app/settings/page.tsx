@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   Bell,
   FolderOpen,
@@ -212,19 +212,53 @@ export default function SettingsPage() {
   const [busyMedia, setBusyMedia] = useState<MediaKind | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     let cancelled = false;
-    const timer = window.setTimeout(() => {
+    queueMicrotask(() => {
       if (cancelled) return;
+      let hasCachedData = false;
+      try {
+        const cachedProfile = localStorage.getItem("jobrain-profile");
+        if (cachedProfile) {
+          const nextProfile = fromProfile(JSON.parse(cachedProfile) as Record<string, unknown>);
+          setProfile(nextProfile);
+          setActiveBackgroundUrl(nextProfile.backgroundUrl);
+          setProfileLoaded(true);
+          hasCachedData = true;
+        }
+
+        const cachedSettings = localStorage.getItem("jobrain-settings");
+        if (cachedSettings) {
+          setSettings(fromSettings(JSON.parse(cachedSettings) as Record<string, unknown>));
+          hasCachedData = true;
+        }
+      } catch {
+        // The API refresh below recovers when cached settings are invalid.
+      }
+      if (hasCachedData) setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const applyRequestedSection = () => {
       const section = new URLSearchParams(window.location.search).get("section");
       if (section === "media") setActiveSection("Media studio");
       else if (section === "appearance") setActiveSection("Appearance");
       else if (section === "preferences") setActiveSection("Preferences");
-    }, 0);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
     };
+    applyRequestedSection();
+
+    const onSectionRequest = (event: Event) => {
+      const section = (event as CustomEvent<SettingsSection>).detail;
+      if (section === "Preferences" || section === "Media studio" || section === "Appearance") {
+        setActiveSection(section);
+      }
+    };
+    window.addEventListener("jobrain:settings-section", onSectionRequest);
+    return () => window.removeEventListener("jobrain:settings-section", onSectionRequest);
   }, []);
 
   const setMediaPreview = useCallback((kind: MediaKind, url: string) => {
@@ -556,7 +590,7 @@ export default function SettingsPage() {
             <p className="settings-subnav-help">Scroll, drag, or use arrow keys to switch sections.</p>
           </aside>
 
-          <div className="settings-panel">
+          <div className="settings-panel" key={activeSection}>
             {activeSection === "Preferences" ? (
               <section className="account-card settings-main-card">
                 <div className="settings-card-heading">
