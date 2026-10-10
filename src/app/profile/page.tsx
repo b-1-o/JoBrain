@@ -89,20 +89,25 @@ export default function ProfilePage() {
   }, []);
 
   useLayoutEffect(() => {
-    // The account shell is remounted between routes, so seed it from the profile
-    // cache before paint instead of flashing blank placeholders and reloading
-    // the avatar/banner visually on every visit.
-    try {
-      const cached = localStorage.getItem("jobrain-profile");
-      if (cached) {
-        const next = fromApi(JSON.parse(cached) as Record<string, unknown>);
-        setProfile(next);
-        setBaseline(next);
-        setLoading(false);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      // Seed from cache before paint instead of flashing blank placeholders.
+      try {
+        const cached = localStorage.getItem("jobrain-profile");
+        if (cached) {
+          const next = fromApi(JSON.parse(cached) as Record<string, unknown>);
+          setProfile(next);
+          setBaseline(next);
+          setLoading(false);
+        }
+      } catch {
+        // Refresh from the API if the local cache is unavailable or invalid.
       }
-    } catch {
-      // Refresh from the API if the local cache is unavailable or invalid.
-    }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
