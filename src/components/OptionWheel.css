@@ -34,7 +34,7 @@
   letter-spacing: -.035em;
   transform-origin: left center;
   cursor: pointer;
-  will-change: transform, opacity, filter;
+  will-change: transform, opacity;
   color: color-mix(in srgb, var(--ow-active-color) calc(var(--ow-p, 0) * 100%), var(--ow-text-color));
 }
 .option-wheel__icon {
