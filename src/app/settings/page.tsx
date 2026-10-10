@@ -213,26 +213,33 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
 
   useLayoutEffect(() => {
-    let hasCachedData = false;
-    try {
-      const cachedProfile = localStorage.getItem("jobrain-profile");
-      if (cachedProfile) {
-        const nextProfile = fromProfile(JSON.parse(cachedProfile) as Record<string, unknown>);
-        setProfile(nextProfile);
-        setActiveBackgroundUrl(nextProfile.backgroundUrl);
-        setProfileLoaded(true);
-        hasCachedData = true;
-      }
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      let hasCachedData = false;
+      try {
+        const cachedProfile = localStorage.getItem("jobrain-profile");
+        if (cachedProfile) {
+          const nextProfile = fromProfile(JSON.parse(cachedProfile) as Record<string, unknown>);
+          setProfile(nextProfile);
+          setActiveBackgroundUrl(nextProfile.backgroundUrl);
+          setProfileLoaded(true);
+          hasCachedData = true;
+        }
 
-      const cachedSettings = localStorage.getItem("jobrain-settings");
-      if (cachedSettings) {
-        setSettings(fromSettings(JSON.parse(cachedSettings) as Record<string, unknown>));
-        hasCachedData = true;
+        const cachedSettings = localStorage.getItem("jobrain-settings");
+        if (cachedSettings) {
+          setSettings(fromSettings(JSON.parse(cachedSettings) as Record<string, unknown>));
+          hasCachedData = true;
+        }
+      } catch {
+        // The API refresh below recovers when cached settings are invalid.
       }
-    } catch {
-      // The API refresh below recovers when cached settings are invalid.
-    }
-    if (hasCachedData) setLoading(false);
+      if (hasCachedData) setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
