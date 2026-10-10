@@ -177,9 +177,19 @@ export default function OptionWheel({
         rotation = (mirror * angle * 180) / Math.PI;
       }
       element.style.transform = `translate(${x.toFixed(2)}px, calc(${y.toFixed(2)}px - 50%)) rotate(${rotation.toFixed(3)}deg)`;
-      element.style.opacity = String(Math.max(cfg.minOpacity, 1 - magnitude * cfg.fade));
-      element.style.filter = cfg.blur > 0 ? `blur(${(magnitude * cfg.blur).toFixed(2)}px)` : "none";
-      element.style.setProperty("--ow-p", Math.max(0, 1 - Math.min(magnitude, 1)).toFixed(4));
+      const opacity = Math.max(cfg.minOpacity, 1 - magnitude * cfg.fade).toFixed(3);
+      if (element.style.opacity !== opacity) element.style.opacity = opacity;
+
+      // Preserve the blur depth effect, but avoid sub-pixel filter updates every
+      // frame. Filters are paint-heavy; 0.1px quantization is visually seamless.
+      const blur = cfg.blur > 0 ? Math.round(magnitude * cfg.blur * 10) / 10 : 0;
+      const filter = blur > 0 ? `blur(${blur.toFixed(1)}px)` : "none";
+      if (element.style.filter !== filter) element.style.filter = filter;
+
+      const progress = Math.max(0, 1 - Math.min(magnitude, 1)).toFixed(3);
+      if (element.style.getPropertyValue("--ow-p") !== progress) {
+        element.style.setProperty("--ow-p", progress);
+      }
     }
 
     rafRef.current = settled ? null : requestAnimationFrame((timestamp) => runFrameRef.current(timestamp));
@@ -190,7 +200,9 @@ export default function OptionWheel({
   }, [runFrame]);
 
   const startLoop = useCallback(() => {
-    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    // Keep the current frame clock when input updates arrive. Restarting the RAF
+    // on every wheel/pointer event creates uneven frame pacing during fast drags.
+    if (rafRef.current !== null) return;
     lastRef.current = performance.now();
     rafRef.current = requestAnimationFrame(runFrame);
   }, [runFrame]);
