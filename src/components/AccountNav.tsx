@@ -80,6 +80,10 @@ export default function AccountNav({ active }: { active: AccountSection }) {
         minOpacity={0.18}
         smoothing={180}
         inset={16}
+        onSettled={(index) => {
+          const next = accountItems[index];
+          if (next) navigate(next.href);
+        }}
         onActivate={(index) => {
           const next = accountItems[index];
           if (next) navigate(next.href);
