@@ -53,7 +53,17 @@ export default function AccountNav({ active }: { active: AccountSection }) {
         </span>
         <span className="account-nav-brand-signal" aria-hidden="true" />
       </Link>
-      <Link className="account-nav-media" href="/settings?section=media" aria-label="Open avatar, banner and background settings">
+      <Link
+        className="account-nav-media"
+        href="/settings?section=media"
+        aria-label="Open avatar, banner and background settings"
+        onClick={(event) => {
+          if (pathname !== "/settings") return;
+          event.preventDefault();
+          window.history.replaceState(null, "", "/settings?section=media");
+          window.dispatchEvent(new CustomEvent("jobrain:settings-section", { detail: "Media studio" }));
+        }}
+      >
         <span className="account-nav-media-icon"><ImageIcon size={15} strokeWidth={1.8} /></span>
         <span className="account-nav-media-copy">
           <strong>Media & appearance</strong>
