@@ -48,8 +48,10 @@ function repositoryKey(value: string): string | null {
     const segments = url.pathname.split("/").filter(Boolean);
     if (segments.length !== 2) return null;
     const owner = segments[0];
-    const repo = segments[1].replace(/\.git$/i, "");
-    return owner && repo ? `${owner}/${repo}`.toLowerCase() : null;
+    const repository = segments[1];
+    if (!owner || !repository) return null;
+    const repo = repository.replace(/\.git$/i, "");
+    return repo ? `${owner}/${repo}`.toLowerCase() : null;
   } catch {
     return null;
   }
