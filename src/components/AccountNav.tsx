@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ArrowUpRight,
   Bell,
   FolderKanban,
   History,
@@ -36,15 +35,7 @@ export default function AccountNav({ active }: { active: AccountSection }) {
 
   return (
     <nav className="account-nav" aria-label="Workspace navigation">
-      <Link className="account-nav-brand" href="/" aria-label="Return to JoBrain overview">
-        <span className="account-nav-mark" aria-hidden="true">J</span>
-        <span className="account-nav-brand-copy">
-          <strong>JoBrain</strong>
-          <small>WORKSPACE</small>
-        </span>
-      </Link>
-
-      <div className="account-nav-links" aria-label="Account sections">
+            <div className="account-nav-links" aria-label="Account sections">
         {accountItems.map(({ label, href, icon: Icon }) => {
           const selected = pathname === href || activeHref === href;
           return (
@@ -61,22 +52,6 @@ export default function AccountNav({ active }: { active: AccountSection }) {
         })}
       </div>
 
-      <Link
-        className={"account-nav-media" + (pathname === "/settings" ? " is-active" : "")}
-        href="/settings?section=appearance"
-        aria-label="Appearance settings"
-        onClick={(event) => {
-          if (pathname === "/settings") {
-            event.preventDefault();
-            window.history.replaceState({}, "", "/settings?section=appearance");
-            window.dispatchEvent(new CustomEvent("jobrain:settings-section", { detail: "Appearance" }));
-          }
-        }}
-      >
-        <SlidersHorizontal size={15} strokeWidth={1.8} aria-hidden="true" />
-        <span>Appearance</span>
-        <ArrowUpRight size={13} aria-hidden="true" />
-      </Link>
-    </nav>
+          </nav>
   );
 }
