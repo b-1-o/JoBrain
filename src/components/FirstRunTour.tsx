@@ -16,7 +16,7 @@ type Rect = { x: number; y: number; width: number; height: number };
 type Viewport = { width: number; height: number };
 type Position = { x: number; y: number; width: number };
 
-const STORAGE_KEY = "jobrain-first-run-tour-v1";
+const STORAGE_KEY = "jobrain-first-run-tour-v2";
 
 const STEPS: Step[] = [
   {
