@@ -14,6 +14,7 @@ import {
   Compass,
   BriefcaseBusiness,
   CheckCircle2,
+  LockKeyhole,
   History,
   FolderKanban,
   Bell,
@@ -1005,7 +1006,52 @@ export default function WorkspaceHome() {
           </div>
         </div>
       </div>
-      <FirstRunTour activeTab={tab} onNavigate={changeTab} />
+      <FirstRunTour activeTab={tab} onNavigate={changeTab} replayKey={tourReplayKey} />
+
+      {accountReason && typeof document !== "undefined" ? createPortal(
+        <div
+          className="jb-account-dialog-layer"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setAccountReason(null);
+          }}
+        >
+          <section
+            className="jb-account-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="jb-account-dialog-title"
+            aria-describedby="jb-account-dialog-description"
+          >
+            <button type="button" className="jb-account-dialog-close" aria-label="Close" onClick={() => setAccountReason(null)}>
+              <X size={17} />
+            </button>
+            <span className="jb-account-dialog-icon"><LockKeyhole size={21} /></span>
+            <span className="jb-account-dialog-kicker">FREE ACCOUNT FEATURE</span>
+            <h2 id="jb-account-dialog-title">Keep exploring. Save when you’re ready.</h2>
+            <p id="jb-account-dialog-description">
+              A free account is needed for {accountReason}. You can still search, compare and open live job listings without signing up.
+            </p>
+            <div className="jb-account-dialog-benefits">
+              <span><CheckCircle2 size={15} /> Save roles and track application stages</span>
+              <span><CheckCircle2 size={15} /> Get your calendar, follow-ups and statistics</span>
+              <span><CheckCircle2 size={15} /> Keep your profile and activity in one place</span>
+            </div>
+            <div className="jb-account-dialog-actions">
+              <Link href="/sign-up?redirect_url=%2F" className="jb-account-dialog-primary" onClick={() => setAccountReason(null)}>
+                Create free account <ArrowRight size={15} />
+              </Link>
+              <Link href="/sign-in?redirect_url=%2F" className="jb-account-dialog-secondary" onClick={() => setAccountReason(null)}>
+                Sign in
+              </Link>
+            </div>
+            <button type="button" className="jb-account-dialog-guest" onClick={() => { setAccountReason(null); changeTab("search"); }}>
+              Continue browsing as guest
+            </button>
+          </section>
+        </div>,
+        document.body,
+      ) : null}
     </main>
   );
 }
