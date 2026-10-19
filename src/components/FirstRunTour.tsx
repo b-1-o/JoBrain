@@ -93,9 +93,12 @@ export default function FirstRunTour({
 
   useEffect(() => {
     if (replayKey <= 0) return;
-    setStepIndex(0);
-    setClosing(false);
-    setOpen(true);
+    const frame = window.requestAnimationFrame(() => {
+      setStepIndex(0);
+      setClosing(false);
+      setOpen(true);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [replayKey]);
 
   useEffect(() => {
