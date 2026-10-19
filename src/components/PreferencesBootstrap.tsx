@@ -34,7 +34,7 @@ function mergeAppearance(profile?: Profile, settings?: Settings): AppearanceStat
     glassBlur: profile?.glassBlur ?? undefined,
     panelOpacity: profile?.panelOpacity ?? undefined,
     borderIntensity: profile?.borderIntensity ?? undefined,
-    backgroundUrl: profile?.backgroundUrl ?? null,
+    backgroundUrl: null,
     reducedMotion: settings?.reducedMotion ?? false,
   });
 }
@@ -45,7 +45,7 @@ export default function PreferencesBootstrap() {
   useEffect(() => {
     // Always apply the visitor's local visual preferences. Private account
     // preferences are only fetched once Clerk confirms an authenticated user.
-    applyAppearanceToDocument(readCachedAppearance());
+    applyAppearanceToDocument({ ...readCachedAppearance(), backgroundUrl: null });
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       document.documentElement.dataset.reducedMotion = "true";
