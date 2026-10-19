@@ -7,7 +7,6 @@ import {
   Bell,
   FolderKanban,
   History,
-  Image as ImageIcon,
   Sparkles,
   SlidersHorizontal,
   UserRound,
@@ -64,17 +63,17 @@ export default function AccountNav({ active }: { active: AccountSection }) {
 
       <Link
         className={"account-nav-media" + (pathname === "/settings" ? " is-active" : "")}
-        href="/settings?section=media"
-        aria-label="Personalize appearance"
+        href="/settings?section=appearance"
+        aria-label="Appearance settings"
         onClick={(event) => {
           if (pathname === "/settings") {
             event.preventDefault();
-            window.history.replaceState({}, "", "/settings?section=media");
-            window.dispatchEvent(new CustomEvent("jobrain:settings-section", { detail: "Media studio" }));
+            window.history.replaceState({}, "", "/settings?section=appearance");
+            window.dispatchEvent(new CustomEvent("jobrain:settings-section", { detail: "Appearance" }));
           }
         }}
       >
-        <ImageIcon size={15} strokeWidth={1.8} aria-hidden="true" />
+        <SlidersHorizontal size={15} strokeWidth={1.8} aria-hidden="true" />
         <span>Appearance</span>
         <ArrowUpRight size={13} aria-hidden="true" />
       </Link>
