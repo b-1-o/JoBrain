@@ -95,8 +95,6 @@ export default function ApplicationDashboard({ apps, loading, onNavigate }: Dash
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [selectedDay, setSelectedDay] = useState(() => startOfDay(new Date()));
   const today = startOfDay(new Date());
-  const todayKey = today.getTime();
-
   const calendarDays = useMemo(() => eachDayOfInterval({
     start: startOfWeek(startOfMonth(month)),
     end: endOfWeek(endOfMonth(month)),
@@ -117,7 +115,7 @@ export default function ApplicationDashboard({ apps, loading, onNavigate }: Dash
       return date && app.status !== "REJECTED" && app.status !== "OFFER";
     })
     .sort((a, b) => (parseDate(a.nextActionAt)?.getTime() ?? 0) - (parseDate(b.nextActionAt)?.getTime() ?? 0))
-    .slice(0, 4), [apps, todayKey]);
+    .slice(0, 4), [apps]);
 
   const recent = useMemo(() => [...apps]
     .sort((a, b) => (parseDate(b.updatedAt)?.getTime() ?? 0) - (parseDate(a.updatedAt)?.getTime() ?? 0))
@@ -201,7 +199,7 @@ export default function ApplicationDashboard({ apps, loading, onNavigate }: Dash
             <span>{loading ? "Syncing activity…" : createdThisMonth + " added this month"}</span>
           </div>
 
-          <div className="jb-calendar-grid" role="grid" aria-label={monthLabel}>
+          <div className="jb-calendar-grid" role="group" aria-label={monthLabel}>
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
               <span className="jb-calendar-weekday" key={day} role="columnheader">{day}</span>
             ))}
@@ -217,7 +215,6 @@ export default function ApplicationDashboard({ apps, loading, onNavigate }: Dash
                 <button
                   type="button"
                   key={day.toISOString()}
-                  role="gridcell"
                   aria-label={format(day, "EEEE, MMMM d") + (eventApps.length ? ", " + eventApps.length + " activities" : "")}
                   aria-pressed={selected}
                   className={[
@@ -291,7 +288,7 @@ export default function ApplicationDashboard({ apps, loading, onNavigate }: Dash
                       <span className="jb-next-action-copy">
                         <strong>{app.role}</strong>
                         <small>{app.company}</small>
-                        <span>{overdue ? "Follow-up overdue" : date < new Date(Date.now() + 86400000) ? "Due today" : format(date, "EEEE")}</span>
+                        <span>{overdue ? "Follow-up overdue" : isToday(date) ? "Due today" : format(date, "EEEE")}</span>
                       </span>
                       <ArrowRight className="jb-next-action-arrow" size={14} />
                     </button>
