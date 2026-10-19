@@ -102,7 +102,8 @@ export function normalizeAppearance(input: Partial<AppearanceState> | null | und
     glassBlur: clamp(Math.round(input?.glassBlur ?? APPEARANCE_DEFAULTS.glassBlur), 0, 24),
     panelOpacity: clamp(Math.round(input?.panelOpacity ?? APPEARANCE_DEFAULTS.panelOpacity), 40, 95),
     borderIntensity: clamp(Math.round(input?.borderIntensity ?? APPEARANCE_DEFAULTS.borderIntensity), 0, 100),
-    backgroundUrl: input?.backgroundUrl?.trim() ? input.backgroundUrl.trim().slice(0, 2048) : null,
+    // Uploaded wallpapers are intentionally disabled; only the theme palette controls the page.
+    backgroundUrl: null,
     reducedMotion: Boolean(input?.reducedMotion),
   };
 }
@@ -130,14 +131,10 @@ export function applyAppearanceToDocument(raw: Partial<AppearanceState> | null |
   root.style.setProperty("--jb-panel-opacity", String(appearance.panelOpacity / 100));
   root.style.setProperty("--jb-border-intensity", String(appearance.borderIntensity / 100));
 
-  if (appearance.backgroundUrl) {
-    const safe = appearance.backgroundUrl.replace(/["\\]/g, "");
-    root.style.setProperty("--jb-user-background", `url("${safe}")`);
-    root.dataset.customBackground = "true";
-  } else {
-    root.style.removeProperty("--jb-user-background");
-    delete root.dataset.customBackground;
-  }
+  // Clear wallpaper state from older saved preferences so no custom image leaks
+  // into the interface after the media studio has been retired.
+  root.style.removeProperty("--jb-user-background");
+  delete root.dataset.customBackground;
 
   try {
     localStorage.setItem("jobrain-theme", resolved);
