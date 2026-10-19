@@ -27,7 +27,7 @@ const emptyProfile: Profile = {
   avatarUrl: "",
   bannerUrl: "",
   backgroundUrl: "",
-  accentColor: "#b8c9d6",
+  accentColor: "#63e69a",
   glassIntensity: 45,
   glassBlur: 12,
   panelOpacity: 72,
