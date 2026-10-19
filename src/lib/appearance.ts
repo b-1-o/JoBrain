@@ -18,7 +18,7 @@ export type AppearanceState = {
 
 export const APPEARANCE_DEFAULTS: AppearanceState = {
   theme: "dark",
-  accentColor: "#b8c9d6",
+  accentColor: "#63e69a",
   glassIntensity: 45,
   glassBlur: 12,
   panelOpacity: 72,
@@ -32,35 +32,35 @@ export const APPEARANCE_PRESETS: Record<
   Pick<AppearanceState, "accentColor" | "glassIntensity" | "glassBlur" | "panelOpacity" | "borderIntensity">
 > = {
   graphite: {
-    accentColor: "#b8c9d6",
+    accentColor: "#63e69a",
     glassIntensity: 45,
     glassBlur: 12,
     panelOpacity: 72,
     borderIntensity: 40,
   },
   mist: {
-    accentColor: "#9eb6c8",
+    accentColor: "#48d887",
     glassIntensity: 55,
     glassBlur: 16,
     panelOpacity: 64,
     borderIntensity: 32,
   },
   snow: {
-    accentColor: "#6b8a9e",
+    accentColor: "#278653",
     glassIntensity: 35,
     glassBlur: 10,
     panelOpacity: 80,
     borderIntensity: 28,
   },
   oled: {
-    accentColor: "#d0dce6",
+    accentColor: "#97f0b4",
     glassIntensity: 28,
     glassBlur: 8,
     panelOpacity: 88,
     borderIntensity: 50,
   },
   frost: {
-    accentColor: "#a8c4d8",
+    accentColor: "#3dbe78",
     glassIntensity: 62,
     glassBlur: 18,
     panelOpacity: 58,
@@ -78,10 +78,22 @@ export function normalizeAppearance(input: Partial<AppearanceState> | null | und
       ? input.theme
       : APPEARANCE_DEFAULTS.theme;
 
-  const accent =
+  const previousDefaultAccents = new Set([
+    "#b8c9d6",
+    "#9eb6c8",
+    "#6b8a9e",
+    "#d0dce6",
+    "#a8c4d8",
+  ]);
+  const requestedAccent =
     typeof input?.accentColor === "string" && /^#[0-9a-fA-F]{6}$/.test(input.accentColor)
-      ? input.accentColor
+      ? input.accentColor.toLowerCase()
       : APPEARANCE_DEFAULTS.accentColor;
+  // Migrate the old blue-gray built-in presets to the new green identity while
+  // preserving colors the user explicitly chose outside the previous palette.
+  const accent = previousDefaultAccents.has(requestedAccent)
+    ? APPEARANCE_DEFAULTS.accentColor
+    : requestedAccent;
 
   return {
     theme,
