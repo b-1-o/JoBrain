@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Show, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { flushSync } from "react-dom";
 import JobResultsList, { type JobResult } from "@/components/JobResultsList";
 import LatticeLoader from "@/components/LatticeLoader";
 import OverviewAnalytics from "@/components/OverviewAnalytics";
@@ -228,8 +229,23 @@ export default function WorkspaceHome() {
   }, []);
 
   const changeTab = useCallback((next: "overview" | "search" | "pipeline") => {
-    setTab(next);
-  }, []);
+    if (next === tab) return;
+
+    const update = () => setTab(next);
+    if (reduceMotion || typeof document === "undefined") {
+      update();
+      return;
+    }
+
+    const transitionDocument = document as Document & {
+      startViewTransition?: (callback: () => void) => unknown;
+    };
+    if (typeof transitionDocument.startViewTransition === "function") {
+      transitionDocument.startViewTransition(() => flushSync(update));
+    } else {
+      update();
+    }
+  }, [reduceMotion, tab]);
 
   const updateNavIndicator = useCallback(() => {
     const nav = navRef.current;
