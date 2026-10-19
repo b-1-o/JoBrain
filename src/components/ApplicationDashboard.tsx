@@ -114,7 +114,7 @@ export default function ApplicationDashboard({ apps, loading, onNavigate }: Dash
   const upcoming = useMemo(() => apps
     .filter((app) => {
       const date = parseDate(app.nextActionAt);
-      return date && date.getTime() >= todayKey && app.status !== "REJECTED" && app.status !== "OFFER";
+      return date && app.status !== "REJECTED" && app.status !== "OFFER";
     })
     .sort((a, b) => (parseDate(a.nextActionAt)?.getTime() ?? 0) - (parseDate(b.nextActionAt)?.getTime() ?? 0))
     .slice(0, 4), [apps, todayKey]);
