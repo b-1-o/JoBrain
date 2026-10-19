@@ -14,6 +14,8 @@ import {
   Compass,
   BriefcaseBusiness,
   CheckCircle2,
+  CalendarDays,
+  TrendingUp,
   LockKeyhole,
   History,
   FolderKanban,
