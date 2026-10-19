@@ -6085,11 +6085,6 @@ html[data-theme="light"] .jb-guest-preview-brand > span {
 .jb-command-search input { min-width: 0; }
 .jb-command-search .jb-search-hint { flex: 0 0 auto; }
 
-.jb-account-menu-footer .cl-userButtonTrigger {
-  border-radius: 12px !important;
-}
-.jb-account-menu-footer [data-clerk-component] { max-width: 100%; }
-
 /* Smooth theme changes, including both color schemes and their surfaces. */
 html,
 body,
