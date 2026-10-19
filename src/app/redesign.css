@@ -401,6 +401,7 @@ html[data-theme="light"] .jb-auth-link-primary {
 
 .jb-view-stage {
   min-height: 0 !important;
+  view-transition-name: jb-workspace-stage;
 }
 
 .jb-view-panel {
@@ -3274,15 +3275,15 @@ html[data-theme="light"] .account-operation {
 }
 
 /* Native view transitions animate both the old tab leaving and the new one entering. */
-::view-transition-group(root) {
+::view-transition-group(jb-workspace-stage) {
   animation-duration: 300ms;
 }
 
-::view-transition-old(root) {
+::view-transition-old(jb-workspace-stage) {
   animation: jb-view-exit 150ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
-::view-transition-new(root) {
+::view-transition-new(jb-workspace-stage) {
   animation: jb-view-enter 260ms cubic-bezier(0.18, 0.75, 0.25, 1) both;
 }
 
@@ -3297,15 +3298,15 @@ html[data-theme="light"] .account-operation {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-group(root),
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
+  ::view-transition-group(jb-workspace-stage),
+  ::view-transition-old(jb-workspace-stage),
+  ::view-transition-new(jb-workspace-stage) {
     animation: none !important;
   }
 }
 
-html[data-reduced-motion="true"] ::view-transition-group(root),
-html[data-reduced-motion="true"] ::view-transition-old(root),
-html[data-reduced-motion="true"] ::view-transition-new(root) {
+html[data-reduced-motion="true"] ::view-transition-group(jb-workspace-stage),
+html[data-reduced-motion="true"] ::view-transition-old(jb-workspace-stage),
+html[data-reduced-motion="true"] ::view-transition-new(jb-workspace-stage) {
   animation: none !important;
 }
