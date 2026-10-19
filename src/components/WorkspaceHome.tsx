@@ -13,6 +13,7 @@ import {
   ArrowRight,
   Compass,
   BriefcaseBusiness,
+  CheckCircle2,
   History,
   FolderKanban,
   Bell,
@@ -873,24 +874,40 @@ export default function WorkspaceHome() {
                           </span>
                         ))
                       ) : (
-                        <span className="jb-source-pill">
-                          <i aria-hidden="true" />
-                          Waiting for data
-                        </span>
+                        ["remoteok", "remotive", "jobicy", "adzuna", "linkedin", "indeed"].map((name) => (
+                          <span key={name} className="jb-source-pill is-pending" title="Checked when you run a search">
+                            <i aria-hidden="true" />
+                            {SOURCE_LABELS[name] ?? name}
+                          </span>
+                        ))
                       )}
                     </div>
                   </section>
                 </div>
                 {!jobQuery.trim() && !loadingJobs && !recommendationsMode ? (
-                  <div className="jb-search-empty">
-                    <strong>Explore live roles.</strong>
-                    <p>Start with a skill, title, or company. JoBrain queries multiple sources in parallel and keeps your results readable.</p>
-                    <div className="jb-suggest-chips">
-                      {SUGGESTIONS.map((item) => (
-                        <button key={item} type="button" className="jb-suggest-chip" onClick={() => applySuggestion(item)}>
-                          {item}
-                        </button>
-                      ))}
+                  <div className="jb-search-empty" data-tour="search-empty">
+                    <div className="jb-search-empty-header">
+                      <span className="jb-search-empty-icon"><Search size={19} /></span>
+                      <div>
+                        <span className="jb-dashboard-overline">START WITH AN IDEA</span>
+                        <strong>What kind of work are you looking for?</strong>
+                        <p>Search by role, company or skill. Filter by location, experience and remote options. You can explore listings without an account.</p>
+                      </div>
+                    </div>
+                    <div className="jb-search-empty-suggestions">
+                      <span className="jb-search-suggestion-label">QUICK SEARCHES</span>
+                      <div className="jb-suggest-chips">
+                        {SUGGESTIONS.map((item) => (
+                          <button key={item} type="button" className="jb-suggest-chip" onClick={() => applySuggestion(item)}>
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="jb-search-empty-foot">
+                      <span><i /> Free to browse</span>
+                      <span><i /> Filters update live</span>
+                      <span><i /> Save roles with an account</span>
                     </div>
                   </div>
                 ) : (
