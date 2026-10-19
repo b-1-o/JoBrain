@@ -139,7 +139,7 @@ function useReducedMotionPreferred() {
 }
 
 export default function WorkspaceHome() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, userId } = useAuth();
   const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [accountReason, setAccountReason] = useState<string | null>(null);
@@ -201,6 +201,7 @@ export default function WorkspaceHome() {
     return stored === "light" || stored === "dark" ? stored : "dark";
   });
   const [apps, setApps] = useState<App[]>([]);
+  const [appsUserId, setAppsUserId] = useState<string | null>(null);
   const [loadingApps, setLoadingApps] = useState(true);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [jobQuery, setJobQuery] = useState("");
@@ -258,14 +259,16 @@ export default function WorkspaceHome() {
     if (!isSignedIn) return;
 
     let cancelled = false;
-    setLoadingApps(true);
     void fetch("/api/applications", { cache: "no-store" })
       .then(async (r) => {
         if (!r.ok) throw new Error("applications");
         return (await r.json()) as { applications?: App[] };
       })
       .then((data) => {
-        if (!cancelled) setApps(Array.isArray(data.applications) ? data.applications : []);
+        if (!cancelled) {
+          setApps(Array.isArray(data.applications) ? data.applications : []);
+          setAppsUserId(userId ?? null);
+        }
       })
       .catch(() => {
         if (!cancelled) setError("Could not load saved applications.");
@@ -276,7 +279,7 @@ export default function WorkspaceHome() {
     return () => {
       cancelled = true;
     };
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded, isSignedIn, userId]);
 
   const toggleTheme = useCallback(() => {
     const nextTheme = theme === "dark" ? "light" : "dark";
@@ -703,7 +706,11 @@ export default function WorkspaceHome() {
           <div className="jb-view-transition-host">
             {tab === "overview" ? (
               isLoaded && isSignedIn ? (
-                <ApplicationDashboard apps={apps} loading={loadingApps} onNavigate={changeTab} />
+                <ApplicationDashboard
+                  apps={appsUserId === userId ? apps : []}
+                  loading={loadingApps || appsUserId !== userId}
+                  onNavigate={changeTab}
+/>
               ) : (
                 <section key="overview" className="jb-overview jb-view-panel jb-guest-overview">
                   <div className="jb-hero">
