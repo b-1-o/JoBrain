@@ -1,6 +1,8 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import AccountNav from "@/components/AccountNav";
 import LatticeLoader from "@/components/LatticeLoader";
@@ -48,12 +50,28 @@ function fromApi(raw: Record<string, unknown> | null | undefined): Profile {
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const { isLoaded, isSignedIn } = useAuth();
   const [profile, setProfile] = useState<Profile>(emptyProfile);
   const [baseline, setBaseline] = useState<Profile>(emptyProfile);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+
+  const redirectToSignIn = useCallback(() => {
+    try {
+      localStorage.removeItem("jobrain-profile");
+    } catch {
+      // Continue to sign-in even when browser storage is unavailable.
+    }
+    setProfile(emptyProfile);
+    setBaseline(emptyProfile);
+    setSaved(false);
+    setError("");
+    setLoading(false);
+    router.replace("/sign-in?redirect_url=%2Fprofile");
+  }, [router]);
 
   const dirty =
     profile.displayName !== baseline.displayName ||
@@ -62,6 +80,10 @@ export default function ProfilePage() {
   const load = useCallback(() => {
     void fetch("/api/profile", { cache: "no-store" })
       .then(async (response) => {
+        if (response.status === 401) {
+          redirectToSignIn();
+          return;
+        }
         const data = (await response.json().catch(() => ({}))) as {
           profile?: Record<string, unknown>;
           error?: unknown;
@@ -86,9 +108,10 @@ export default function ProfilePage() {
         setError(cause instanceof Error ? cause.message : "Could not load your profile. Please retry.");
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [redirectToSignIn]);
 
   useLayoutEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
     let cancelled = false;
     queueMicrotask(() => {
       if (cancelled) return;
@@ -108,11 +131,16 @@ export default function ProfilePage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      redirectToSignIn();
+      return;
+    }
     void load();
-  }, [load]);
+  }, [isLoaded, isSignedIn, load, redirectToSignIn]);
 
   function update<K extends keyof Profile>(key: K, value: Profile[K]) {
     setProfile((current) => ({ ...current, [key]: value }));
@@ -132,6 +160,10 @@ export default function ProfilePage() {
           bio: profile.bio,
         }),
       });
+      if (response.status === 401) {
+        redirectToSignIn();
+        return;
+      }
       const data = (await response.json().catch(() => ({}))) as {
         profile?: Record<string, unknown>;
         error?: unknown;
