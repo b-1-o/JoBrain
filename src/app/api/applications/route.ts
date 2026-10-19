@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { getWorkspaceUser } from "@/lib/current-user";
+import { requireAuthUser } from "@/lib/require-auth-user";
 import { prisma } from "@/lib/prisma";
 
 const sourceEnum = z.enum([
@@ -61,36 +61,24 @@ async function createApplicationNotification(
   });
 }
 
-function setWorkspaceCookie(response: NextResponse, userId: string) {
-  response.cookies.set("jobrain_workspace", userId, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365,
-  });
-}
-export async function GET(request: NextRequest) {
-  const { user } = await getWorkspaceUser(
-    request.cookies.get("jobrain_workspace")?.value,
-  );
+export async function GET() {
+  const user = await requireAuthUser();
+  if (!user) return NextResponse.json({ error: "Sign in to access your application pipeline." }, { status: 401 });
 
   const applications = await prisma.application.findMany({
     where: { userId: user.id },
     orderBy: { updatedAt: "desc" },
   });
 
-  const response = NextResponse.json({ applications });
-  setWorkspaceCookie(response, user.id);
-  return response;
+  return NextResponse.json({ applications }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: NextRequest) {
+  const user = await requireAuthUser();
+  if (!user) return NextResponse.json({ error: "Sign in to save jobs to your pipeline." }, { status: 401 });
+
   try {
     const body = createSchema.parse(await request.json());
-    const { user } = await getWorkspaceUser(
-      request.cookies.get("jobrain_workspace")?.value,
-    );
 
     const application = await prisma.application.create({
       data: {
@@ -117,20 +105,18 @@ export async function POST(request: NextRequest) {
       "/?tab=pipeline",
     );
 
-    const response = NextResponse.json({ application }, { status: 201 });
-    setWorkspaceCookie(response, user.id);
-    return response;
+    return NextResponse.json({ application }, { status: 201, headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ error: "Invalid application payload" }, { status: 400 });
   }
 }
 
 export async function PATCH(request: NextRequest) {
+  const user = await requireAuthUser();
+  if (!user) return NextResponse.json({ error: "Sign in to update your pipeline." }, { status: 401 });
+
   try {
     const body = patchSchema.parse(await request.json());
-    const { user } = await getWorkspaceUser(
-      request.cookies.get("jobrain_workspace")?.value,
-    );
 
     const { id } = body;
     const existing = await prisma.application.findFirst({
@@ -168,29 +154,24 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const response = NextResponse.json({ updated: result.count === 1 });
-    setWorkspaceCookie(response, user.id);
-    return response;
+    return NextResponse.json({ updated: result.count === 1 }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ error: "Invalid update payload" }, { status: 400 });
   }
 }
 
 export async function DELETE(request: NextRequest) {
+  const user = await requireAuthUser();
+  if (!user) return NextResponse.json({ error: "Sign in to delete saved applications." }, { status: 401 });
+
   const id = request.nextUrl.searchParams.get("id");
   if (!id) {
     return NextResponse.json({ error: "Missing id" }, { status: 400 });
   }
 
-  const { user } = await getWorkspaceUser(
-    request.cookies.get("jobrain_workspace")?.value,
-  );
-
   await prisma.application.deleteMany({
     where: { id, userId: user.id },
   });
 
-  const response = NextResponse.json({ ok: true });
-  setWorkspaceCookie(response, user.id);
-  return response;
+  return NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
 }
