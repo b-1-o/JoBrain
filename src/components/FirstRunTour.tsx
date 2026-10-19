@@ -76,7 +76,7 @@ export default function FirstRunTour({
   const [spotlight, setSpotlight] = useState<Rect | null>(null);
   const [position, setPosition] = useState<Position>({ x: 16, y: 16, width: 360 });
 
-  const step = STEPS[stepIndex];
+  const step = STEPS[stepIndex]!;
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -190,14 +190,14 @@ export default function FirstRunTour({
     }
     const nextIndex = stepIndex + 1;
     setStepIndex(nextIndex);
-    onNavigate(STEPS[nextIndex].tab);
+    onNavigate(STEPS[nextIndex]!.tab);
   }, [finish, onNavigate, stepIndex]);
 
   const previous = useCallback(() => {
     if (stepIndex === 0) return;
     const previousIndex = stepIndex - 1;
     setStepIndex(previousIndex);
-    onNavigate(STEPS[previousIndex].tab);
+    onNavigate(STEPS[previousIndex]!.tab);
   }, [onNavigate, stepIndex]);
 
   useEffect(() => {
