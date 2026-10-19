@@ -3,6 +3,8 @@ import {
   detectFramework,
   detectTechnologies,
   extractLiveUrl,
+  getGitHubRepositoryKey,
+  normalizeGitHubRepositoryUrl,
   parseGitHubRepositoryUrl,
   scanGitHubRepository,
   summarizeDescription,
@@ -25,6 +27,15 @@ describe("parseGitHubRepositoryUrl", () => {
     expect(parseGitHubRepositoryUrl("https://github.com/b-1-o/JoBrain.git")?.ownerRepo).toBe(
       "b-1-o/JoBrain",
     );
+  });
+
+  it("uses a stable identity for repository casing and URL suffixes", () => {
+    expect(getGitHubRepositoryKey("https://github.com/B-1-O/JoBrain.git")).toBe("b-1-o/jobrain");
+    expect(getGitHubRepositoryKey("https://www.github.com/b-1-o/jobrain/")).toBe("b-1-o/jobrain");
+    expect(normalizeGitHubRepositoryUrl("https://github.com/B-1-O/JoBrain.git")).toBe(
+      "https://github.com/b-1-o/jobrain",
+    );
+    expect(getGitHubRepositoryKey("https://gitlab.com/b-1-o/jobrain")).toBeNull();
   });
 
   it("rejects non-GitHub hosts and non-https schemes", () => {

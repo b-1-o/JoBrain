@@ -39,8 +39,26 @@ type Draft = {
   framework: string | null;
 };
 
+function repositoryKey(value: string): string | null {
+  try {
+    const url = new URL(value.trim());
+    if (url.protocol !== "https:" || !["github.com", "www.github.com"].includes(url.hostname.toLowerCase())) {
+      return null;
+    }
+    const segments = url.pathname.split("/").filter(Boolean);
+    if (segments.length !== 2) return null;
+    const owner = segments[0];
+    const repo = segments[1].replace(/\.git$/i, "");
+    return owner && repo ? `${owner}/${repo}`.toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [projectsReady, setProjectsReady] = useState(false);
+  const [projectsLoadError, setProjectsLoadError] = useState(false);
   const [repositoryUrl, setRepositoryUrl] = useState("");
   const [draft, setDraft] = useState<Draft | null>(null);
   const [loading, setLoading] = useState(false);
@@ -55,11 +73,20 @@ export default function ProjectsPage() {
   useEffect(() => {
     let cancelled = false;
     void fetch("/api/projects", { cache: "no-store" })
-      .then((response) => response.json())
-      .then((data) => {
-        if (!cancelled) setProjects(Array.isArray(data.projects) ? data.projects : []);
+      .then(async (response) => {
+        const data = (await response.json().catch(() => ({}))) as {
+          projects?: Project[];
+          error?: string;
+        };
+        if (!response.ok) throw new Error(data.error ?? "Could not load saved projects.");
+        if (cancelled) return;
+        setProjects(Array.isArray(data.projects) ? data.projects : []);
+        setProjectsReady(true);
+        setProjectsLoadError(false);
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (!cancelled) setProjectsLoadError(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -102,7 +129,31 @@ export default function ProjectsPage() {
   }, [repositoryRefresh]);
 
 
+  const addedRepositoryKeys = new Set(
+    projects
+      .map((project) => repositoryKey(project.repositoryUrl))
+      .filter((key): key is string => key !== null),
+  );
+  const manualRepositoryKey = repositoryKey(repositoryUrl);
+  const manualRepositoryAlreadyAdded =
+    manualRepositoryKey !== null && addedRepositoryKeys.has(manualRepositoryKey);
+
   async function scan(repository = repositoryUrl) {
+    if (!projectsReady) {
+      setMessage(
+        projectsLoadError
+          ? "Saved projects could not be loaded. Refresh the page before adding a repository."
+          : "Checking your saved projects first. Try again in a moment.",
+      );
+      return;
+    }
+
+    const targetKey = repositoryKey(repository);
+    if (targetKey && addedRepositoryKeys.has(targetKey)) {
+      setMessage("This repository is already in your portfolio.");
+      return;
+    }
+
     setLoading(true);
     setMessage("");
     setDraft(null);
@@ -114,6 +165,14 @@ export default function ProjectsPage() {
       });
       const data = await response.json();
       if (!response.ok) {
+        if (data.code === "PROJECT_ALREADY_ADDED") {
+          void fetch("/api/projects", { cache: "no-store" })
+            .then((projectsResponse) => projectsResponse.json())
+            .then((projectsData) => {
+              if (Array.isArray(projectsData.projects)) setProjects(projectsData.projects);
+            })
+            .catch(() => undefined);
+        }
         setMessage(data.error ?? "Could not scan repository.");
         return;
       }
@@ -138,6 +197,15 @@ export default function ProjectsPage() {
       });
       const data = await response.json();
       if (!response.ok) {
+        if (data.code === "PROJECT_ALREADY_ADDED") {
+          setDraft(null);
+          void fetch("/api/projects", { cache: "no-store" })
+            .then((projectsResponse) => projectsResponse.json())
+            .then((projectsData) => {
+              if (Array.isArray(projectsData.projects)) setProjects(projectsData.projects);
+            })
+            .catch(() => undefined);
+        }
         setMessage(data.error ?? "Could not save project.");
         return;
       }
@@ -229,6 +297,13 @@ export default function ProjectsPage() {
             </div>
           ) : githubLogin ? (
             <>
+              {!projectsReady ? (
+                <p className="account-muted project-status-message">
+                  {projectsLoadError
+                    ? "Saved projects could not be loaded. Repository additions are disabled until you refresh and try again."
+                    : "Checking saved projects before enabling repository additions…"}
+                </p>
+              ) : null}
               <div className="project-repository-toolbar">
                 <label className="project-repository-search">
                   <Search size={14} />
@@ -237,7 +312,16 @@ export default function ProjectsPage() {
                 <span>{githubRepositories.length} public repos</span>
               </div>
               <div className="project-repository-picker">
-                {githubRepositories.filter((repository) => (repository.fullName + " " + (repository.description ?? "")).toLowerCase().includes(repositorySearch.toLowerCase())).map((repository) => (
+                {githubRepositories
+                  .filter((repository) =>
+                    (repository.fullName + " " + (repository.description ?? ""))
+                      .toLowerCase()
+                      .includes(repositorySearch.toLowerCase()),
+                  )
+                  .map((repository) => {
+                    const key = repositoryKey(repository.url);
+                    const alreadyAdded = key !== null && addedRepositoryKeys.has(key);
+                    return (
                   <article className="project-repository-option" key={repository.id}>
                     <div className="project-repository-main">
                       <div className="project-repository-title">
@@ -252,12 +336,27 @@ export default function ProjectsPage() {
                         <span>Updated {new Date(repository.updatedAt).toLocaleDateString()}</span>
                       </div>
                     </div>
-                    <button className="account-button account-button-primary" type="button" disabled={loading} onClick={() => { setRepositoryUrl(repository.url); void scan(repository.url); }}>
-                      Add project
+                    <button
+                      className={alreadyAdded ? "account-button" : "account-button account-button-primary"}
+                      type="button"
+                      disabled={loading || !projectsReady || alreadyAdded}
+                      aria-label={alreadyAdded ? repository.fullName + " is already in your portfolio" : "Add " + repository.fullName}
+                      onClick={() => { setRepositoryUrl(repository.url); void scan(repository.url); }}
+                    >
+                      {alreadyAdded ? "Already added" : !projectsReady ? (projectsLoadError ? "Unavailable" : "Checking…") : "Add project"}
                     </button>
                   </article>
-                ))}
-                {!githubRepositories.length ? <p className="account-muted">No public repositories were returned for this GitHub account.</p> : null}
+                    );
+                  })}
+                {!githubRepositories.length ? (
+                  <p className="account-muted">No public repositories were returned for this GitHub account.</p>
+                ) : !githubRepositories.some((repository) =>
+                    (repository.fullName + " " + (repository.description ?? ""))
+                      .toLowerCase()
+                      .includes(repositorySearch.toLowerCase()),
+                  ) ? (
+                    <p className="account-muted">No repositories match this filter.</p>
+                  ) : null}
               </div>
             </>
           ) : null}
@@ -267,9 +366,12 @@ export default function ProjectsPage() {
             <label className="account-field">
               <span>GitHub repository URL</span>
               <input value={repositoryUrl} onChange={(event) => setRepositoryUrl(event.target.value)} placeholder="https://github.com/your-account/repository" autoComplete="off" spellCheck={false} />
+              {manualRepositoryAlreadyAdded ? (
+                <small className="account-muted">This repository is already in your portfolio.</small>
+              ) : null}
             </label>
             <div className="account-actions">
-              <button className="account-button account-button-primary" type="button" disabled={loading || !githubLogin || !repositoryUrl.trim()} onClick={() => void scan()}>
+              <button className="account-button account-button-primary" type="button" disabled={loading || !githubLogin || !repositoryUrl.trim() || !projectsReady || manualRepositoryAlreadyAdded} onClick={() => void scan()}>
                 {loading ? <LatticeLoader label="Scanning" status="working" cellSize={3} gap={1} fontSize={10} showTimer={false} /> : "Verify & scan URL"}
               </button>
             </div>

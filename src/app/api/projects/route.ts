@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuthUser } from "@/lib/require-auth-user";
 import {
+  getGitHubRepositoryKey,
+  normalizeGitHubRepositoryUrl,
   parseGitHubRepositoryUrl,
   scanGitHubRepository,
   type ScannedProject,
@@ -18,6 +20,32 @@ function isHttpUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+async function findExistingProject(userId: string, repositoryUrl: string) {
+  const targetKey = getGitHubRepositoryKey(repositoryUrl);
+  if (!targetKey) return null;
+
+  const projects = await prisma.project.findMany({
+    where: { userId },
+    select: { id: true, repositoryUrl: true },
+  });
+
+  return projects.find((project) => getGitHubRepositoryKey(project.repositoryUrl) === targetKey) ?? null;
+}
+
+function alreadyAddedResponse() {
+  return NextResponse.json(
+    {
+      code: "PROJECT_ALREADY_ADDED",
+      error: "This repository has already been added to your portfolio.",
+    },
+    { status: 409, headers: { "Cache-Control": "no-store" } },
+  );
+}
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
 }
 
 function responseForProjectError(error: unknown) {
@@ -95,6 +123,10 @@ export async function POST(request: Request) {
         );
       }
 
+      if (await findExistingProject(user.id, parsed.canonicalUrl)) {
+        return alreadyAddedResponse();
+      }
+
       let scanned: ScannedProject;
       try {
         scanned = await scanGitHubRepository(parsed);
@@ -103,7 +135,14 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: message }, { status: 400 });
       }
 
-      if (action === "scan") return NextResponse.json({ draft: scanned });
+      scanned = {
+        ...scanned,
+        repositoryUrl: normalizeGitHubRepositoryUrl(scanned.repositoryUrl) ?? parsed.canonicalUrl,
+      };
+
+      if (action === "scan") {
+        return NextResponse.json({ draft: scanned }, { headers: { "Cache-Control": "no-store" } });
+      }
       return await persistProject(user.id, scanned);
     }
 
@@ -135,6 +174,15 @@ export async function POST(request: Request) {
         );
       }
 
+      if (await findExistingProject(user.id, project.repositoryUrl)) {
+        return alreadyAddedResponse();
+      }
+
+      const normalizedRepositoryUrl = normalizeGitHubRepositoryUrl(project.repositoryUrl);
+      if (!normalizedRepositoryUrl) {
+        return NextResponse.json({ error: "Invalid repository URL." }, { status: 400 });
+      }
+
       const languages =
         project.languages && typeof project.languages === "object" && !Array.isArray(project.languages)
           ? (project.languages as Record<string, number>)
@@ -144,7 +192,7 @@ export async function POST(request: Request) {
         : [];
 
       const payload: ScannedProject = {
-        repositoryUrl: parsed.canonicalUrl,
+        repositoryUrl: normalizedRepositoryUrl,
         name: project.name.trim().slice(0, 120) || parsed.repo,
         description:
           typeof project.description === "string" ? project.description.trim().slice(0, 2000) || null : null,
@@ -169,23 +217,19 @@ export async function POST(request: Request) {
 
 async function persistProject(userId: string, scanned: ScannedProject) {
   try {
-    const existing = await prisma.project.findUnique({
-      where: { userId_repositoryUrl: { userId, repositoryUrl: scanned.repositoryUrl } },
-    });
+    const repositoryUrl = normalizeGitHubRepositoryUrl(scanned.repositoryUrl);
+    if (!repositoryUrl) {
+      return NextResponse.json({ error: "Invalid repository URL." }, { status: 400 });
+    }
 
-    const project = await prisma.project.upsert({
-      where: { userId_repositoryUrl: { userId, repositoryUrl: scanned.repositoryUrl } },
-      update: {
-        name: scanned.name,
-        description: scanned.description,
-        liveUrl: scanned.liveUrl,
-        languages: scanned.languages,
-        technologies: scanned.technologies,
-        readme: scanned.readme.slice(0, 20000),
-      },
-      create: {
+    if (await findExistingProject(userId, repositoryUrl)) {
+      return alreadyAddedResponse();
+    }
+
+    const project = await prisma.project.create({
+      data: {
         userId,
-        repositoryUrl: scanned.repositoryUrl,
+        repositoryUrl,
         name: scanned.name,
         description: scanned.description,
         liveUrl: scanned.liveUrl,
@@ -196,10 +240,12 @@ async function persistProject(userId: string, scanned: ScannedProject) {
     });
 
     return NextResponse.json(
-      { project, created: !existing },
-      { status: existing ? 200 : 201, headers: { "Cache-Control": "no-store" } },
+      { project, created: true },
+      { status: 201, headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
+    // Two concurrent requests may pass the pre-check; the unique index is the final guard.
+    if (isUniqueConstraintError(error)) return alreadyAddedResponse();
     return responseForProjectError(error);
   }
 }

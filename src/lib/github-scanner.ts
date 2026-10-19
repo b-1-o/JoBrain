@@ -127,6 +127,22 @@ export function parseGitHubRepositoryUrl(input: string): ParsedGitHubRepo | null
   };
 }
 
+/**
+ * A stable, case-insensitive key for one GitHub repository.
+ * URL casing and an optional .git suffix do not change repository identity.
+ */
+export function getGitHubRepositoryKey(input: string): string | null {
+  const parsed = parseGitHubRepositoryUrl(input);
+  return parsed ? parsed.ownerRepo.toLowerCase() : null;
+}
+
+export function normalizeGitHubRepositoryUrl(input: string): string | null {
+  const parsed = parseGitHubRepositoryUrl(input);
+  return parsed
+    ? `https://github.com/${parsed.owner.toLowerCase()}/${parsed.repo.toLowerCase()}`
+    : null;
+}
+
 export function detectTechnologies(
   languages: Record<string, number>,
   dependencies: string[],
