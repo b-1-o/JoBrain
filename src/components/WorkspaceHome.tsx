@@ -609,34 +609,84 @@ export default function WorkspaceHome() {
               <span className="jb-status-dot" />
               <span>{loadingJobs ? <LatticeLoader label="Syncing" status="working" cellSize={3} gap={1} fontSize={9} showTimer={false} /> : "LIVE"}</span>
             </div>
-            <div className="jb-account-shortcuts" aria-label="Account" data-tour="account-shortcuts">
-              <Link href="/profile" className="jb-account-shortcut" title="Profile" aria-label="Profile">
-                {profileAvatarUrl ? (
+            <div className="jb-account-menu-wrap" ref={accountMenuRef} data-tour="account-shortcuts">
+              <button
+                type="button"
+                className="jb-account-menu-trigger"
+                data-tour="account-menu-trigger"
+                aria-label="Account options"
+                aria-haspopup="dialog"
+                aria-expanded={accountMenuOpen}
+                onClick={() => setAccountMenuOpen((open) => !open)}
+              >
+                {isSignedIn && profileAvatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={profileAvatarUrl} alt="" loading="eager" fetchPriority="high" decoding="async" />
                 ) : (
-                  <UserRound size={14} />
+                  <UserRound size={16} />
                 )}
-              </Link>
-              <Link href="/settings" className="jb-account-shortcut" title="Settings">
-                <Settings size={14} />
-              </Link>
+                <span className="jb-account-trigger-label">{isLoaded && isSignedIn ? "Account" : "Guest"}</span>
+              </button>
+
+              {accountMenuOpen ? (
+                <div className="jb-account-menu" role="dialog" aria-label="Account and guest access">
+                  <div className="jb-account-menu-intro">
+                    <span className="jb-account-menu-eyebrow">{isLoaded && isSignedIn ? "YOUR ACCOUNT" : "GUEST MODE"}</span>
+                    <strong>{isLoaded && isSignedIn ? "Your career workspace" : "Explore without signing up"}</strong>
+                    <p>
+                      {isLoaded && isSignedIn
+                        ? "Your saved jobs, applications, history and profile are ready."
+                        : "Search live jobs and open listings for free. An account is only needed when you want to save roles, manage a pipeline, or personalize your experience."}
+                    </p>
+                  </div>
+
+                  {isLoaded && isSignedIn ? (
+                    <>
+                      <div className="jb-account-menu-links">
+                        <Link href="/profile" onClick={() => setAccountMenuOpen(false)}><UserRound size={15} /> Profile <ArrowRight size={13} /></Link>
+                        <Link href="/settings" onClick={() => setAccountMenuOpen(false)}><Settings size={15} /> Settings <ArrowRight size={13} /></Link>
+                        <Link href="/projects" onClick={() => setAccountMenuOpen(false)}><FolderKanban size={15} /> Projects <ArrowRight size={13} /></Link>
+                        <Link href="/history" onClick={() => setAccountMenuOpen(false)}><History size={15} /> History <ArrowRight size={13} /></Link>
+                        <Link href="/notifications" onClick={() => setAccountMenuOpen(false)}><Bell size={15} /> Notifications <ArrowRight size={13} /></Link>
+                      </div>
+                      <div className="jb-account-menu-footer">
+                        <span>Signed in</span>
+                        <UserButton appearance={{ elements: { avatarBox: "jb-auth-avatar" } }} />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className="jb-account-menu-browse"
+                        onClick={() => { setAccountMenuOpen(false); changeTab("search"); }}
+                      >
+                        <Search size={15} /> Browse live jobs <ArrowRight size={14} />
+                      </button>
+                      <div className="jb-account-menu-actions">
+                        <Link href="/sign-up?redirect_url=%2F" className="jb-account-menu-create" onClick={() => setAccountMenuOpen(false)}>
+                          Create free account
+                        </Link>
+                        <Link href="/sign-in?redirect_url=%2F" className="jb-account-menu-signin" onClick={() => setAccountMenuOpen(false)}>
+                          Sign in
+                        </Link>
+                      </div>
+                    </>
+                  )}
+
+                  <button
+                    type="button"
+                    className="jb-account-menu-tour"
+                    onClick={() => {
+                      setAccountMenuOpen(false);
+                      setTourReplayKey((current) => current + 1);
+                    }}
+                  >
+                    <Sparkles size={14} /> {isLoaded && isSignedIn ? "Replay quick tour" : "How JoBrain works"}
+                  </button>
+                </div>
+              ) : null}
             </div>
-            <Show when="signed-out">
-              <div className="jb-auth-controls" aria-label="Account">
-                <Link href="/sign-in" className="jb-auth-link">
-                  Sign in
-                </Link>
-                <Link href="/sign-up" className="jb-auth-link jb-auth-link-primary">
-                  Create account
-                </Link>
-              </div>
-            </Show>
-            <Show when="signed-in">
-              <div className="jb-auth-user">
-                <UserButton appearance={{ elements: { avatarBox: "jb-auth-avatar" } }} />
-              </div>
-            </Show>
           </div>
         </div>
       </header>
