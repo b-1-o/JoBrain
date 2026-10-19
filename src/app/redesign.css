@@ -22,7 +22,7 @@
 
 html[data-theme="light"] {
   color-scheme: light;
-  --jb-accent: color-mix(in srgb, var(--jb-user-accent, #63e69a) 45%, #105735);
+  --jb-accent: color-mix(in srgb, var(--jb-user-accent, #63e69a) 28%, #105735);
   --jb-accent-strong: color-mix(in srgb, var(--jb-accent) 78%, #07351d);
   --jb-accent-soft: color-mix(in srgb, var(--jb-accent) 10%, transparent);
   --jb-accent-border: color-mix(in srgb, var(--jb-accent) 28%, transparent);
