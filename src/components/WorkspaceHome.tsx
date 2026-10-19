@@ -283,7 +283,20 @@ export default function WorkspaceHome() {
 
   const toggleTheme = useCallback(() => {
     const nextTheme = theme === "dark" ? "light" : "dark";
-    setTheme(nextTheme);
+    const applyTheme = () => setTheme(nextTheme);
+    const transitionDocument = document as Document & {
+      startViewTransition?: (callback: () => void) => { finished?: Promise<unknown> };
+    };
+    if (!reduceMotion && typeof transitionDocument.startViewTransition === "function") {
+      try {
+        const transition = transitionDocument.startViewTransition(applyTheme);
+        void transition.finished?.catch(() => undefined);
+      } catch {
+        applyTheme();
+      }
+    } else {
+      applyTheme();
+    }
 
     // Guests can switch themes locally; only signed-in users have a server preference.
     if (!isSignedIn) return;
