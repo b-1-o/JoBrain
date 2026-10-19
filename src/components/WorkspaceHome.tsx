@@ -284,6 +284,9 @@ export default function WorkspaceHome() {
     const nextTheme = theme === "dark" ? "light" : "dark";
     setTheme(nextTheme);
 
+    // Guests can switch themes locally; only signed-in users have a server preference.
+    if (!isSignedIn) return;
+
     // Persist the quick-switch to the account preference as well as local cache
     // so PreferencesBootstrap does not restore an older server-side theme.
     void fetch("/api/settings", {
@@ -305,7 +308,7 @@ export default function WorkspaceHome() {
       .catch(() => {
         // Local theme selection remains usable if the preference API is unavailable.
       });
-  }, [theme]);
+  }, [isSignedIn, theme]);
 
   const changeTab = useCallback((next: "overview" | "search" | "pipeline") => {
     if (next === tab) return;
@@ -320,7 +323,16 @@ export default function WorkspaceHome() {
       startViewTransition?: (callback: () => void) => unknown;
     };
     if (typeof transitionDocument.startViewTransition === "function") {
-      transitionDocument.startViewTransition(() => flushSync(update));
+      try {
+        const transition = transitionDocument.startViewTransition(() => flushSync(update)) as {
+          finished?: Promise<unknown>;
+        };
+        // Starting a second tab transition can skip the first one. Treat that as
+        // normal interaction rather than an unhandled AbortError in the console.
+        void transition.finished?.catch(() => undefined);
+      } catch {
+        update();
+      }
     } else {
       update();
     }
@@ -339,6 +351,24 @@ export default function WorkspaceHome() {
     window.addEventListener("resize", updateNavIndicator);
     return () => window.removeEventListener("resize", updateNavIndicator);
   }, [tab, updateNavIndicator]);
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (event.target instanceof Node && !accountMenuRef.current?.contains(event.target)) {
+        setAccountMenuOpen(false);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setAccountMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [accountMenuOpen]);
 
   const searchJobs = useCallback(async () => {
     setRecommendationsMode(false);
@@ -366,22 +396,24 @@ export default function WorkspaceHome() {
       setJobs(data.jobs);
       setSourceState(data.sources ?? {});
       setLastFetched(data.fetchedAt);
-      void fetch("/api/history", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "SEARCH",
-          title: jobQuery.trim(),
-          metadata: { location, platform, experience, remoteOnly },
-        }),
-      }).catch(() => undefined);
+      if (isSignedIn) {
+        void fetch("/api/history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "SEARCH",
+            title: jobQuery.trim(),
+            metadata: { location, platform, experience, remoteOnly },
+          }),
+        }).catch(() => undefined);
+      }
     } catch (value) {
       if (value instanceof DOMException && value.name === "AbortError") return;
       setError("Live search is temporarily unavailable.");
     } finally {
       if (!controller.signal.aborted) setLoadingJobs(false);
     }
-  }, [jobQuery, location, platform, experience, remoteOnly]);
+  }, [experience, isSignedIn, jobQuery, location, platform, remoteOnly]);
 
   useEffect(() => {
     abortRef.current?.abort();
@@ -401,6 +433,11 @@ export default function WorkspaceHome() {
   );
 
   async function addApplication(job: JobResult) {
+    if (!isSignedIn) {
+      requestAccount("saving jobs to your pipeline");
+      return;
+    }
+
     const sourceValue =
       job.platform === "linkedin"
         ? "LINKEDIN"
@@ -432,6 +469,10 @@ export default function WorkspaceHome() {
   }
 
   async function createManualApplication() {
+    if (!isSignedIn) {
+      requestAccount("adding and managing applications");
+      return;
+    }
     if (!manualCompany.trim() || !manualRole.trim()) return;
     setManualLoading(true);
     try {
@@ -466,6 +507,10 @@ export default function WorkspaceHome() {
   }
 
   async function loadRecommendations() {
+    if (!isSignedIn) {
+      requestAccount("personalized job recommendations");
+      return;
+    }
     abortRef.current?.abort();
     setRecommendationsMode(true);
     setJobQuery("");
