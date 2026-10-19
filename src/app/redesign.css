@@ -1,10 +1,10 @@
 /* JoBrain refresh — product-first, responsive, green monochrome design system. */
 :root {
   color-scheme: dark;
-  --jb-accent: #63e69a;
-  --jb-accent-strong: #39ce7a;
-  --jb-accent-soft: rgba(99, 230, 154, 0.13);
-  --jb-accent-border: rgba(99, 230, 154, 0.28);
+  --jb-accent: var(--jb-user-accent, #63e69a);
+  --jb-accent-strong: color-mix(in srgb, var(--jb-accent) 78%, #052b16);
+  --jb-accent-soft: color-mix(in srgb, var(--jb-accent) 13%, transparent);
+  --jb-accent-border: color-mix(in srgb, var(--jb-accent) 30%, transparent);
   --jb-accent-ink: #06140b;
   --jb-app-bg: #070b08;
   --jb-app-wash: radial-gradient(ellipse at 50% -12%, rgba(34, 197, 94, 0.12), transparent 40rem);
@@ -22,10 +22,10 @@
 
 html[data-theme="light"] {
   color-scheme: light;
-  --jb-accent: #176b42;
-  --jb-accent-strong: #105735;
-  --jb-accent-soft: rgba(23, 107, 66, 0.09);
-  --jb-accent-border: rgba(23, 107, 66, 0.25);
+  --jb-accent: color-mix(in srgb, var(--jb-user-accent, #63e69a) 45%, #105735);
+  --jb-accent-strong: color-mix(in srgb, var(--jb-accent) 78%, #07351d);
+  --jb-accent-soft: color-mix(in srgb, var(--jb-accent) 10%, transparent);
+  --jb-accent-border: color-mix(in srgb, var(--jb-accent) 28%, transparent);
   --jb-accent-ink: #ffffff;
   --jb-app-bg: #f5f9f6;
   --jb-app-wash: radial-gradient(ellipse at 50% -12%, rgba(22, 163, 74, 0.09), transparent 44rem);
