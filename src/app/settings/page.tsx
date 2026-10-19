@@ -1,16 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import {
   Bell,
   FolderOpen,
-  Image as ImageIcon,
   Palette,
-  RotateCcw,
   SlidersHorizontal,
   Sparkles,
-  Trash2,
   UploadCloud,
 } from "lucide-react";
 import AccountNav from "@/components/AccountNav";
@@ -21,7 +18,6 @@ import {
   readCachedAppearance,
   type AppearanceTheme,
 } from "@/lib/appearance";
-import { MEDIA_LIMITS, sanitizeImageUrl, type MediaKind } from "@/lib/media";
 
 type Settings = {
   jobAlertsEnabled: boolean;
@@ -36,9 +32,6 @@ type Settings = {
 type Profile = {
   displayName: string;
   bio: string;
-  avatarUrl: string;
-  bannerUrl: string;
-  backgroundUrl: string;
   accentColor: string;
   glassIntensity: number;
   glassBlur: number;
@@ -47,7 +40,7 @@ type Profile = {
 };
 
 type Activity = "idle" | "working" | "done" | "error";
-type SettingsSection = "Preferences" | "Media studio" | "Appearance";
+type SettingsSection = "Preferences" | "Appearance";
 type ToggleKey =
   | "jobAlertsEnabled"
   | "searchSuggestionsEnabled"
@@ -68,9 +61,6 @@ const emptySettings: Settings = {
 const emptyProfile: Profile = {
   displayName: "",
   bio: "",
-  avatarUrl: "",
-  bannerUrl: "",
-  backgroundUrl: "",
   accentColor: "#63e69a",
   glassIntensity: 45,
   glassBlur: 12,
@@ -116,18 +106,6 @@ const settingsSections: Array<{ label: SettingsSection; icon: typeof SlidersHori
   { label: "Appearance", icon: Palette },
 ];
 
-const mediaFields: Record<MediaKind, "avatarUrl" | "bannerUrl" | "backgroundUrl"> = {
-  avatar: "avatarUrl",
-  banner: "bannerUrl",
-  background: "backgroundUrl",
-};
-
-const mediaLabels: Record<MediaKind, string> = {
-  avatar: "Avatar",
-  banner: "Banner",
-  background: "Page background",
-};
-
 const presetOrder = ["graphite", "mist", "snow", "oled", "frost"] as const;
 
 async function optimizeBackgroundImage(file: File): Promise<File> {
@@ -169,9 +147,6 @@ function fromProfile(raw: Record<string, unknown> | null | undefined): Profile {
   return {
     displayName: typeof raw?.displayName === "string" ? raw.displayName : "",
     bio: typeof raw?.bio === "string" ? raw.bio : "",
-    avatarUrl: typeof raw?.avatarUrl === "string" ? raw.avatarUrl : "",
-    bannerUrl: typeof raw?.bannerUrl === "string" ? raw.bannerUrl : "",
-    backgroundUrl: typeof raw?.backgroundUrl === "string" ? raw.backgroundUrl : "",
     accentColor:
       typeof raw?.accentColor === "string" &&
       !["#b8c9d6", "#9eb6c8", "#6b8a9e", "#d0dce6", "#a8c4d8"].includes(raw.accentColor.toLowerCase())
@@ -200,18 +175,10 @@ function fromSettings(raw: Record<string, unknown> | null | undefined): Settings
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings>(emptySettings);
   const [profile, setProfile] = useState<Profile>(emptyProfile);
-  const [activeBackgroundUrl, setActiveBackgroundUrl] = useState("");
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [activeSection, setActiveSection] = useState<SettingsSection>("Preferences");
   const [activity, setActivity] = useState<Activity>("idle");
   const [message, setMessage] = useState("");
-  const [mediaPreviews, setMediaPreviews] = useState<Record<MediaKind, string>>({
-    avatar: "",
-    banner: "",
-    background: "",
-  });
-  const previewUrls = useRef<Record<MediaKind, string>>({ avatar: "", banner: "", background: "" });
-  const [busyMedia, setBusyMedia] = useState<MediaKind | null>(null);
   const [loading, setLoading] = useState(true);
 
   useLayoutEffect(() => {
@@ -224,7 +191,6 @@ export default function SettingsPage() {
         if (cachedProfile) {
           const nextProfile = fromProfile(JSON.parse(cachedProfile) as Record<string, unknown>);
           setProfile(nextProfile);
-          setActiveBackgroundUrl(nextProfile.backgroundUrl);
           setProfileLoaded(true);
           hasCachedData = true;
         }
@@ -257,28 +223,12 @@ export default function SettingsPage() {
 
     const onSectionRequest = (event: Event) => {
       const section = (event as CustomEvent<SettingsSection>).detail;
-      if (section === "Preferences" || section === "Media studio" || section === "Appearance") {
+      if (section === "Preferences" || section === "Appearance") {
         setActiveSection(section);
       }
     };
     window.addEventListener("jobrain:settings-section", onSectionRequest);
     return () => window.removeEventListener("jobrain:settings-section", onSectionRequest);
-  }, []);
-
-  const setMediaPreview = useCallback((kind: MediaKind, url: string) => {
-    const previous = previewUrls.current[kind];
-    if (previous.startsWith("blob:")) URL.revokeObjectURL(previous);
-    previewUrls.current[kind] = url;
-    setMediaPreviews((current) => ({ ...current, [kind]: url }));
-  }, []);
-
-  useEffect(() => {
-    const previews = previewUrls.current;
-    return () => {
-      Object.values(previews).forEach((url) => {
-        if (url.startsWith("blob:")) URL.revokeObjectURL(url);
-      });
-    };
   }, []);
 
   const load = useCallback(() => {
@@ -300,7 +250,6 @@ export default function SettingsPage() {
         const nextProfile = fromProfile(profileData.profile);
         const nextSettings = fromSettings(settingsData.settings);
         setProfile(nextProfile);
-        setActiveBackgroundUrl(nextProfile.backgroundUrl);
         setSettings(nextSettings);
         setProfileLoaded(true);
         applyAppearanceToDocument({
@@ -312,7 +261,6 @@ export default function SettingsPage() {
           glassBlur: nextProfile.glassBlur,
           panelOpacity: nextProfile.panelOpacity,
           borderIntensity: nextProfile.borderIntensity,
-          backgroundUrl: sanitizeImageUrl(nextProfile.backgroundUrl),
         });
       })
       .catch((cause: unknown) => {
@@ -337,11 +285,9 @@ export default function SettingsPage() {
       glassBlur: profile.glassBlur,
       panelOpacity: profile.panelOpacity,
       borderIntensity: profile.borderIntensity,
-      backgroundUrl: sanitizeImageUrl(activeBackgroundUrl),
     });
   }, [
     profileLoaded,
-    activeBackgroundUrl,
     profile.accentColor,
     profile.glassIntensity,
     profile.glassBlur,
@@ -375,9 +321,6 @@ export default function SettingsPage() {
       }
       const next = fromProfile(data.profile);
       setProfile(next);
-      if (Object.prototype.hasOwnProperty.call(patch, "backgroundUrl")) {
-        setActiveBackgroundUrl(next.backgroundUrl);
-      }
       setProfileLoaded(true);
       setActivity("done");
       setMessage(successMessage);
@@ -425,102 +368,6 @@ export default function SettingsPage() {
       setActivity("error");
       setMessage(cause instanceof Error ? cause.message : "Could not reach the settings service.");
       return false;
-    }
-  }
-
-  async function saveMediaUrl(kind: MediaKind) {
-    const field = mediaFields[kind];
-    await saveProfilePatch({ [field]: profile[field] }, `${mediaLabels[kind]} saved to your account.`);
-  }
-
-  async function uploadMedia(kind: MediaKind, file: File | null) {
-    if (!file) return;
-    const sourceLimit = kind === "background" ? 24 * 1024 * 1024 : MEDIA_LIMITS[kind].maxBytes;
-    if (file.size > sourceLimit) {
-      setActivity("error");
-      setMessage(
-        kind === "background"
-          ? "Background file is too large to process. Choose an image under 24 MB."
-          : `${mediaLabels[kind]} is too large. Choose a smaller image.`,
-      );
-      return;
-    }
-
-    setBusyMedia(kind);
-    setActivity("working");
-    setMessage("");
-    if (kind !== "background") setMediaPreview(kind, URL.createObjectURL(file));
-
-    try {
-      // Large wallpapers can force expensive image decoding and GPU compositing.
-      // Downscale/compress them before previewing or uploading.
-      const uploadFile = kind === "background" ? await optimizeBackgroundImage(file) : file;
-      if (uploadFile.size > MEDIA_LIMITS[kind].maxBytes) {
-        throw new Error(`${mediaLabels[kind]} is too large after optimization. Choose a smaller image.`);
-      }
-      if (kind === "background") setMediaPreview(kind, URL.createObjectURL(uploadFile));
-
-      const form = new FormData();
-      form.set("kind", kind);
-      form.set("file", uploadFile, uploadFile.name);
-      const response = await fetch("/api/media", { method: "POST", body: form });
-      const data = (await response.json().catch(() => ({}))) as {
-        url?: string;
-        profile?: Record<string, unknown>;
-        error?: string;
-        code?: string;
-      };
-      if (!response.ok || !data.profile || !data.url) {
-        throw new Error(
-          data.code === "STORAGE_UNAVAILABLE"
-            ? "Image upload storage is not connected. Paste a public HTTPS image URL below and choose Save image, or connect Vercel Blob to enable file uploads."
-            : data.error ?? "Upload failed. The image was not saved.",
-        );
-      }
-      const nextProfile = fromProfile(data.profile);
-      setProfile(nextProfile);
-      if (kind === "background") setActiveBackgroundUrl(nextProfile.backgroundUrl);
-      setProfileLoaded(true);
-      setMediaPreview(kind, "");
-      setActivity("done");
-      setMessage(`${mediaLabels[kind]} uploaded and saved.`);
-    } catch (cause) {
-      setMediaPreview(kind, "");
-      setActivity("error");
-      setMessage(cause instanceof Error ? cause.message : "Upload failed. The image was not saved.");
-    } finally {
-      setBusyMedia(null);
-    }
-  }
-
-  async function removeMedia(kind: MediaKind) {
-    setBusyMedia(kind);
-    setActivity("working");
-    setMessage("");
-    try {
-      const response = await fetch("/api/media", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind }),
-      });
-      const data = (await response.json().catch(() => ({}))) as {
-        profile?: Record<string, unknown>;
-        error?: string;
-      };
-      if (!response.ok || !data.profile) {
-        throw new Error(data.error ?? `Could not remove ${mediaLabels[kind].toLowerCase()}.`);
-      }
-      const nextProfile = fromProfile(data.profile);
-      setProfile(nextProfile);
-      if (kind === "background") setActiveBackgroundUrl("");
-      setMediaPreview(kind, "");
-      setActivity("done");
-      setMessage(`${mediaLabels[kind]} removed.`);
-    } catch (cause) {
-      setActivity("error");
-      setMessage(cause instanceof Error ? cause.message : "Could not remove media.");
-    } finally {
-      setBusyMedia(null);
     }
   }
 
