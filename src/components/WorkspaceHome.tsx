@@ -22,7 +22,7 @@ import {
   Bell,
   type LucideIcon,
 } from "lucide-react";
-import { useAuth, UserButton } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { createPortal, flushSync } from "react-dom";
 import JobResultsList, { type JobResult } from "@/components/JobResultsList";
@@ -140,60 +140,11 @@ function useReducedMotionPreferred() {
 
 export default function WorkspaceHome() {
   const { isLoaded, isSignedIn, userId } = useAuth();
-  const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [accountReason, setAccountReason] = useState<string | null>(null);
   const [tourReplayKey, setTourReplayKey] = useState(0);
 
-  // Seed only the tiny account avatar from cache. Wallpapers are applied by
-  // PreferencesBootstrap through CSS, so the workspace does not need a
-  // second background renderer or a WebGL animation loop.
-  useLayoutEffect(() => {
-    if (!isLoaded || !isSignedIn) return;
-    let cancelled = false;
-    queueMicrotask(() => {
-      if (cancelled) return;
-      try {
-        const cached = localStorage.getItem("jobrain-profile");
-        if (!cached) return;
-        const profile = JSON.parse(cached) as { avatarUrl?: unknown };
-        if (typeof profile.avatarUrl === "string" && /^https?:\/\//i.test(profile.avatarUrl)) {
-          setProfileAvatarUrl(profile.avatarUrl);
-        }
-      } catch {
-        // The server request below remains the source of truth.
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [isLoaded, isSignedIn]);
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    if (!isSignedIn) return;
-    let active = true;
-    void fetch("/api/profile", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) return null;
-        return (await response.json()) as { profile?: { avatarUrl?: unknown } };
-      })
-      .then((data) => {
-        if (!active) return;
-        const avatarUrl = data?.profile?.avatarUrl;
-        setProfileAvatarUrl(
-          typeof avatarUrl === "string" && /^https?:\/\//i.test(avatarUrl) ? avatarUrl : null,
-        );
-      })
-      .catch(() => {
-        // Keep the cached avatar and let the workspace load.
-      });
-    return () => {
-      active = false;
-    };
-  }, [isLoaded, isSignedIn]);
-
-  const reduceMotion = useReducedMotionPreferred();
+remove avatar cache and profile request  const reduceMotion = useReducedMotionPreferred();
   const [tab, setTab] = useState<"overview" | "search" | "pipeline">("overview");
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     if (typeof window === "undefined") return "dark";
@@ -283,7 +234,12 @@ export default function WorkspaceHome() {
 
   const toggleTheme = useCallback(() => {
     const nextTheme = theme === "dark" ? "light" : "dark";
-    const applyTheme = () => setTheme(nextTheme);
+    const applyTheme = () => {
+      // Apply the theme token inside the transition callback so the browser
+      // captures the old and new palettes as complete snapshots.
+      document.documentElement.dataset.theme = nextTheme;
+      flushSync(() => setTheme(nextTheme));
+    };
     const transitionDocument = document as Document & {
       startViewTransition?: (callback: () => void) => { finished?: Promise<unknown> };
     };
@@ -322,7 +278,7 @@ export default function WorkspaceHome() {
       .catch(() => {
         // Local theme selection remains usable if the preference API is unavailable.
       });
-  }, [isSignedIn, theme]);
+  }, [isSignedIn, reduceMotion, theme]);
 
   const changeTab = useCallback((next: "overview" | "search" | "pipeline") => {
     if (next === tab) return;
@@ -633,12 +589,7 @@ export default function WorkspaceHome() {
                 aria-expanded={accountMenuOpen}
                 onClick={() => setAccountMenuOpen((open) => !open)}
               >
-                {isSignedIn && profileAvatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={profileAvatarUrl} alt="" loading="eager" fetchPriority="high" decoding="async" />
-                ) : (
-                  <UserRound size={16} />
-                )}
+                <UserRound size={16} aria-hidden="true" />
                 <span className="jb-account-trigger-label">{isLoaded && isSignedIn ? "Account" : "Guest"}</span>
               </button>
 
@@ -664,8 +615,7 @@ export default function WorkspaceHome() {
                         <Link href="/notifications" onClick={() => setAccountMenuOpen(false)}><Bell size={15} /> Notifications <ArrowRight size={13} /></Link>
                       </div>
                       <div className="jb-account-menu-footer">
-                        <span>Signed in</span>
-                        <UserButton appearance={{ elements: { avatarBox: "jb-auth-avatar" } }} />
+                        <span className="jb-account-session-status"><i aria-hidden="true" />Signed in</span>
                       </div>
                     </>
                   ) : (
@@ -812,35 +762,52 @@ export default function WorkspaceHome() {
                     </div>
                   </div>
                   <div className="jb-command-filters">
-                    <label>
-                      <span>Location</span>
-                      <input value={location} onChange={(e) => { setRecommendationsMode(false); setLocation(e.target.value); }} placeholder="City, region, or remote" aria-label="Location filter" />
-                    </label>
-                    <label>
-                      <span>Platform</span>
-                      <select value={platform} onChange={(e) => { setRecommendationsMode(false); setPlatform(e.target.value); }} aria-label="Platform filter">
-                        {PLATFORM_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <button
-                      type="button"
-                      className={"jb-command-toggle" + (remoteOnly ? " is-on" : "")}
-                      onClick={() => { setRecommendationsMode(false); setRemoteOnly((v) => !v); }}
-                      aria-pressed={remoteOnly}
-                    >
-                      <span>Remote only</span>
-                      <i />
-                    </button>
-                    <button type="button" className="jb-command-reset" onClick={resetFilters}>
-                      Reset
-                    </button>
+                    <div className="jb-filter-fields">
+                      <label htmlFor="jb-location-filter">
+                        <span>Location</span>
+                        <input
+                          id="jb-location-filter"
+                          name="location"
+                          value={location}
+                          onChange={(e) => { setRecommendationsMode(false); setLocation(e.target.value); }}
+                          placeholder="City, region, or remote"
+                          autoComplete="off"
+                        />
+                      </label>
+                      <label htmlFor="jb-platform-filter">
+                        <span>Platform</span>
+                        <select
+                          id="jb-platform-filter"
+                          name="platform"
+                          value={platform}
+                          onChange={(e) => { setRecommendationsMode(false); setPlatform(e.target.value); }}
+                        >
+                          {PLATFORM_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    <div className="jb-filter-actions">
+                      <button
+                        type="button"
+                        className={"jb-command-toggle" + (remoteOnly ? " is-on" : "")}
+                        onClick={() => { setRecommendationsMode(false); setRemoteOnly((v) => !v); }}
+                        aria-pressed={remoteOnly}
+                      >
+                        <span>Remote only</span>
+                        <i aria-hidden="true" />
+                      </button>
+                      <button type="button" className="jb-command-reset" onClick={resetFilters}>
+                        Reset filters
+                      </button>
+                    </div>
                     <section className="jb-experience-control" aria-labelledby="jb-experience-label">
                       <div className="jb-experience-heading">
                         <span id="jb-experience-label">Experience level</span>
+                        <span className="jb-experience-hint">Choose one</span>
                       </div>
                       <div className="jb-experience-steps" role="group" aria-label="Choose experience level">
                         {EXPERIENCE_OPTIONS.map((option) => (
