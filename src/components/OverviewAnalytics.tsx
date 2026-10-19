@@ -132,24 +132,24 @@ export default function OverviewAnalytics() {
                 <AreaChart data={analytics.series} margin={{ top: 10, right: 8, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="jbTrackedGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#9fbcd0" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="#9fbcd0" stopOpacity={0.015} />
+                      <stop offset="0%" stopColor="var(--jb-accent)" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="var(--jb-accent)" stopOpacity={0.015} />
                     </linearGradient>
                     <linearGradient id="jbSubmittedGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#d4dfe8" stopOpacity={0.18} />
-                      <stop offset="100%" stopColor="#d4dfe8" stopOpacity={0.005} />
+                      <stop offset="0%" stopColor="var(--jb-text)" stopOpacity={0.18} />
+                      <stop offset="100%" stopColor="var(--jb-text)" stopOpacity={0.005} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid stroke="rgba(190,205,215,.09)" strokeDasharray="3 5" vertical={false} />
-                  <XAxis dataKey="date" tickFormatter={formatDate} tick={{ fill: "#83919b", fontSize: 10 }} axisLine={false} tickLine={false} minTickGap={24} />
-                  <YAxis allowDecimals={false} tick={{ fill: "#83919b", fontSize: 10 }} axisLine={false} tickLine={false} width={34} />
+                  <CartesianGrid stroke="color-mix(in srgb, var(--jb-border) 78%, transparent)" strokeDasharray="3 5" vertical={false} />
+                  <XAxis dataKey="date" tickFormatter={formatDate} tick={{ fill: "var(--jb-muted)", fontSize: 10 }} axisLine={false} tickLine={false} minTickGap={24} />
+                  <YAxis allowDecimals={false} tick={{ fill: "var(--jb-muted)", fontSize: 10 }} axisLine={false} tickLine={false} width={34} />
                   <Tooltip
                     labelFormatter={(label) => formatDate(String(label))}
-                    contentStyle={{ background: "rgba(9,12,15,.92)", border: "1px solid rgba(205,220,230,.15)", borderRadius: 12, backdropFilter: "blur(18px)", color: "#e8eef2", fontSize: 12 }}
-                    itemStyle={{ color: "#e8eef2" }}
+                    contentStyle={{ background: "var(--jb-surface-raised)", border: "1px solid var(--jb-border-strong)", borderRadius: 12, backdropFilter: "blur(18px)", color: "var(--jb-text)", fontSize: 12 }}
+                    itemStyle={{ color: "var(--jb-text)" }}
                   />
-                  <Area type="monotone" dataKey="tracked" name="Tracked" stroke="#9fbcd0" strokeWidth={2} fill="url(#jbTrackedGradient)" activeDot={{ r: 4 }} />
-                  <Area type="monotone" dataKey="submitted" name="Submitted" stroke="#d4dfe8" strokeWidth={1.8} fill="url(#jbSubmittedGradient)" activeDot={{ r: 4 }} />
+                  <Area type="monotone" dataKey="tracked" name="Tracked" stroke="var(--jb-accent)" strokeWidth={2} fill="url(#jbTrackedGradient)" activeDot={{ r: 4 }} />
+                  <Area type="monotone" dataKey="submitted" name="Submitted" stroke="var(--jb-text)" strokeWidth={1.8} fill="url(#jbSubmittedGradient)" activeDot={{ r: 4 }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
