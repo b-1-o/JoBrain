@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useState } from "react";
+import { createPortal } from "react-dom";
 
 type WorkspaceTab = "overview" | "search" | "pipeline";
 type Step = {
@@ -210,9 +211,9 @@ export default function FirstRunTour({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [finish, next, open, previous]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div className={"jb-tour-layer" + (closing ? " is-closing" : "")}>
       {viewport.width > 0 && viewport.height > 0 ? (
         <svg
@@ -304,6 +305,7 @@ export default function FirstRunTour({
           </div>
         </div>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }
