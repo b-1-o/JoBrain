@@ -6477,7 +6477,7 @@ html[data-theme="light"] .account-button-primary {
 }
 .jb-filter-actions { padding-bottom: 2px; }
 .jb-experience-control { padding-top: 14px; }
-@media (max-width: 950px) {
+@media (max-width: 680px) {
   .jb-search-toolbar {
     grid-template-columns: minmax(0, 1fr) minmax(145px, .55fr);
   }
