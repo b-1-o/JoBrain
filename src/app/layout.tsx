@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   title: "JoBrain — Job Search Intelligence",
   description:
     "Realtime job search, application tracking, and funnel analytics.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+  },
 };
 
 const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
