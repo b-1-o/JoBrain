@@ -35,7 +35,7 @@ export default function AccountNav({ active }: { active: AccountSection }) {
 
   return (
     <nav className="account-nav" aria-label="Workspace navigation">
-            <div className="account-nav-links" aria-label="Account sections">
+      <div className="account-nav-links" aria-label="Account sections">
         {accountItems.map(({ label, href, icon: Icon }) => {
           const selected = pathname === href || activeHref === href;
           return (
@@ -51,7 +51,6 @@ export default function AccountNav({ active }: { active: AccountSection }) {
           );
         })}
       </div>
-
-          </nav>
+    </nav>
   );
 }
