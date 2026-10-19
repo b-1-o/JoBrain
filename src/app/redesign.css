@@ -6162,3 +6162,211 @@ body::before,
     view-transition-name: none !important;
   }
 }
+
+
+
+/* Stable job-search controls: fields, actions and experience never collide. */
+.jb-command-filters {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 16px !important;
+  padding: 18px !important;
+  align-items: stretch !important;
+}
+.jb-filter-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 12px;
+  min-width: 0;
+}
+.jb-filter-fields > label {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  margin: 0;
+}
+.jb-filter-fields > label > span {
+  color: var(--jb-muted) !important;
+  font-size: 11px !important;
+  font-weight: 700;
+  letter-spacing: .025em;
+}
+.jb-filter-fields input,
+.jb-filter-fields select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 0 13px !important;
+  border: 1px solid var(--jb-border) !important;
+  border-radius: 12px !important;
+  background: var(--jb-surface-muted) !important;
+  color: var(--jb-text) !important;
+  font-size: 13px !important;
+  line-height: 1.35;
+}
+.jb-filter-fields select { cursor: pointer; }
+.jb-filter-fields select option { color: #f3f8f4; background: #111a14; }
+.jb-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 9px;
+  min-width: 0;
+}
+.jb-filter-actions .jb-command-toggle {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 13px !important;
+  border: 1px solid var(--jb-border) !important;
+  border-radius: 12px !important;
+  background: var(--jb-surface-muted) !important;
+  color: var(--jb-muted) !important;
+  white-space: nowrap;
+}
+.jb-filter-actions .jb-command-toggle.is-on {
+  border-color: var(--jb-accent-border) !important;
+  background: var(--jb-accent-soft) !important;
+  color: var(--jb-accent) !important;
+}
+.jb-filter-actions .jb-command-toggle i {
+  position: relative;
+  display: inline-block;
+  width: 27px;
+  height: 16px;
+  flex: 0 0 27px;
+  border: 1px solid var(--jb-border-strong);
+  border-radius: 999px;
+  background: var(--jb-surface);
+}
+.jb-filter-actions .jb-command-toggle i::after {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--jb-muted);
+  content: "";
+  transition: transform 180ms ease, background-color 180ms ease;
+}
+.jb-filter-actions .jb-command-toggle.is-on i::after {
+  transform: translateX(11px);
+  background: var(--jb-accent);
+}
+.jb-filter-actions .jb-command-reset {
+  min-height: 40px;
+  padding: 0 14px !important;
+  border: 1px solid var(--jb-border) !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  color: var(--jb-muted) !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+}
+.jb-experience-control {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin: 0;
+  padding-top: 15px;
+  border-top: 1px solid var(--jb-border);
+}
+.jb-experience-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.jb-experience-heading > span:first-child {
+  color: var(--jb-text);
+  font-size: 12px;
+  font-weight: 720;
+}
+.jb-experience-hint { color: var(--jb-faint); font-size: 10px; }
+.jb-experience-steps {
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 8px !important;
+  width: 100%;
+}
+.jb-experience-step {
+  display: flex;
+  min-width: 0;
+  min-height: 42px !important;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px !important;
+  border: 1px solid var(--jb-border) !important;
+  border-radius: 11px !important;
+  background: var(--jb-surface-muted) !important;
+  color: var(--jb-muted) !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+  line-height: 1.25;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  transition: color 220ms ease, background-color 240ms ease, border-color 240ms ease, box-shadow 240ms ease !important;
+}
+.jb-experience-step:hover {
+  border-color: var(--jb-accent-border) !important;
+  color: var(--jb-text) !important;
+}
+.jb-experience-step.is-active {
+  border-color: var(--jb-accent-border) !important;
+  background: var(--jb-accent-soft) !important;
+  color: var(--jb-accent) !important;
+  box-shadow: inset 0 0 0 1px var(--jb-accent-border);
+}
+.jb-account-menu-footer { align-items: center; justify-content: flex-start; }
+.jb-account-session-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--jb-muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+.jb-account-session-status i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--jb-accent);
+  box-shadow: 0 0 0 3px var(--jb-accent-soft);
+}
+html[data-custom-background="true"] .jb-shell,
+html[data-custom-background="true"] .account-page {
+  background-image: none !important;
+  background-color: var(--jb-app-bg, #070b08) !important;
+}
+::view-transition-old(root) {
+  animation: jb-theme-fade-out 360ms cubic-bezier(.2,.65,.3,1) both !important;
+}
+::view-transition-new(root) {
+  animation: jb-theme-fade-in 420ms cubic-bezier(.2,.75,.25,1) both !important;
+}
+@keyframes jb-theme-fade-out { to { opacity: 0; } }
+@keyframes jb-theme-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 900px) {
+  .jb-experience-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .jb-command-filters { gap: 14px !important; padding: 13px !important; }
+  .jb-filter-fields { grid-template-columns: minmax(0, 1fr); gap: 11px; }
+  .jb-filter-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .jb-filter-actions > button { width: 100%; min-width: 0; white-space: normal; }
+  .jb-filter-actions .jb-command-toggle { gap: 8px; padding-inline: 10px !important; font-size: 10px !important; }
+  .jb-experience-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px !important; }
+  .jb-experience-step { min-height: 40px !important; padding: 7px 8px !important; font-size: 11px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
+}
