@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useAuth } from "@clerk/nextjs";
 import {
   applyAppearanceToDocument,
   normalizeAppearance,
@@ -39,12 +40,18 @@ function mergeAppearance(profile?: Profile, settings?: Settings): AppearanceStat
 }
 
 export default function PreferencesBootstrap() {
+  const { isLoaded, isSignedIn } = useAuth();
+
   useEffect(() => {
+    // Always apply the visitor's local visual preferences. Private account
+    // preferences are only fetched once Clerk confirms an authenticated user.
     applyAppearanceToDocument(readCachedAppearance());
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       document.documentElement.dataset.reducedMotion = "true";
     }
+
+    if (!isLoaded || !isSignedIn) return;
 
     void Promise.all([
       fetch("/api/profile", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)),
@@ -60,7 +67,7 @@ export default function PreferencesBootstrap() {
       .catch(() => {
         // Signed-out users keep the local theme without an authenticated profile.
       });
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   return null;
 }
