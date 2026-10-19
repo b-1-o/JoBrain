@@ -113,7 +113,6 @@ const preferenceItems: Array<{ key: ToggleKey; title: string; description: strin
 
 const settingsSections: Array<{ label: SettingsSection; icon: typeof SlidersHorizontal }> = [
   { label: "Preferences", icon: SlidersHorizontal },
-  { label: "Media studio", icon: ImageIcon },
   { label: "Appearance", icon: Palette },
 ];
 
@@ -248,9 +247,11 @@ export default function SettingsPage() {
   useEffect(() => {
     const applyRequestedSection = () => {
       const section = new URLSearchParams(window.location.search).get("section");
-      if (section === "media") setActiveSection("Media studio");
-      else if (section === "appearance") setActiveSection("Appearance");
-      else if (section === "preferences") setActiveSection("Preferences");
+      if (section === "media" || section === "appearance") {
+        setActiveSection("Appearance");
+      } else if (section === "preferences") {
+        setActiveSection("Preferences");
+      }
     };
     applyRequestedSection();
 
@@ -643,114 +644,6 @@ export default function SettingsPage() {
               </section>
             ) : null}
 
-            {activeSection === "Media studio" ? (
-              <section className="account-card settings-main-card">
-                <div className="settings-card-heading">
-                  <div>
-                    <h2>Media studio</h2>
-                    <p>Avatar, banner and page wallpaper are saved to your profile. Upload an image directly or use a public HTTPS image URL.</p>
-                  </div>
-                </div>
-                <div className="settings-media-preview-grid">
-                  {(["avatar", "banner", "background"] as const).map((kind) => {
-                    const field = mediaFields[kind];
-                    const source = mediaPreviews[kind] || sanitizeImageUrl(profile[field]) || "";
-                    return (
-                      <div className={"settings-media-preview settings-media-preview-" + kind} key={kind}>
-                        <div className="settings-media-art">
-                          {source ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={source} alt="" decoding="async" />
-                          ) : (
-                            <span className="settings-media-placeholder">
-                              {kind === "avatar" ? "A" : kind === "banner" ? "BANNER" : "BACKGROUND"}
-                            </span>
-                          )}
-                        </div>
-                        <div className="settings-media-caption">
-                          <strong>{mediaLabels[kind]}</strong>
-                          <small>{kind === "avatar" ? "Square portrait" : kind === "banner" ? "Profile cover" : "App wallpaper"}</small>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {(["avatar", "banner", "background"] as const).map((kind) => {
-                  const field = mediaFields[kind];
-                  const maxMb = Math.round(MEDIA_LIMITS[kind].maxBytes / (1024 * 1024));
-                  return (
-                    <div className="settings-media-editor" key={kind}>
-                      <div className="settings-media-editor-heading">
-                        <div>
-                          <strong>{mediaLabels[kind]}</strong>
-                          <small>Max {maxMb} MB</small>
-                        </div>
-                        <div className="settings-media-actions">
-                          <label className="account-button settings-upload-button">
-                            <UploadCloud size={14} />
-                            {busyMedia === kind ? <LatticeLoader label="Uploading" status="working" cellSize={3} gap={1} fontSize={10} showTimer={false} /> : "Choose file"}
-                            <input
-                              type="file"
-                              accept="image/png,image/jpeg,image/webp,image/gif"
-                              aria-label={`Upload ${mediaLabels[kind]}`}
-                              disabled={busyMedia !== null}
-                              onChange={(event) => {
-                                const input = event.currentTarget;
-                                const file = input.files?.[0] ?? null;
-                                input.value = "";
-                                if (file) void uploadMedia(kind, file);
-                              }}
-                            />
-                          </label>
-                          <button
-                            type="button"
-                            className="account-button settings-icon-button"
-                            aria-label={`Remove ${mediaLabels[kind]}`}
-                            disabled={busyMedia !== null}
-                            onClick={() => void removeMedia(kind)}
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </div>
-                      <label className="account-field">
-                        <span>Public image URL</span>
-                        <input
-                          type="url"
-                          value={profile[field]}
-                          onChange={(event) => updateProfile(field, event.target.value)}
-                          placeholder="https://images.example.com/…"
-                          autoComplete="url"
-                          spellCheck={false}
-                        />
-                      </label>
-                      <div className="account-actions settings-media-save">
-                        {kind === "background" ? (
-                          <button
-                            type="button"
-                            className="account-button"
-                            disabled={busyMedia !== null}
-                            onClick={() => void saveProfilePatch({ backgroundUrl: "" }, "Default background restored.")}
-                          >
-                            <RotateCcw size={14} /> Reset background
-                          </button>
-                        ) : null}
-                        <button
-                          type="button"
-                          className="account-button account-button-primary"
-                          disabled={busyMedia !== null}
-                          onClick={() => void saveMediaUrl(kind)}
-                        >
-                          Save {kind === "background" ? "background" : kind}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </section>
-            ) : null}
-
             {activeSection === "Appearance" ? (
               <section className="account-card settings-main-card">
                 <div className="settings-card-heading">
@@ -761,7 +654,6 @@ export default function SettingsPage() {
                   <span className="settings-live-indicator"><span /> LIVE PREVIEW</span>
                 </div>
                 <div className="settings-appearance-preview">
-                  <div className="settings-preview-orb" aria-hidden="true" />
                   <div className="settings-preview-panel">
                     <span className="settings-preview-label">GLASS SURFACE</span>
                     <div className="settings-preview-lines"><i /><i /><i /></div>
