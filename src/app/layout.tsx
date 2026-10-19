@@ -5,6 +5,7 @@ import "./performance.css";
 import "./redesign.css";
 import PreferencesBootstrap from "@/components/PreferencesBootstrap";
 import RouteTransitionFeedback from "@/components/RouteTransitionFeedback";
+import AccountRouteBoundary from "@/components/AccountRouteBoundary";
 
 export const metadata: Metadata = {
   title: "JoBrain — Job Search Intelligence",
@@ -29,7 +30,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body><div className="jb-wallpaper-layer" aria-hidden="true" /><ClerkProvider><PreferencesBootstrap /><RouteTransitionFeedback />{children}</ClerkProvider></body>
+      <body><div className="jb-wallpaper-layer" aria-hidden="true" /><ClerkProvider><PreferencesBootstrap /><RouteTransitionFeedback /><AccountRouteBoundary>{children}</AccountRouteBoundary></ClerkProvider></body>
     </html>
   );
 }
