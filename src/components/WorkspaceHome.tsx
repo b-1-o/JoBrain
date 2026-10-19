@@ -907,54 +907,81 @@ export default function WorkspaceHome() {
 
             {tab === "pipeline" ? (
               <section key="pipeline" className="jb-pipeline-page jb-view-panel">
-                <div className="jb-pipeline-hero">
-                  <div>
-                    <span className="jb-eyebrow">PIPELINE / 03</span>
-                    <h1>Your job search, in motion.</h1>
-                  </div>
-                  <button type="button" className="jb-button jb-button-solid" onClick={() => changeTab("search")}>
-                    Find new roles
-                  </button>
-                </div>
-                <div className="jb-pipeline-signal" data-tour="pipeline-stage">
-                  {funnel.map((item, index) => (
-                    <div key={item.key} className={"jb-pipeline-signal-item " + item.tone}>
-                      <span>{String(index + 1).padStart(2, "0")}</span>
-                      <strong>{item.count}</strong>
-                      <small>{item.label}</small>
+                {isLoaded && isSignedIn ? (
+                  <>
+                    <div className="jb-pipeline-hero">
+                      <div>
+                        <span className="jb-eyebrow">PIPELINE / 03</span>
+                        <h1>Your job search, in motion.</h1>
+                      </div>
+                      <button type="button" className="jb-button jb-button-solid" onClick={() => changeTab("search")}>
+                        Find new roles
+                      </button>
                     </div>
-                  ))}
-                </div>
-                <section className="jb-quick-add">
-                  <div className="jb-quick-add-fields">
-                    <input value={manualCompany} onChange={(e) => setManualCompany(e.target.value)} placeholder="Company" />
-                    <input value={manualRole} onChange={(e) => setManualRole(e.target.value)} placeholder="Role" />
-                    <button type="button" className="jb-button jb-button-solid" onClick={() => void createManualApplication()} disabled={manualLoading}>
-                      {manualLoading ? <LatticeLoader label="Adding" status="working" cellSize={3} gap={1} fontSize={10} showTimer={false} /> : "Add"}
-                    </button>
-                  </div>
-                </section>
-                {apps.length ? (
-                  <div className="jb-job-list" style={{ marginTop: 20 }}>
-                    {apps.slice(0, 12).map((app, index) => (
-                      <article key={app.id} className="jb-job-row">
-                        <div className="jb-job-index">{String(index + 1).padStart(2, "0")}</div>
-                        <div className="jb-job-main">
-                          <div className="jb-job-overline">
-                            <span>{app.status}</span>
-                            <span>{app.source}</span>
-                          </div>
-                          <h2>{app.role}</h2>
-                          <div className="jb-job-company">{app.company}</div>
+                    <div className="jb-pipeline-signal" data-tour="pipeline-stage">
+                      {funnel.map((item, index) => (
+                        <div key={item.key} className={"jb-pipeline-signal-item " + item.tone}>
+                          <span>{String(index + 1).padStart(2, "0")}</span>
+                          <strong>{item.count}</strong>
+                          <small>{item.label}</small>
                         </div>
-                      </article>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                    <section className="jb-quick-add">
+                      <div className="jb-quick-add-heading">
+                        <div><strong>Add an application</strong><span>Keep every role and follow-up in one place.</span></div>
+                      </div>
+                      <div className="jb-quick-add-fields">
+                        <input value={manualCompany} onChange={(e) => setManualCompany(e.target.value)} placeholder="Company" aria-label="Company" />
+                        <input value={manualRole} onChange={(e) => setManualRole(e.target.value)} placeholder="Role title" aria-label="Role title" />
+                        <button type="button" className="jb-button jb-button-solid" onClick={() => void createManualApplication()} disabled={manualLoading}>
+                          {manualLoading ? <LatticeLoader label="Adding" status="working" cellSize={3} gap={1} fontSize={10} showTimer={false} /> : "Add application"}
+                        </button>
+                      </div>
+                    </section>
+                    {apps.length ? (
+                      <div className="jb-job-list" style={{ marginTop: 20 }}>
+                        {apps.slice(0, 12).map((app, index) => (
+                          <article key={app.id} className="jb-job-row">
+                            <div className="jb-job-index">{String(index + 1).padStart(2, "0")}</div>
+                            <div className="jb-job-main">
+                              <div className="jb-job-overline">
+                                <span>{app.status}</span>
+                                <span>{app.source}</span>
+                              </div>
+                              <h2>{app.role}</h2>
+                              <div className="jb-job-company">{app.company}</div>
+                              {app.nextActionAt ? <div className="jb-job-company">Next action · {new Date(app.nextActionAt).toLocaleDateString()}</div> : null}
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="jb-search-empty">
+                        <strong>Your pipeline starts with one role.</strong>
+                        <p>Track a role from search or add one above. Then update its stage and schedule the next action.</p>
+                        <div className="jb-suggest-chips">
+                          <button type="button" className="jb-suggest-chip" onClick={() => changeTab("search")}>Find roles</button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 ) : (
-                  <div className="jb-search-empty">
-                    <strong>Pipeline is empty.</strong>
-                    <p>Track roles from search or add one manually to start your funnel.</p>
-                  </div>
+                  <section className="jb-guest-pipeline-gate" data-tour="pipeline-stage">
+                    <div className="jb-guest-pipeline-icon"><BriefcaseBusiness size={22} /></div>
+                    <span className="jb-dashboard-overline">YOUR APPLICATIONS, ORGANIZED</span>
+                    <h1>Every opportunity deserves a next step.</h1>
+                    <p>Browse and compare jobs freely. A free account unlocks your private application pipeline, stage tracking, personal calendar, and reminders.</p>
+                    <div className="jb-guest-pipeline-points">
+                      <span><CheckCircle2 size={15} /> Keep every application in one place</span>
+                      <span><CalendarDays size={15} /> Plan interviews and follow-ups</span>
+                      <span><TrendingUp size={15} /> See progress and trends over time</span>
+                    </div>
+                    <div className="jb-hero-actions">
+                      <button type="button" className="jb-button jb-button-solid" onClick={() => requestAccount("building your application pipeline")}>Create free account <ArrowRight size={15} /></button>
+                      <button type="button" className="jb-button jb-button-ghost" onClick={() => changeTab("search")}>Keep browsing</button>
+                    </div>
+                  </section>
                 )}
               </section>
             ) : null}
