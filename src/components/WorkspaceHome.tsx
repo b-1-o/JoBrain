@@ -203,7 +203,29 @@ export default function WorkspaceHome() {
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
-    window.localStorage.setItem("jobrain-theme", theme);
+    try {
+      window.localStorage.setItem("jobrain-theme", theme);
+
+      const cachedAppearance = window.localStorage.getItem("jobrain-appearance");
+      if (cachedAppearance) {
+        const appearance = JSON.parse(cachedAppearance) as Record<string, unknown>;
+        window.localStorage.setItem(
+          "jobrain-appearance",
+          JSON.stringify({ ...appearance, theme }),
+        );
+      }
+
+      const cachedSettings = window.localStorage.getItem("jobrain-settings");
+      if (cachedSettings) {
+        const settings = JSON.parse(cachedSettings) as Record<string, unknown>;
+        window.localStorage.setItem(
+          "jobrain-settings",
+          JSON.stringify({ ...settings, theme }),
+        );
+      }
+    } catch {
+      // Theme switching stays available in memory if storage is disabled.
+    }
   }, [theme]);
 
   useEffect(() => {
@@ -225,8 +247,31 @@ export default function WorkspaceHome() {
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setTheme((c) => (c === "dark" ? "light" : "dark"));
-  }, []);
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+
+    // Persist the quick-switch to the account preference as well as local cache
+    // so PreferencesBootstrap does not restore an older server-side theme.
+    void fetch("/api/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ theme: nextTheme }),
+    })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const data = (await response.json()) as { settings?: Record<string, unknown> };
+        if (data.settings) {
+          try {
+            window.localStorage.setItem("jobrain-settings", JSON.stringify(data.settings));
+          } catch {
+            // The server preference remains saved if browser storage is unavailable.
+          }
+        }
+      })
+      .catch(() => {
+        // Local theme selection remains usable if the preference API is unavailable.
+      });
+  }, [theme]);
 
   const changeTab = useCallback((next: "overview" | "search" | "pipeline") => {
     if (next === tab) return;
