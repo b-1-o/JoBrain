@@ -38,7 +38,7 @@ html[data-theme="light"] {
   --jb-muted: #535861;
   --jb-faint: #6d737d;
   --jb-shadow: 0 16px 44px rgba(20, 22, 25, 0.07);
-  --jb-focus: rgba(23, 107, 66, 0.78);
+  --jb-focus: color-mix(in srgb, var(--jb-accent) 82%, transparent);
 }
 
 html,
@@ -126,7 +126,7 @@ html[data-custom-background="true"] .jb-shell {
   background-image:
     linear-gradient(rgba(3, 9, 5, 0.54), rgba(3, 9, 5, 0.7)),
     var(--jb-user-background),
-    linear-gradient(160deg, #070b08, #0a120c) !important;
+    linear-gradient(160deg, #090a0c, #111214) !important;
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -137,7 +137,7 @@ html[data-theme="light"][data-custom-background="true"] .jb-shell {
   background-image:
     linear-gradient(rgba(244, 250, 246, 0.76), rgba(244, 250, 246, 0.84)),
     var(--jb-user-background),
-    linear-gradient(160deg, #f5f9f6, #edf4ef) !important;
+    linear-gradient(160deg, #f6f7f8, #eef0f2) !important;
 }
 
 .jb-pattern-waves,
@@ -166,7 +166,7 @@ html[data-theme="light"][data-custom-background="true"] .jb-shell {
 
 html[data-theme="light"] .jb-topbar {
   background: color-mix(in srgb, #ffffff 88%, transparent) !important;
-  box-shadow: 0 1px 0 rgba(24, 63, 40, 0.035);
+  box-shadow: 0 1px 0 rgba(24, 27, 31, 0.035);
 }
 
 .jb-topbar-inner {
@@ -546,7 +546,7 @@ html[data-theme="light"] .jb-button-solid {
   border-color: var(--jb-accent) !important;
   background: var(--jb-accent) !important;
   color: #ffffff !important;
-  box-shadow: 0 8px 22px rgba(23, 107, 66, 0.13) !important;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--jb-accent) 17%, transparent) !important;
 }
 
 .jb-button-solid:hover:not(:disabled) {
@@ -706,7 +706,7 @@ html[data-theme="light"] .jb-button-solid {
 }
 
 html[data-theme="light"] .jb-command-search {
-  background: #f6faf7 !important;
+  background: #f7f8f9 !important;
 }
 
 .jb-command-search input,
@@ -3571,7 +3571,7 @@ html[data-theme="light"] .jb-account-menu-create:hover {
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(2, 8, 4, .74);
+  background: rgba(7, 8, 10, .74);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   animation: jb-tour-fade-in 160ms ease-out both;
@@ -6207,7 +6207,7 @@ body::before,
   line-height: 1.35;
 }
 .jb-filter-fields select { cursor: pointer; }
-.jb-filter-fields select option { color: #f3f8f4; background: #111a14; }
+.jb-filter-fields select option { color: #f3f4f6; background: #151619; }
 .jb-filter-actions {
   display: flex;
   flex-wrap: wrap;
