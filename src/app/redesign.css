@@ -3452,8 +3452,6 @@ html[data-reduced-motion="true"] ::view-transition-new(jb-workspace-stage) {
   font-weight: 650;
 }
 
-.jb-account-menu-footer .cl-userButtonBox,
-.jb-account-menu-footer .cl-avatarBox,
 .jb-account-menu-footer .jb-auth-avatar {
   width: 29px !important;
   height: 29px !important;
@@ -6087,10 +6085,6 @@ html[data-theme="light"] .jb-guest-preview-brand > span {
 .jb-command-search input { min-width: 0; }
 .jb-command-search .jb-search-hint { flex: 0 0 auto; }
 
-.jb-account-menu-footer .cl-userButtonBox,
-.jb-account-menu-footer .cl-avatarBox {
-  /* Avoid depending on Clerk's private component DOM; size the wrapper we own. */
-}
 .jb-account-menu-footer .cl-userButtonTrigger {
   border-radius: 12px !important;
 }
