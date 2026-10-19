@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 
 type WorkspaceTab = "overview" | "search" | "pipeline";
 type Step = {
@@ -69,6 +69,7 @@ export default function FirstRunTour({
 }) {
   const maskId = useId().replaceAll(":", "");
   const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [viewport, setViewport] = useState<Viewport>({ width: 0, height: 0 });
   const [spotlight, setSpotlight] = useState<Rect | null>(null);
@@ -92,7 +93,7 @@ export default function FirstRunTour({
     if (activeTab !== step.tab) onNavigate(step.tab);
 
     let timeout = 0;
-    const measureTarget = () => {
+    const measureTarget = (scrollToTarget = false) => {
       const width = window.innerWidth;
       const height = window.innerHeight;
       setViewport({ width, height });
@@ -103,15 +104,17 @@ export default function FirstRunTour({
         return;
       }
 
-      target.scrollIntoView({
-        behavior:
-          window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
-          document.documentElement.dataset.reducedMotion === "true"
-            ? "auto"
-            : "smooth",
-        block: "nearest",
-        inline: "nearest",
-      });
+      if (scrollToTarget) {
+        target.scrollIntoView({
+          behavior:
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+            document.documentElement.dataset.reducedMotion === "true"
+              ? "auto"
+              : "smooth",
+          block: "nearest",
+          inline: "nearest",
+        });
+      }
 
       const bounds = target.getBoundingClientRect();
       const padding = 7;
@@ -138,7 +141,7 @@ export default function FirstRunTour({
       setPosition({ x, y, width: cardWidth });
     };
 
-    timeout = window.setTimeout(measureTarget, activeTab === step.tab ? 40 : 120);
+    timeout = window.setTimeout(() => measureTarget(true), activeTab === step.tab ? 40 : 120);
     const onViewportChange = () => measureTarget();
     window.addEventListener("resize", onViewportChange);
     window.addEventListener("scroll", onViewportChange, true);
@@ -150,16 +153,17 @@ export default function FirstRunTour({
     };
   }, [activeTab, onNavigate, open, step]);
 
-  function finish() {
+  const finish = useCallback(() => {
     try {
       window.localStorage.setItem(STORAGE_KEY, "complete");
     } catch {
       // The tour can still be dismissed when storage is unavailable.
     }
-    setOpen(false);
-  }
+    setClosing(true);
+    window.setTimeout(() => setOpen(false), 180);
+  }, []);
 
-  function next() {
+  const next = useCallback(() => {
     if (stepIndex === STEPS.length - 1) {
       finish();
       return;
@@ -167,14 +171,14 @@ export default function FirstRunTour({
     const nextIndex = stepIndex + 1;
     setStepIndex(nextIndex);
     onNavigate(STEPS[nextIndex].tab);
-  }
+  }, [finish, onNavigate, stepIndex]);
 
-  function previous() {
+  const previous = useCallback(() => {
     if (stepIndex === 0) return;
     const previousIndex = stepIndex - 1;
     setStepIndex(previousIndex);
     onNavigate(STEPS[previousIndex].tab);
-  }
+  }, [onNavigate, stepIndex]);
 
   useEffect(() => {
     if (!open) return;
@@ -185,12 +189,12 @@ export default function FirstRunTour({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, stepIndex]);
+  }, [finish, next, open, previous]);
 
   if (!open) return null;
 
   return (
-    <div className="jb-tour-layer">
+    <div className={"jb-tour-layer" + (closing ? " is-closing" : "")}>
       {viewport.width > 0 && viewport.height > 0 ? (
         <svg
           className="jb-tour-dimmer"
