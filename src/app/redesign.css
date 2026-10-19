@@ -5791,3 +5791,223 @@ html[data-theme="light"] .jb-guest-preview-brand > span {
     height: 3px;
   }
 }
+
+
+/* Search layout guardrails: keep filters, status and source chips from colliding. */
+.jb-search-page,
+.jb-command,
+.jb-command-top,
+.jb-command-filters,
+.jb-results-head,
+.jb-results-status,
+.jb-source-cluster,
+.jb-source-pills,
+.jb-search-empty,
+.jb-search-empty-header,
+.jb-search-empty-suggestions,
+.jb-suggest-chips,
+.jb-experience-control,
+.jb-experience-steps {
+  min-width: 0;
+}
+
+.jb-command-filters {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr) minmax(0, auto) auto;
+}
+
+.jb-command-toggle {
+  min-width: 0;
+  gap: 8px !important;
+  padding-inline: 10px !important;
+}
+
+.jb-experience-steps {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: stretch;
+  gap: 7px !important;
+}
+
+.jb-experience-step {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 36px !important;
+  padding-inline: 10px !important;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.jb-results-head {
+  display: grid !important;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  align-items: stretch !important;
+  gap: 12px !important;
+  padding: 0 !important;
+}
+
+.jb-results-status,
+.jb-source-cluster {
+  min-width: 0;
+  max-width: none;
+  padding: 14px;
+  border: 1px solid var(--jb-border);
+  border-radius: 15px;
+  background: var(--jb-surface-muted);
+}
+
+.jb-results-status {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: start;
+  align-items: center;
+  gap: 8px 12px !important;
+}
+
+.jb-results-status > .jb-results-label {
+  grid-column: 1 / -1;
+}
+
+.jb-results-status-value {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
+.jb-recommendations-trigger {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  max-width: 100%;
+  min-width: max-content;
+}
+
+.jb-source-cluster {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.jb-source-pills {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px !important;
+  margin-top: 10px;
+}
+
+.jb-source-pill {
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.jb-search-empty-header > div,
+.jb-search-empty-header strong,
+.jb-search-empty-header p,
+.jb-search-empty-foot span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.jb-search-empty .jb-suggest-chips {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  gap: 8px !important;
+}
+
+.jb-search-empty .jb-suggest-chip {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 38px !important;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px !important;
+  line-height: 1.25;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .jb-results-head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .jb-results-status,
+  .jb-source-cluster {
+    width: 100%;
+  }
+
+  .jb-search-empty .jb-suggest-chips {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .jb-command-filters {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .jb-command-toggle {
+    gap: 6px !important;
+    padding-inline: 7px !important;
+    font-size: 10px !important;
+  }
+
+  .jb-command-toggle i {
+    width: 24px !important;
+    flex: 0 0 24px;
+  }
+
+  .jb-experience-steps {
+    gap: 6px !important;
+  }
+
+  .jb-experience-step {
+    padding-inline: 8px !important;
+    font-size: 10px !important;
+  }
+
+  .jb-results-status,
+  .jb-source-cluster {
+    padding: 12px;
+  }
+
+  .jb-results-status {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px !important;
+  }
+
+  .jb-recommendations-trigger {
+    gap: 5px;
+    padding-inline: 9px !important;
+    font-size: 10px !important;
+  }
+
+  .jb-search-empty {
+    padding: 14px !important;
+    gap: 14px !important;
+  }
+
+  .jb-search-empty-header {
+    gap: 10px;
+  }
+
+  .jb-search-empty-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .jb-search-empty .jb-suggest-chips {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
