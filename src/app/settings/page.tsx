@@ -173,7 +173,11 @@ function fromProfile(raw: Record<string, unknown> | null | undefined): Profile {
     avatarUrl: typeof raw?.avatarUrl === "string" ? raw.avatarUrl : "",
     bannerUrl: typeof raw?.bannerUrl === "string" ? raw.bannerUrl : "",
     backgroundUrl: typeof raw?.backgroundUrl === "string" ? raw.backgroundUrl : "",
-    accentColor: typeof raw?.accentColor === "string" ? raw.accentColor : "#b8c9d6",
+    accentColor:
+      typeof raw?.accentColor === "string" &&
+      !["#b8c9d6", "#9eb6c8", "#6b8a9e", "#d0dce6", "#a8c4d8"].includes(raw.accentColor.toLowerCase())
+        ? raw.accentColor
+        : "#63e69a",
     glassIntensity: typeof raw?.glassIntensity === "number" ? raw.glassIntensity : 45,
     glassBlur: typeof raw?.glassBlur === "number" ? raw.glassBlur : 12,
     panelOpacity: typeof raw?.panelOpacity === "number" ? raw.panelOpacity : 72,
