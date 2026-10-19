@@ -799,6 +799,9 @@ export default function WorkspaceHome() {
                         onChange={(e) => handleJobQueryChange(e.target.value)}
                         placeholder="Search jobs, skills, companies…"
                         aria-label="Search jobs"
+                        id="jb-job-search"
+                        name="jobSearch"
+                        autoComplete="off"
                       />
                       {jobQuery ? (
                         <button type="button" className="jb-icon-button" aria-label="Clear search" onClick={() => handleJobQueryChange("")}>
