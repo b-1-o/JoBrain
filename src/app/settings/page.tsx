@@ -108,41 +108,6 @@ const settingsSections: Array<{ label: SettingsSection; icon: typeof SlidersHori
 
 const presetOrder = ["graphite", "mist", "snow", "oled", "frost"] as const;
 
-async function optimizeBackgroundImage(file: File): Promise<File> {
-  if (file.type === "image/gif" || typeof createImageBitmap !== "function") return file;
-  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) return file;
-
-  let bitmap: ImageBitmap;
-  try {
-    bitmap = await createImageBitmap(file);
-  } catch {
-    return file;
-  }
-
-  try {
-    const longestSide = Math.max(bitmap.width, bitmap.height);
-    if (longestSide <= 2200 && file.size <= 2.5 * 1024 * 1024) return file;
-
-    const scale = Math.min(1, 2200 / longestSide);
-    const width = Math.max(1, Math.round(bitmap.width * scale));
-    const height = Math.max(1, Math.round(bitmap.height * scale));
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext("2d", { alpha: true });
-    if (!context) return file;
-    context.drawImage(bitmap, 0, 0, width, height);
-
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.84));
-    if (!blob || blob.size >= file.size) return file;
-
-    const stem = file.name.replace(/\.[^.]+$/, "") || "background";
-    return new File([blob], `${stem}.webp`, { type: "image/webp", lastModified: Date.now() });
-  } finally {
-    bitmap.close();
-  }
-}
-
 function fromProfile(raw: Record<string, unknown> | null | undefined): Profile {
   return {
     displayName: typeof raw?.displayName === "string" ? raw.displayName : "",
