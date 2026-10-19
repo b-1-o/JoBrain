@@ -96,11 +96,13 @@ export default function FirstRunTour({
     const measureTarget = (scrollToTarget = false) => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      setViewport({ width, height });
+      setViewport((current) =>
+        current.width === width && current.height === height ? current : { width, height },
+      );
 
       const target = document.querySelector<HTMLElement>(step.target);
       if (!target) {
-        setSpotlight(null);
+        setSpotlight((current) => (current === null ? current : null));
         return;
       }
 
@@ -124,7 +126,18 @@ export default function FirstRunTour({
         width: Math.min(width - 12, bounds.width + padding * 2),
         height: Math.min(height - 12, bounds.height + padding * 2),
       };
-      setSpotlight(rect);
+      setSpotlight((current) => {
+        if (
+          current &&
+          Math.abs(current.x - rect.x) < 1 &&
+          Math.abs(current.y - rect.y) < 1 &&
+          Math.abs(current.width - rect.width) < 1 &&
+          Math.abs(current.height - rect.height) < 1
+        ) {
+          return current;
+        }
+        return rect;
+      });
 
       const cardWidth = Math.min(380, width - 32);
       const estimatedCardHeight = width <= 640 ? 270 : 245;
@@ -138,7 +151,13 @@ export default function FirstRunTour({
       }
       y = Math.min(Math.max(16, y), Math.max(16, height - estimatedCardHeight - 16));
 
-      setPosition({ x, y, width: cardWidth });
+      setPosition((current) =>
+        Math.abs(current.x - x) < 1 &&
+        Math.abs(current.y - y) < 1 &&
+        current.width === cardWidth
+          ? current
+          : { x, y, width: cardWidth },
+      );
     };
 
     timeout = window.setTimeout(() => measureTarget(true), activeTab === step.tab ? 40 : 120);
