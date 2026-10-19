@@ -59,19 +59,23 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
 
-  const redirectToSignIn = useCallback(() => {
+  const navigateToSignIn = useCallback(() => {
     try {
       localStorage.removeItem("jobrain-profile");
     } catch {
       // Continue to sign-in even when browser storage is unavailable.
     }
+    router.replace("/sign-in?redirect_url=%2Fprofile");
+  }, [router]);
+
+  const redirectToSignIn = useCallback(() => {
     setProfile(emptyProfile);
     setBaseline(emptyProfile);
     setSaved(false);
     setError("");
     setLoading(false);
-    router.replace("/sign-in?redirect_url=%2Fprofile");
-  }, [router]);
+    navigateToSignIn();
+  }, [navigateToSignIn]);
 
   const dirty =
     profile.displayName !== baseline.displayName ||
@@ -136,11 +140,11 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) {
-      redirectToSignIn();
+      navigateToSignIn();
       return;
     }
     void load();
-  }, [isLoaded, isSignedIn, load, redirectToSignIn]);
+  }, [isLoaded, isSignedIn, load, navigateToSignIn]);
 
   function update<K extends keyof Profile>(key: K, value: Profile[K]) {
     setProfile((current) => ({ ...current, [key]: value }));
