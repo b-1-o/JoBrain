@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import AccountNav from "@/components/AccountNav";
 import LatticeLoader from "@/components/LatticeLoader";
-import OptionWheel from "@/components/OptionWheel";
 import {
   APPEARANCE_PRESETS,
   applyAppearanceToDocument,
@@ -565,29 +564,22 @@ export default function SettingsPage() {
         <div className="settings-layout">
           <aside className="settings-subnav account-card" aria-label="Settings sections">
             <div className="account-kicker">SETTINGS MENU</div>
-            <OptionWheel
-              key={activeSection}
-              items={settingsSections.map((section) => section.label)}
-              icons={settingsSections.map(({ icon: Icon, label }) => <Icon key={label} size={17} strokeWidth={1.7} />)}
-              defaultSelected={Math.max(0, settingsSections.findIndex((section) => section.label === activeSection))}
-              textColor="#8997a0"
-              activeColor="#f4f7f9"
-              fontSize={1}
-              spacing={1.75}
-              curve={0.65}
-              tilt={5}
-              blur={0.5}
-              fade={0.16}
-              minOpacity={0.25}
-              smoothing={180}
-              inset={10}
-              onChange={(index) => {
-                const section = settingsSections[index];
-                if (section) setActiveSection(section.label);
-              }}
-              className="settings-section-wheel"
-            />
-            <p className="settings-subnav-help">Scroll, drag, or use arrow keys to switch sections.</p>
+            <div className="settings-section-tabs" role="tablist" aria-label="Settings categories">
+              {settingsSections.map(({ label, icon: Icon }) => (
+                <button
+                  key={label}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeSection === label}
+                  className={"settings-section-tab" + (activeSection === label ? " is-active" : "")}
+                  onClick={() => setActiveSection(label)}
+                >
+                  <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+            <p className="settings-subnav-help">Choose a section to update your account and workspace.</p>
           </aside>
 
           <div className="settings-panel" key={activeSection}>
