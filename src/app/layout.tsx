@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import "./performance.css";
+import "./redesign.css";
 import PreferencesBootstrap from "@/components/PreferencesBootstrap";
 import RouteTransitionFeedback from "@/components/RouteTransitionFeedback";
 
