@@ -6,12 +6,14 @@ import {
   Bell,
   FolderKanban,
   History,
+  House,
   Sparkles,
   SlidersHorizontal,
   UserRound,
 } from "lucide-react";
 
 const accountItems = [
+  { label: "Home", href: "/", icon: House },
   { label: "Profile", href: "/profile", icon: UserRound },
   { label: "Settings", href: "/settings", icon: SlidersHorizontal },
   { label: "Projects", href: "/projects", icon: FolderKanban },
