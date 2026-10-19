@@ -234,25 +234,10 @@ export default function WorkspaceHome() {
 
   const toggleTheme = useCallback(() => {
     const nextTheme = theme === "dark" ? "light" : "dark";
-    const applyTheme = () => {
-      // Apply the theme token inside the transition callback so the browser
-      // captures the old and new palettes as complete snapshots.
-      document.documentElement.dataset.theme = nextTheme;
-      flushSync(() => setTheme(nextTheme));
-    };
-    const transitionDocument = document as Document & {
-      startViewTransition?: (callback: () => void) => { finished?: Promise<unknown> };
-    };
-    if (!reduceMotion && typeof transitionDocument.startViewTransition === "function") {
-      try {
-        const transition = transitionDocument.startViewTransition(applyTheme);
-        void transition.finished?.catch(() => undefined);
-      } catch {
-        applyTheme();
-      }
-    } else {
-      applyTheme();
-    }
+    // Update the theme token and React state together; CSS animates the palette
+    // itself, so the page never fades to a blank snapshot.
+    document.documentElement.dataset.theme = nextTheme;
+    flushSync(() => setTheme(nextTheme));
 
     // Guests can switch themes locally; only signed-in users have a server preference.
     if (!isSignedIn) return;
@@ -278,7 +263,7 @@ export default function WorkspaceHome() {
       .catch(() => {
         // Local theme selection remains usable if the preference API is unavailable.
       });
-  }, [isSignedIn, reduceMotion, theme]);
+  }, [isSignedIn, theme]);
 
   const changeTab = useCallback((next: "overview" | "search" | "pipeline") => {
     if (next === tab) return;
@@ -741,9 +726,9 @@ export default function WorkspaceHome() {
             {tab === "search" ? (
               <section key="search" className="jb-search-page jb-view-panel">
                 <div className="jb-command" data-tour="search-panel">
-                  <div className="jb-command-top">
+                  <div className="jb-command-top jb-search-toolbar">
                     <div className="jb-command-search">
-                      <Search size={16} />
+                      <Search size={16} aria-hidden="true" />
                       <input
                         value={jobQuery}
                         onChange={(e) => handleJobQueryChange(e.target.value)}
@@ -760,36 +745,34 @@ export default function WorkspaceHome() {
                       ) : null}
                       <span className="jb-search-hint">{loadingJobs ? "SYNC" : "LIVE"}</span>
                     </div>
+                    <label className="jb-toolbar-filter" htmlFor="jb-location-filter">
+                      <span>Location</span>
+                      <input
+                        id="jb-location-filter"
+                        name="location"
+                        value={location}
+                        onChange={(e) => { setRecommendationsMode(false); setLocation(e.target.value); }}
+                        placeholder="City or remote"
+                        autoComplete="off"
+                      />
+                    </label>
+                    <label className="jb-toolbar-filter" htmlFor="jb-platform-filter">
+                      <span>Platform</span>
+                      <select
+                        id="jb-platform-filter"
+                        name="platform"
+                        value={platform}
+                        onChange={(e) => { setRecommendationsMode(false); setPlatform(e.target.value); }}
+                      >
+                        {PLATFORM_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                   </div>
                   <div className="jb-command-filters">
-                    <div className="jb-filter-fields">
-                      <label htmlFor="jb-location-filter">
-                        <span>Location</span>
-                        <input
-                          id="jb-location-filter"
-                          name="location"
-                          value={location}
-                          onChange={(e) => { setRecommendationsMode(false); setLocation(e.target.value); }}
-                          placeholder="City, region, or remote"
-                          autoComplete="off"
-                        />
-                      </label>
-                      <label htmlFor="jb-platform-filter">
-                        <span>Platform</span>
-                        <select
-                          id="jb-platform-filter"
-                          name="platform"
-                          value={platform}
-                          onChange={(e) => { setRecommendationsMode(false); setPlatform(e.target.value); }}
-                        >
-                          {PLATFORM_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
                     <div className="jb-filter-actions">
                       <button
                         type="button"
