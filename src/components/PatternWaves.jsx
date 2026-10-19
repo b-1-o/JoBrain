@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Renderer, Program, Mesh, Triangle, RenderTarget, Texture } from 'ogl';
 
 import './PatternWaves.css';
@@ -477,7 +477,7 @@ const PatternWaves = ({
   const wakeRef = useRef(null);
 
   const base = SURFACE_PRESETS[preset] || SURFACE_PRESETS.silk;
-  const pick = (value, key) => (value === undefined || value === null ? base[key] : value);
+  const pick = useCallback((value, key) => (value === undefined || value === null ? base[key] : value), [base]);
 
   const colors = useMemo(
     () => ({
@@ -514,6 +514,7 @@ const PatternWaves = ({
     wakeRef.current?.();
   }, [
     colors,
+    pick,
     pattern,
     wave,
     spacing,
@@ -953,7 +954,7 @@ const PatternWaves = ({
       gl.getExtension('WEBGL_lose_context')?.loseContext();
       if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
     };
-  }, []);
+  }, [interactive]);
 
   return <div ref={containerRef} className={`pattern-waves ${className}`.trim()} style={style} />;
 };
