@@ -14,12 +14,10 @@ import {
 } from "lucide-react";
 import { Show, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
-import PatternWaves from "@components/PatternWaves";
 import JobResultsList, { type JobResult } from "@/components/JobResultsList";
 import LatticeLoader from "@/components/LatticeLoader";
 import OverviewAnalytics from "@/components/OverviewAnalytics";
-import DecryptedText from "@/components/DecryptedText";
-import TechText from "@/components/TechText";
+import FirstRunTour from "@/components/FirstRunTour";
 import {
   useCallback,
   useEffect,
@@ -130,49 +128,24 @@ function useReducedMotionPreferred() {
 
 export default function WorkspaceHome() {
   const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
-  const [hasCustomBackground, setHasCustomBackground] = useState(false);
-  const [backgroundReady, setBackgroundReady] = useState(false);
 
-  // Seed state in a microtask before paint, without forcing a cascading
-  // synchronous render from the layout effect.
+  // Seed only the tiny account avatar from cache. Wallpapers are applied by
+  // PreferencesBootstrap through CSS, so the workspace does not need a
+  // second background renderer or a WebGL animation loop.
   useLayoutEffect(() => {
     let cancelled = false;
     queueMicrotask(() => {
       if (cancelled) return;
-      const readCache = (key: string): Record<string, unknown> | null => {
-        try {
-          const value = localStorage.getItem(key);
-          if (!value) return null;
-          const parsed: unknown = JSON.parse(value);
-          return parsed && typeof parsed === "object" ? parsed as Record<string, unknown> : null;
-        } catch {
-          return null;
+      try {
+        const cached = localStorage.getItem("jobrain-profile");
+        if (!cached) return;
+        const profile = JSON.parse(cached) as { avatarUrl?: unknown };
+        if (typeof profile.avatarUrl === "string" && /^https?:\/\//i.test(profile.avatarUrl)) {
+          setProfileAvatarUrl(profile.avatarUrl);
         }
-      };
-
-      const cachedProfile = readCache("jobrain-profile");
-      const cachedAppearance = readCache("jobrain-appearance");
-      const cachedAvatar = cachedProfile?.avatarUrl;
-      if (typeof cachedAvatar === "string" && /^https?:\/\//i.test(cachedAvatar)) {
-        setProfileAvatarUrl(cachedAvatar);
+      } catch {
+        // The server request below remains the source of truth.
       }
-
-      const html = document.documentElement;
-      const cachedProfileBackground = cachedProfile?.backgroundUrl;
-      const cachedAppearanceBackground = cachedAppearance?.backgroundUrl;
-      const hasKnownBackground =
-        html.dataset.customBackground === "true" ||
-        typeof cachedProfileBackground === "string" ||
-        cachedProfileBackground === null ||
-        typeof cachedAppearanceBackground === "string" ||
-        cachedAppearanceBackground === null;
-      const hasBackground =
-        html.dataset.customBackground === "true" ||
-        (typeof cachedProfileBackground === "string" && cachedProfileBackground.trim().length > 0) ||
-        (typeof cachedAppearanceBackground === "string" && cachedAppearanceBackground.trim().length > 0);
-
-      setHasCustomBackground(hasBackground);
-      if (hasKnownBackground) setBackgroundReady(true);
     });
     return () => {
       cancelled = true;
@@ -184,27 +157,17 @@ export default function WorkspaceHome() {
     void fetch("/api/profile", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) return null;
-        return (await response.json()) as {
-          profile?: { avatarUrl?: unknown; backgroundUrl?: unknown };
-        };
+        return (await response.json()) as { profile?: { avatarUrl?: unknown } };
       })
       .then((data) => {
         if (!active) return;
         const avatarUrl = data?.profile?.avatarUrl;
-        if (typeof avatarUrl === "string" && /^https?:\/\//i.test(avatarUrl)) {
-          setProfileAvatarUrl(avatarUrl);
-        }
-        const backgroundUrl = data?.profile?.backgroundUrl;
-        if (typeof backgroundUrl === "string" || backgroundUrl === null) {
-          setHasCustomBackground(typeof backgroundUrl === "string" && backgroundUrl.trim().length > 0);
-          setBackgroundReady(true);
-        }
+        setProfileAvatarUrl(
+          typeof avatarUrl === "string" && /^https?:\/\//i.test(avatarUrl) ? avatarUrl : null,
+        );
       })
       .catch(() => {
-        // Keep any cached avatar/background and let the rest of the workspace load.
-      })
-      .finally(() => {
-        if (active) setBackgroundReady(true);
+        // Keep the cached avatar and let the workspace load.
       });
     return () => {
       active = false;
@@ -241,36 +204,6 @@ export default function WorkspaceHome() {
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem("jobrain-theme", theme);
   }, [theme]);
-
-  useEffect(() => {
-    const read = () => {
-      const html = document.documentElement;
-      if (html.dataset.customBackground === "true") {
-        setHasCustomBackground(true);
-        setBackgroundReady(true);
-        return;
-      }
-
-      // Only conclude that the background was removed when a cached appearance
-      // explicitly says so. Before preferences load, the server may still have
-      // a saved wallpaper and PatternWaves must stay unmounted.
-      try {
-        const raw = localStorage.getItem("jobrain-appearance");
-        if (!raw) return;
-        const appearance = JSON.parse(raw) as { backgroundUrl?: unknown };
-        if (typeof appearance.backgroundUrl === "string" || appearance.backgroundUrl === null) {
-          setHasCustomBackground(typeof appearance.backgroundUrl === "string" && appearance.backgroundUrl.trim().length > 0);
-          setBackgroundReady(true);
-        }
-      } catch {
-        // The profile request below resolves background state on cache misses.
-      }
-    };
-    const observer = new MutationObserver(read);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-custom-background"] });
-    read();
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -490,48 +423,10 @@ export default function WorkspaceHome() {
     changeTab("search");
   }
 
-  // Do not create a WebGL renderer until saved background state is known.
-  // A wallpaper means no PatternWaves component, not merely a hidden canvas.
-  const showWaves = backgroundReady && !hasCustomBackground;
-  const isDark = theme === "dark";
   const sourceEntries = Object.entries(sourceState);
 
   return (
     <main className="jb-shell">
-      {showWaves ? (
-        isDark ? (
-          <PatternWaves
-            preset="silk"
-            color="#ffffff"
-            backgroundColor="#000000"
-            fade="edges"
-            interactive
-            cursorSize={50}
-            cursorStrength={0.6}
-            shine={0.15}
-            speed={0.1}
-            opacity={1}
-            paused={reduceMotion}
-            className="jb-pattern-waves"
-          />
-        ) : (
-          <PatternWaves
-            preset="silk"
-            color="#000000"
-            backgroundColor="#d0d0d0"
-            fade="edges"
-            interactive
-            cursorSize={50}
-            cursorStrength={0.6}
-            shine={0.15}
-            speed={0.1}
-            opacity={1}
-            paused={reduceMotion}
-            className="jb-pattern-waves"
-          />
-        )
-      ) : null}
-
       <header className="jb-topbar">
         <div className="jb-topbar-inner">
           <button type="button" className="jb-brand" onClick={() => changeTab("overview")} aria-label="JoBrain home">
@@ -551,6 +446,7 @@ export default function WorkspaceHome() {
               <button
                 key={item.key}
                 type="button"
+                data-tour={item.key === "search" ? "search-tab" : item.key === "pipeline" ? "pipeline-tab" : undefined}
                 className={"jb-nav-item " + (tab === item.key ? "is-active" : "")}
                 onClick={() => changeTab(item.key)}
               >
@@ -562,6 +458,7 @@ export default function WorkspaceHome() {
             <button
               type="button"
               className="jb-theme-toggle"
+              data-tour="theme-toggle"
               onClick={toggleTheme}
               aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
             >
@@ -572,7 +469,7 @@ export default function WorkspaceHome() {
               <span className="jb-status-dot" />
               <span>{loadingJobs ? <LatticeLoader label="Syncing" status="working" cellSize={3} gap={1} fontSize={9} showTimer={false} /> : "LIVE"}</span>
             </div>
-            <div className="jb-account-shortcuts" aria-label="Account">
+            <div className="jb-account-shortcuts" aria-label="Account" data-tour="account-shortcuts">
               <Link href="/profile" className="jb-account-shortcut" title="Profile" aria-label="Profile">
                 {profileAvatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -626,47 +523,13 @@ export default function WorkspaceHome() {
                     </div>
                     <h1 className="sr-only">Find work. Not another spreadsheet.</h1>
                     <div className="jb-tech-text-wrap">
-                      {reduceMotion ? (
-                        <span className="jb-tech-text-static">Find work.</span>
-                      ) : (
-                        <TechText
-                          text="Find work."
-                          fontWeight={600}
-                          fontSize={150}
-                          color={isDark ? "#ffffff" : "#000000"}
-                          accentColor={isDark ? "#ffffff" : "#000000"}
-                          reveal="letter"
-                          dashLength={4}
-                          dashGap={2}
-                          specks={9}
-                          selection
-                          labels
-                          draggable
-                          sweep
-                          speed={0.65}
-                        />
-                      )}
+                      <span className="jb-tech-text-static">Find work.</span>
                     </div>
-                    <div className="jb-decrypt">
-                      {reduceMotion ? (
-                        "Not another spreadsheet."
-                      ) : (
-                        <DecryptedText
-                          text="Not another spreadsheet."
-                          animateOn="view"
-                          sequential
-                          speed={35}
-                          revealDirection="center"
-                          useOriginalCharsOnly
-                          className="jb-decrypt-character"
-                          encryptedClassName="jb-decrypt-character is-encrypted"
-                        />
-                      )}
-                    </div>
+                    <div className="jb-decrypt">Not another spreadsheet.</div>
                     <p className="jb-hero-support">
                       JoBrain is a job-search operating system — live roles, pipeline tracking, and a portfolio that stays ready for recruiters.
                     </p>
-                    <div className="jb-hero-actions">
+                    <div className="jb-hero-actions" data-tour="hero-actions">
                       <button type="button" className="jb-button jb-button-solid" onClick={() => changeTab("search")}>
                         Explore live roles
                       </button>
@@ -684,7 +547,7 @@ export default function WorkspaceHome() {
 
             {tab === "search" ? (
               <section key="search" className="jb-search-page jb-view-panel">
-                <div className="jb-command">
+                <div className="jb-command" data-tour="search-panel">
                   <div className="jb-command-top">
                     <div className="jb-command-search">
                       <Search size={16} />
@@ -827,7 +690,7 @@ export default function WorkspaceHome() {
                     Find new roles
                   </button>
                 </div>
-                <div className="jb-pipeline-signal">
+                <div className="jb-pipeline-signal" data-tour="pipeline-stage">
                   {funnel.map((item, index) => (
                     <div key={item.key} className={"jb-pipeline-signal-item " + item.tone}>
                       <span>{String(index + 1).padStart(2, "0")}</span>
@@ -872,6 +735,7 @@ export default function WorkspaceHome() {
           </div>
         </div>
       </div>
+      <FirstRunTour activeTab={tab} onNavigate={changeTab} />
     </main>
   );
 }
