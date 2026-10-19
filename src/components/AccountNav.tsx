@@ -66,6 +66,13 @@ export default function AccountNav({ active }: { active: AccountSection }) {
         className={"account-nav-media" + (pathname === "/settings" ? " is-active" : "")}
         href="/settings?section=media"
         aria-label="Personalize appearance"
+        onClick={(event) => {
+          if (pathname === "/settings") {
+            event.preventDefault();
+            window.history.replaceState({}, "", "/settings?section=media");
+            window.dispatchEvent(new CustomEvent("jobrain:settings-section", { detail: "Media studio" }));
+          }
+        }}
       >
         <ImageIcon size={15} strokeWidth={1.8} aria-hidden="true" />
         <span>Appearance</span>
