@@ -220,8 +220,8 @@ export default function ProfilePage() {
                 fontSize={11}
               />
             ) : null}
-            <Link className="account-button" href="/settings">
-              Media & appearance <span aria-hidden="true">↗</span>
+            <Link className="account-button" href="/settings?section=appearance">
+              Appearance settings <span aria-hidden="true">↗</span>
             </Link>
             <button
               className="account-button account-button-primary"
@@ -235,34 +235,6 @@ export default function ProfilePage() {
         </header>
 
         {error ? <p className="account-alert" role="alert">{error}</p> : null}
-
-        <section className="profile-banner" aria-label="Profile preview">
-          {profile.bannerUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="profile-banner-image" src={profile.bannerUrl} alt="" loading="eager" fetchPriority="high" decoding="async" />
-          ) : null}
-          <div className="profile-identity">
-            <div className="profile-avatar">
-              {profile.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatarUrl} alt="" loading="eager" fetchPriority="high" decoding="async" />
-              ) : (
-                <span className="profile-avatar-placeholder">
-                  {(profile.displayName || "JB").trim().slice(0, 2).toUpperCase()}
-                </span>
-              )}
-            </div>
-            <div>
-              <div className="account-kicker">PROFILE PREVIEW</div>
-              <h2 className="account-title profile-preview-title">
-                {profile.displayName || "Your name"}
-              </h2>
-              <p className="account-copy">
-                {profile.bio || "Add a short introduction to your professional profile."}
-              </p>
-            </div>
-          </div>
-        </section>
 
         <div className="account-grid profile-editor-grid">
           <section className="account-card account-card-wide">
