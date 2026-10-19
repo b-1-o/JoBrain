@@ -144,7 +144,7 @@ export default function WorkspaceHome() {
   const [accountReason, setAccountReason] = useState<string | null>(null);
   const [tourReplayKey, setTourReplayKey] = useState(0);
 
-remove avatar cache and profile request  const reduceMotion = useReducedMotionPreferred();
+  const reduceMotion = useReducedMotionPreferred();
   const [tab, setTab] = useState<"overview" | "search" | "pipeline">("overview");
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     if (typeof window === "undefined") return "dark";
