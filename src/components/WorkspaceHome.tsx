@@ -704,35 +704,70 @@ export default function WorkspaceHome() {
         <div className="jb-view-stage">
           <div className="jb-view-transition-host">
             {tab === "overview" ? (
-              <section key="overview" className="jb-overview jb-view-panel">
-                <div className="jb-hero">
-                  <div className="jb-hero-copy">
-                    <div className="jb-eyebrow">
-                      <span className="jb-eyebrow-line" />
-                      JOB SEARCH / 01
+              isLoaded && isSignedIn ? (
+                <ApplicationDashboard apps={apps} loading={loadingApps} onNavigate={changeTab} />
+              ) : (
+                <section key="overview" className="jb-overview jb-view-panel jb-guest-overview">
+                  <div className="jb-hero">
+                    <div className="jb-hero-copy">
+                      <div className="jb-eyebrow">
+                        <span className="jb-eyebrow-line" />
+                        YOUR JOB SEARCH / 01
+                      </div>
+                      <h1 className="jb-guest-headline">Find work.<br /><span>Not another spreadsheet.</span></h1>
+                      <p className="jb-hero-support">
+                        Search real openings from multiple job sources, compare roles, and explore at your own pace. JoBrain is free to browse — create an account only when you want to save jobs or track applications.
+                      </p>
+                      <div className="jb-hero-actions" data-tour="hero-actions">
+                        <button type="button" className="jb-button jb-button-solid" onClick={() => changeTab("search")}>
+                          <Search size={16} /> Explore live roles
+                        </button>
+                        <button type="button" className="jb-button jb-button-ghost" onClick={() => setTourReplayKey((current) => current + 1)}>
+                          <Sparkles size={15} /> How it works
+                        </button>
+                      </div>
+                      <div className="jb-guest-trust-row">
+                        <span><i /> Browse without an account</span>
+                        <span><i /> Multiple job sources</span>
+                        <span><i /> Private application tracking</span>
+                      </div>
                     </div>
-                    <h1 className="sr-only">Find work. Not another spreadsheet.</h1>
-                    <div className="jb-tech-text-wrap">
-                      <span className="jb-tech-text-static">Find work.</span>
-                    </div>
-                    <div className="jb-decrypt">Not another spreadsheet.</div>
-                    <p className="jb-hero-support">
-                      JoBrain is a job-search operating system — live roles, pipeline tracking, and a portfolio that stays ready for recruiters.
-                    </p>
-                    <div className="jb-hero-actions" data-tour="hero-actions">
-                      <button type="button" className="jb-button jb-button-solid" onClick={() => changeTab("search")}>
-                        Explore live roles
-                      </button>
-                      <button type="button" className="jb-button jb-button-ghost" onClick={() => changeTab("pipeline")}>
-                        Open pipeline
-                      </button>
+                    <div className="jb-guest-preview" aria-label="JoBrain workspace preview">
+                      <div className="jb-guest-preview-top">
+                        <span className="jb-guest-preview-brand"><span>J</span> JoBrain</span>
+                        <span className="jb-guest-preview-live"><i /> LIVE SEARCH</span>
+                      </div>
+                      <div className="jb-guest-preview-title">
+                        <span className="jb-dashboard-overline">THE NEXT OPPORTUNITY</span>
+                        <strong>Good work<br />starts with a<br /><em>better search.</em></strong>
+                        <p>One search. A clearer view of what’s out there.</p>
+                      </div>
+                      <div className="jb-guest-preview-stats">
+                        <div><strong>01</strong><span>Search roles</span></div>
+                        <div><strong>02</strong><span>Compare fits</span></div>
+                        <div><strong>03</strong><span>Track progress</span></div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <Show when="signed-in">
-                  <OverviewAnalytics />
-                </Show>
-              </section>
+                  <div className="jb-guest-feature-grid">
+                    <button type="button" className="jb-guest-feature-card" onClick={() => changeTab("search")}>
+                      <span className="jb-guest-feature-icon"><Compass size={18} /></span>
+                      <span className="jb-guest-feature-copy"><strong>Explore live roles</strong><small>Search by job title, skill, company, location or remote preference.</small></span>
+                      <ArrowRight size={15} />
+                    </button>
+                    <button type="button" className="jb-guest-feature-card" onClick={() => requestAccount("saving roles and managing applications")}>
+                      <span className="jb-guest-feature-icon"><BriefcaseBusiness size={18} /></span>
+                      <span className="jb-guest-feature-copy"><strong>Build your pipeline</strong><small>Save jobs, track every stage and schedule your next action with a free account.</small></span>
+                      <ArrowRight size={15} />
+                    </button>
+                    <button type="button" className="jb-guest-feature-card" onClick={() => setTourReplayKey((current) => current + 1)}>
+                      <span className="jb-guest-feature-icon"><Sparkles size={18} /></span>
+                      <span className="jb-guest-feature-copy"><strong>Take a quick tour</strong><small>See how JoBrain search, application tracking and preferences fit together.</small></span>
+                      <ArrowRight size={15} />
+                    </button>
+                  </div>
+                </section>
+              )
             ) : null}
 
             {tab === "search" ? (
