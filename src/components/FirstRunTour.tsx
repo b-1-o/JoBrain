@@ -44,29 +44,31 @@ const STEPS: Step[] = [
       "Track each opportunity from Found through interviews and offers. Add a role manually when you found it somewhere else, then keep its status up to date.",
   },
   {
-    tab: "pipeline",
-    target: '[data-tour="account-shortcuts"]',
-    eyebrow: "03 / MAKE IT YOURS",
-    title: "Your profile and settings",
+    tab: "overview",
+    target: '[data-tour="account-menu-trigger"]',
+    eyebrow: "03 / GUEST OR ACCOUNT",
+    title: "Browse first. Sign up when ready.",
     description:
-      "Complete your professional profile, adjust preferences, personalize the workspace background, and manage the parts of JoBrain that fit your workflow.",
+      "You can search and open job listings without an account. Sign in only when you want a personal pipeline, saved applications, activity history, profile settings, and tailored recommendations. Open the Account menu any time for a quick guide.",
   },
   {
-    tab: "pipeline",
+    tab: "overview",
     target: '[data-tour="theme-toggle"]',
-    eyebrow: "04 / YOUR PREFERENCES",
-    title: "Choose your look",
+    eyebrow: "04 / MAKE IT YOURS",
+    title: "A workspace that feels right",
     description:
-      "Switch between light and dark themes at any time. Your workspace keeps the same familiar layout while the surfaces and green accent adapt to the theme.",
+      "Switch between light and dark themes whenever you like. Your colors update with the theme, and you can replay this tour from the Account menu.",
   },
 ];
 
 export default function FirstRunTour({
   activeTab,
   onNavigate,
+  replayKey = 0,
 }: {
   activeTab: WorkspaceTab;
   onNavigate: (tab: WorkspaceTab) => void;
+  replayKey?: number;
 }) {
   const maskId = useId().replaceAll(":", "");
   const [open, setOpen] = useState(false);
@@ -88,6 +90,13 @@ export default function FirstRunTour({
     });
     return () => window.cancelAnimationFrame(frame);
   }, []);
+
+  useEffect(() => {
+    if (replayKey <= 0) return;
+    setStepIndex(0);
+    setClosing(false);
+    setOpen(true);
+  }, [replayKey]);
 
   useEffect(() => {
     if (!open) return;
