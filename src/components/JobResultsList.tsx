@@ -1,6 +1,7 @@
 "use client";
 
 import { Clock3, ExternalLink, MapPin, Plus } from "lucide-react";
+import { useAuth } from "@clerk/nextjs";
 import LatticeLoader from "@/components/LatticeLoader";
 import { useMemo, useState } from "react";
 
@@ -64,6 +65,7 @@ type Props = {
 const PAGE_SIZE = 24;
 
 export default function JobResultsList({ jobs, loading, onTrack, onResetFilters }: Props) {
+  const { isLoaded, isSignedIn } = useAuth();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   // Parent remounts this list via `key` when the search identity changes.
   // Still clamp so we never request more than available after a partial update.
@@ -117,6 +119,7 @@ export default function JobResultsList({ jobs, loading, onTrack, onResetFilters 
               rel="noreferrer"
               className="jb-open-link"
               onClick={() => {
+                if (!isLoaded || !isSignedIn) return;
                 void fetch("/api/history", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
