@@ -171,10 +171,7 @@ export default function WorkspaceHome() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (!isSignedIn) {
-      setProfileAvatarUrl(null);
-      return;
-    }
+    if (!isSignedIn) return;
     let active = true;
     void fetch("/api/profile", { cache: "no-store" })
       .then(async (response) => {
@@ -258,11 +255,7 @@ export default function WorkspaceHome() {
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (!isSignedIn) {
-      setApps([]);
-      setLoadingApps(false);
-      return;
-    }
+    if (!isSignedIn) return;
 
     let cancelled = false;
     setLoadingApps(true);
