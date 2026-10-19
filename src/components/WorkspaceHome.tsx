@@ -10,14 +10,19 @@ import {
   Sun,
   X,
   Sparkles,
+  ArrowRight,
+  LayoutGrid,
+  History,
+  FolderKanban,
+  Bell,
   type LucideIcon,
 } from "lucide-react";
-import { Show, UserButton } from "@clerk/nextjs";
+import { useAuth, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
-import { flushSync } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import JobResultsList, { type JobResult } from "@/components/JobResultsList";
 import LatticeLoader from "@/components/LatticeLoader";
-import OverviewAnalytics from "@/components/OverviewAnalytics";
+import ApplicationDashboard from "@/components/ApplicationDashboard";
 import FirstRunTour from "@/components/FirstRunTour";
 import {
   useCallback,
@@ -44,6 +49,7 @@ type App = {
   appliedAt: string | null;
   nextActionAt: string | null;
   updatedAt: string;
+  createdAt?: string;
 };
 
 type Job = {
@@ -128,12 +134,17 @@ function useReducedMotionPreferred() {
 }
 
 export default function WorkspaceHome() {
+  const { isLoaded, isSignedIn } = useAuth();
   const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [accountReason, setAccountReason] = useState<string | null>(null);
+  const [tourReplayKey, setTourReplayKey] = useState(0);
 
   // Seed only the tiny account avatar from cache. Wallpapers are applied by
   // PreferencesBootstrap through CSS, so the workspace does not need a
   // second background renderer or a WebGL animation loop.
   useLayoutEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
     let cancelled = false;
     queueMicrotask(() => {
       if (cancelled) return;
@@ -151,9 +162,14 @@ export default function WorkspaceHome() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      setProfileAvatarUrl(null);
+      return;
+    }
     let active = true;
     void fetch("/api/profile", { cache: "no-store" })
       .then(async (response) => {
@@ -173,7 +189,7 @@ export default function WorkspaceHome() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   const reduceMotion = useReducedMotionPreferred();
   const [tab, setTab] = useState<"overview" | "search" | "pipeline">("overview");
@@ -183,6 +199,7 @@ export default function WorkspaceHome() {
     return stored === "light" || stored === "dark" ? stored : "dark";
   });
   const [apps, setApps] = useState<App[]>([]);
+  const [loadingApps, setLoadingApps] = useState(true);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [jobQuery, setJobQuery] = useState("");
   const [location, setLocation] = useState("");
@@ -199,7 +216,13 @@ export default function WorkspaceHome() {
   const [manualLoading, setManualLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
+  const accountMenuRef = useRef<HTMLDivElement | null>(null);
   const [indicator, setIndicator] = useState({ left: 0, width: 0 });
+
+  const requestAccount = useCallback((feature: string) => {
+    setAccountReason(feature);
+    setAccountMenuOpen(false);
+  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -229,7 +252,15 @@ export default function WorkspaceHome() {
   }, [theme]);
 
   useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      setApps([]);
+      setLoadingApps(false);
+      return;
+    }
+
     let cancelled = false;
+    setLoadingApps(true);
     void fetch("/api/applications", { cache: "no-store" })
       .then(async (r) => {
         if (!r.ok) throw new Error("applications");
@@ -240,11 +271,14 @@ export default function WorkspaceHome() {
       })
       .catch(() => {
         if (!cancelled) setError("Could not load saved applications.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingApps(false);
       });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   const toggleTheme = useCallback(() => {
     const nextTheme = theme === "dark" ? "light" : "dark";
