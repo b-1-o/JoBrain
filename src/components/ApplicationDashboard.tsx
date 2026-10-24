@@ -27,6 +27,7 @@ import {
   Flame,
   ListTodo,
   Plus,
+  Puzzle,
   RefreshCw,
   Sparkles,
   Target,
@@ -346,6 +347,44 @@ export default function ApplicationDashboard({ apps, loading, onNavigate }: Dash
           </section>
         </div>
       </div>
+
+      <section className="jb-dashboard-card jb-autofill-install-card" aria-labelledby="jb-autofill-title">
+        <div className="jb-autofill-install-icon" aria-hidden="true"><Puzzle size={20} /></div>
+        <div className="jb-autofill-install-copy">
+          <span className="jb-dashboard-overline">BROWSER COMPANION</span>
+          <h2 id="jb-autofill-title">Autofill your applications</h2>
+          <p>Fill recognized job application fields from your profile, then review every field before submitting. Autofill never submits applications for you.</p>
+          <div className="jb-autofill-install-tags" aria-label="Extension features">
+            <span>One-click form fill</span>
+            <span>Local profile storage</span>
+            <span>Manual review</span>
+          </div>
+        </div>
+        <div className="jb-autofill-install-action">
+          {process.env.NEXT_PUBLIC_AUTOFILL_CHROME_STORE_URL ? (
+            <a
+              className="jb-button jb-button-solid"
+              href={process.env.NEXT_PUBLIC_AUTOFILL_CHROME_STORE_URL}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Install from Chrome Web Store <ArrowUpRight size={14} />
+            </a>
+          ) : (
+            <a
+              className="jb-button jb-button-solid"
+              href="https://github.com/b-1-o/autofill#installation"
+              target="_blank"
+              rel="noreferrer"
+            >
+              View install steps <ArrowUpRight size={14} />
+            </a>
+          )}
+          {!process.env.NEXT_PUBLIC_AUTOFILL_CHROME_STORE_URL ? (
+            <small>One-click browser installation will be enabled after the extension is published in the Chrome Web Store.</small>
+          ) : null}
+        </div>
+      </section>
 
       <OverviewAnalytics />
     </section>
