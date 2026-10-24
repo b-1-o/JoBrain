@@ -66,3 +66,5 @@ Frontend Developer · UI Engineer
 JoBrain includes a companion Chrome extension for review-first form autofill on supported job application platforms.
 
 [Autofill GitHub](https://github.com/b-1-o/autofill)
+
+The signed-in dashboard includes an Autofill card. Until the extension is published to the Chrome Web Store, its button opens the manual setup instructions. Once published, set `NEXT_PUBLIC_AUTOFILL_CHROME_STORE_URL` in your Vercel project to the public Chrome Web Store listing URL and redeploy JoBrain; the card will then link directly to the store installation flow. The browser still asks each user to confirm the extension installation.
